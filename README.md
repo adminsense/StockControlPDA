@@ -12,7 +12,9 @@ Client-facing proposal and **static UI mock** for a **stock keeping** web applic
 
 This is the **proposed solution prototype** (a reference screen for the customer to review and validate the flow/UX before development):
 
-![Proposed prototype](./readme/images/mock_template.png)
+<p align="center">
+  <img src="./readme/images/mock_template.png" alt="Proposed prototype" />
+</p>
 
 - **Scan-first PDA flow**: designed around a fast, repeatable **Location → Item → Quantity** sequence.
 - **Keyboard-wedge friendly**: assumes barcode scans arrive as **typed input + Enter**, so focus and step transitions are predictable.

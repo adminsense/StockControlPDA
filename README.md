@@ -8,6 +8,12 @@
 
 Client-facing proposal and **static UI mock** for a **stock keeping** web application aimed at **warehouse PDAs**: scan-driven workflow, **minimum / maximum** stock visibility, and **mobile-first** ergonomics.
 
+## 🧩 Protótipo proposto (preview)
+
+Este é o **protótipo proposto para a solução** (tela de referência para o cliente visualizar e validar o fluxo/UX antes do desenvolvimento):
+
+![Protótipo proposto](./readme/images/mock_template.png)
+
 ---
 
 ## 🎯 Customer goals

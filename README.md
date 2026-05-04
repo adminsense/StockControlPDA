@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./readme/images/logoàsense.png" alt="AdminSense" width="100">
+</p>
+
 # <span style="color: #0066cc">Stock Control — PDA</span>
 
 ![Status](https://img.shields.io/badge/Status-Proposal%20%2B%20Mock-0dcaf0?style=flat-square) ![Product](https://img.shields.io/badge/Product-Web%20app%20%28mobile%2FPDA%29-512BD4?style=flat-square) ![Copyright](https://img.shields.io/badge/Copyright-2026-blue?style=flat-square)

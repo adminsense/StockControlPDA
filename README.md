@@ -89,6 +89,7 @@ This is the **proposed solution prototype** (a reference screen for the customer
 - What **code formats** exist today for **locations** and **items** (prefixes, lengths, symbologies)?
 - Does the scanner append **Enter** (or another suffix) after each read?
 - Is stock tracked **per location only**, **global per SKU**, or **both**?
+- For the database layer, do we **create a new database** for this solution, or **integrate with the customer's existing database / ERP / WMS**?
 - Are **batches / lots / expiry** required in the first release?
 - Is **offline** on the PDA mandatory, or is online-only acceptable for MVP?
 

@@ -66,18 +66,18 @@ This is the **proposed solution prototype** (a reference screen for the customer
 <table>
   <thead>
     <tr>
-      <th style="white-space: nowrap;">Phase</th>
-      <th style="white-space: nowrap;">Scope</th>
+      <th><nobr>Phase</nobr></th>
+      <th><nobr>Scope</nobr></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style="white-space: nowrap;"><strong>MVP</strong></td>
-      <td style="white-space: nowrap;">Locations, items, inbound/outbound movements, stock by location, min/max alerts, mobile UI, keyboard-wedge-friendly scan handling, basic auth.</td>
+      <td><nobr><strong>MVP</strong></nobr></td>
+      <td><nobr>Locations, items, inbound/outbound movements, stock by location, min/max alerts, mobile UI, keyboard-wedge-friendly scan handling, basic auth.</nobr></td>
     </tr>
     <tr>
-      <td style="white-space: nowrap;"><strong>Phase 2</strong></td>
-      <td style="white-space: nowrap;"><strong>PWA</strong> / offline queue, label printing, ERP or WMS integration, scheduled reports, advanced permissions.</td>
+      <td><nobr><strong>Phase&nbsp;2</strong></nobr></td>
+      <td><nobr><strong>PWA</strong> / offline queue, label printing, ERP or WMS integration, scheduled reports, advanced permissions.</nobr></td>
     </tr>
   </tbody>
 </table>

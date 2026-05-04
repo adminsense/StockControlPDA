@@ -63,10 +63,24 @@ This is the **proposed solution prototype** (a reference screen for the customer
 
 ## 🚀 Phased delivery (for estimation)
 
-| Phase | Scope |
-|-------|--------|
-| **MVP** | Locations, items, inbound/outbound movements, stock by location, min/max alerts, mobile UI, keyboard-wedge-friendly scan handling, basic auth. |
-| **Phase 2** | **PWA** / offline queue, label printing, ERP or WMS integration, scheduled reports, advanced permissions. |
+<table>
+  <thead>
+    <tr>
+      <th style="white-space: nowrap;">Phase</th>
+      <th style="white-space: nowrap;">Scope</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"><strong>MVP</strong></td>
+      <td style="white-space: nowrap;">Locations, items, inbound/outbound movements, stock by location, min/max alerts, mobile UI, keyboard-wedge-friendly scan handling, basic auth.</td>
+    </tr>
+    <tr>
+      <td style="white-space: nowrap;"><strong>Phase 2</strong></td>
+      <td style="white-space: nowrap;"><strong>PWA</strong> / offline queue, label printing, ERP or WMS integration, scheduled reports, advanced permissions.</td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 

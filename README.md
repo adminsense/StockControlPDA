@@ -8,11 +8,17 @@
 
 Client-facing proposal and **static UI mock** for a **stock keeping** web application aimed at **warehouse PDAs**: scan-driven workflow, **minimum / maximum** stock visibility, and **mobile-first** ergonomics.
 
-## 🧩 Protótipo proposto (preview)
+## 🧩 Proposed prototype (preview)
 
-Este é o **protótipo proposto para a solução** (tela de referência para o cliente visualizar e validar o fluxo/UX antes do desenvolvimento):
+This is the **proposed solution prototype** (a reference screen for the customer to review and validate the flow/UX before development):
 
-![Protótipo proposto](./readme/images/mock_template.png)
+![Proposed prototype](./readme/images/mock_template.png)
+
+- **Scan-first PDA flow**: designed around a fast, repeatable **Location → Item → Quantity** sequence.
+- **Keyboard-wedge friendly**: assumes barcode scans arrive as **typed input + Enter**, so focus and step transitions are predictable.
+- **Clear movement actions**: explicit **Inbound (+)** and **Outbound (−)** actions to reduce operator errors.
+- **Mobile-first ergonomics**: large touch targets and short forms suitable for small screens (PDA / handheld).
+- **Min/Max visibility**: highlights items **below minimum** or **above maximum** to drive replenishment and corrective actions.
 
 ---
 

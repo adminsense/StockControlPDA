@@ -8,7 +8,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Android%20%2B%20Windows%20desktop-6f42c1?style=flat-square)
 ![Stack](https://img.shields.io/badge/Stack-.NET%20MAUI-512BD4?style=flat-square)
 
-Compact **Admin app** built with **.NET MAUI** for **Android and Windows desktop** to maintain the **minimum master data** required by the scan-driven operation app.
+Compact **Admin app** for **Android and Windows desktop** to maintain the **minimum master data** required by the scan-driven operation app.
 
 ---
 

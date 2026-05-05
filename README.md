@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="readme/images/logoàsense.png" alt="AdminSense" width="100">
+  <img src="./readme/images/logo-asense.png" alt="AdminSense" width="100">
 </p>
 
 # <span style="color: #0066cc">Stock Control — PDA</span>
@@ -105,12 +105,21 @@ This is the **proposed solution prototype** (a reference screen for the customer
 Open in a browser (fake data for layout and flow validation only):
 
 - `docs/stock-control-pda-mock.html` (reference UX; implementation target is MAUI)
+ - `docs/stock-control-admin-mock.html` (Admin reference UX; implementation target is MAUI)
 
 The mock illustrates:
 
 - **Location → item → quantity (+/−)** on a compact, touch-friendly screen.
 - A **Min / Max** alert list.
 - A **scan buffer** field suitable for **keyboard wedge** testing (type or paste codes; **Enter** completes a scan).
+
+---
+
+## Documentation
+
+- 🏠 [Main Documentation](README.md) - This document
+- 📋 [Admin app (MAUI)](readme/README-admin-maui-pda.md) - Compact master-data management (Android + optional Windows)
+- 📋 [Operation app (MAUI Android PDA)](readme/README-operation-maui-pda.md) - Scan-driven stock movements
 
 ---
 

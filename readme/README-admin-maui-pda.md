@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./images/logo�sense.png" alt="AdminSense" width="100">
+  <img src="./images/logo-asense.png" alt="AdminSense" width="100">
 </p>
 
 # 🧩 Admin (MAUI Android / PDA) — Compact master data
@@ -170,10 +170,4 @@ Rule: configure by **item + warehouse** (default) and optionally override by **i
 ## Documentation
 
 - 🏠 [Main Documentation](../README.md) - Project overview and proposal
-- 📋 [Operation app (MAUI Android PDA)](README-operation-maui-pda.md) - Scan-driven stock movements
-- 📋 [UI patterns](UI_PATTERNS_QUICK_START.md) - UI consistency guidelines
-
----
-
-**© 2026 AdminSense. All rights reserved.**
 

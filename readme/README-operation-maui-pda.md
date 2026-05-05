@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./images/logo�sense.png" alt="AdminSense" width="100">
+  <img src="./images/logo-asense.png" alt="AdminSense" width="100">
 </p>
 
 # 📦 Operation (Stock Control) — MAUI Android (PDA)
@@ -79,10 +79,4 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 ## Documentation
 
 - 🏠 [Main Documentation](../README.md) - Project overview and proposal
-- 📋 [Admin app (MAUI)](README-admin-maui-pda.md) - Master data management
-- 📋 [UI patterns](UI_PATTERNS_QUICK_START.md) - UI consistency guidelines
-
----
-
-**© 2026 AdminSense. All rights reserved.**
 

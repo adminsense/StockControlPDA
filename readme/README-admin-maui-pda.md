@@ -2,7 +2,7 @@
   <img src="./images/logo-asense.png" alt="AdminSense" width="100">
 </p>
 
-# 🧩 Admin (MAUI Android + Windows desktop) — Compact master data
+# 🧩 Admin — Compact master data
 
 ![Status](https://img.shields.io/badge/Status-Proposal%20%2B%20Mock-0dcaf0?style=flat-square)
 ![Platform](https://img.shields.io/badge/Platform-Android%20%2B%20Windows%20desktop-6f42c1?style=flat-square)

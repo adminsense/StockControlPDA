@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Stock Control — Admin (Mock)</title>
+  <style>
+    /* Keep the SAME palette as PDA mock */
+    :root {
+      --bg: #0c111b;
+      --panel: #141c2a;
+      --panel2: rgba(0, 0, 0, 0.25);
+      --line: rgba(255, 255, 255, 0.1);
+      --text: #eef2ff;
+      --muted: #94a3b8;
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --radius: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: linear-gradient(165deg, #0a0f18 0%, var(--bg) 45%);
+      color: var(--text);
+      min-height: 100dvh;
+      padding: 12px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    .shell {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.12rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      margin: 4px 0 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .pill {
+      flex-shrink: 0;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(59, 130, 246, 0.15);
+      color: #bfdbfe;
+    }
+    nav.tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    nav.tabs button {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      padding: 10px 8px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    nav.tabs button[aria-selected="true"] {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.45);
+      color: var(--text);
+    }
+    section.panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    section.panel h2 {
+      margin: 0 0 10px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    label {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: rgba(59, 130, 246, 0.6);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .row3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .btn {
+      flex: 1;
+      min-height: 48px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      font-size: 0.92rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .btn.primary {
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.35), rgba(59, 130, 246, 0.12));
+      border-color: rgba(59, 130, 246, 0.45);
+    }
+    .btn.success {
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.35), rgba(34, 197, 94, 0.12));
+      border-color: rgba(34, 197, 94, 0.45);
+    }
+    .btn.danger {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.35), rgba(239, 68, 68, 0.12));
+      border-color: rgba(239, 68, 68, 0.45);
+    }
+    .btn.ghost {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .hint {
+      margin-top: 10px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    th, td {
+      padding: 10px 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; }
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .tag.ok {
+      background: rgba(34, 197, 94, 0.15);
+      color: #bbf7d0;
+      border-color: rgba(34, 197, 94, 0.35);
+    }
+    .tag.off {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fecaca;
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+    .mini-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .mini-actions button {
+      min-height: 40px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .mini-actions .edit { border-color: rgba(59,130,246,0.45); background: rgba(59,130,246,0.16); }
+    .mini-actions .del { border-color: rgba(239,68,68,0.45); background: rgba(239,68,68,0.14); }
+    .hidden { display: none !important; }
+    .toast {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(20, 28, 42, 0.95);
+      font-size: 0.85rem;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.2s ease;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>Stock Control — Admin</h1>
+        <p class="sub">Mock (UX). Compact master-data registration flow. On PDAs, the scanner types into the focused field and may send <span class="mono">Enter</span>.</p>
+      </div>
+      <span class="pill">Mock</span>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Admin sections">
+      <button type="button" role="tab" id="tab-users" aria-selected="true" aria-controls="panel-users">Users</button>
+      <button type="button" role="tab" id="tab-wh" aria-selected="false" aria-controls="panel-wh">Warehouses</button>
+      <button type="button" role="tab" id="tab-loc" aria-selected="false" aria-controls="panel-loc">Locations</button>
+      <button type="button" role="tab" id="tab-prod" aria-selected="false" aria-controls="panel-prod">Products</button>
+      <button type="button" role="tab" id="tab-items" aria-selected="false" aria-controls="panel-items">Items (SKU)</button>
+      <button type="button" role="tab" id="tab-minmax" aria-selected="false" aria-controls="panel-minmax">Min/Max</button>
+    </nav>
+
+    <!-- USERS -->
+    <div id="panel-users" role="tabpanel" aria-labelledby="tab-users">
+      <section class="panel">
+        <h2>Users</h2>
+        <label for="user-search">Search</label>
+        <input id="user-search" type="text" placeholder="name or username" />
+        <div class="actions">
+          <button class="btn primary" type="button" data-toast="New user (mock)">+ New</button>
+          <button class="btn ghost" type="button" data-toast="Sync (mock)">Sync</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>List</h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">marco</td>
+                <td>Marco</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit user marco (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate user marco (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">operador01</td>
+                <td>Operador 01</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit user operador01 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate user operador01 (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">teste</td>
+                <td>Teste</td>
+                <td><span class="tag off">Inactive</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit user teste (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Activate user teste (mock)">Activate</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Simple user registry (no roles). Suggestion: deactivate instead of deleting.</p>
+      </section>
+    </div>
+
+    <!-- WAREHOUSES -->
+    <div id="panel-wh" class="hidden" role="tabpanel" aria-labelledby="tab-wh">
+      <section class="panel">
+        <h2>Warehouses</h2>
+        <label for="wh-search">Search</label>
+        <input id="wh-search" type="text" placeholder="code or name" />
+        <div class="actions">
+          <button class="btn primary" type="button" data-toast="New warehouse (mock)">+ New</button>
+          <button class="btn ghost" type="button" data-toast="Sync (mock)">Sync</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>List</h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">WH01</td>
+                <td>Main</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit WH01 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate WH01 (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WH02</td>
+                <td>Branch</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit WH02 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate WH02 (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- LOCATIONS -->
+    <div id="panel-loc" class="hidden" role="tabpanel" aria-labelledby="tab-loc">
+      <section class="panel">
+        <h2>Locations</h2>
+        <div class="row">
+          <div>
+            <label for="loc-warehouse">Warehouse</label>
+            <select id="loc-warehouse">
+              <option>WH01 - Main</option>
+              <option>WH02 - Branch</option>
+            </select>
+          </div>
+          <div>
+            <label for="loc-search">Search</label>
+            <input id="loc-search" type="text" placeholder="code" />
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" type="button" data-toast="New location (mock)">+ New</button>
+          <button class="btn ghost" type="button" data-toast="Import/Scan (mock)">Read scanner</button>
+        </div>
+        <p class="hint">Location code: <strong>up to 12 characters</strong>. On PDA: keep focus and Enter confirms.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Scan (keyboard wedge)</h2>
+        <label for="loc-scan">Focus here and scan a location</label>
+        <input id="loc-scan" type="text" inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="e.g., A01-03-R2" maxlength="12" />
+        <p class="hint">Press <span class="mono">Enter</span> to capture the code and then save.</p>
+        <div class="row">
+          <div>
+            <label for="loc-code">Code (≤12)</label>
+            <input id="loc-code" type="text" maxlength="12" placeholder="A01-03-R2" />
+          </div>
+          <div>
+            <label for="loc-desc">Description</label>
+            <input id="loc-desc" type="text" placeholder="Aisle A / Shelf 3" />
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn success" type="button" data-toast="Location saved (mock)">Save</button>
+          <button class="btn danger" type="button" data-toast="Location removed (mock)">Delete</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>List</h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">A01-03-R2</td>
+                <td>Aisle A / Rack 2</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit A01-03-R2 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate A01-03-R2 (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">B12-RK02</td>
+                <td>Aisle B / Rack 2</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit B12-RK02 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate B12-RK02 (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="panel-prod" class="hidden" role="tabpanel" aria-labelledby="tab-prod">
+      <section class="panel">
+        <h2>Products</h2>
+        <label for="prod-search">Search</label>
+        <input id="prod-search" type="text" placeholder="code or name" />
+        <div class="actions">
+          <button class="btn primary" type="button" data-toast="New product (mock)">+ New</button>
+          <button class="btn ghost" type="button" data-toast="Sync (mock)">Sync</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Quick entry</h2>
+        <div class="row">
+          <div>
+            <label for="prod-code">Code</label>
+            <input id="prod-code" type="text" placeholder="P-000123" />
+          </div>
+          <div>
+            <label for="prod-name">Name</label>
+            <input id="prod-name" type="text" placeholder="Screw M6" />
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn success" type="button" data-toast="Product saved (mock)">Save</button>
+          <button class="btn danger" type="button" data-toast="Product removed (mock)">Delete</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>List</h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">P-000123</td>
+                <td>Screw M6</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit P-000123 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate P-000123 (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">P-000456</td>
+                <td>Cable tie 200mm</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit P-000456 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate P-000456 (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ITEMS -->
+    <div id="panel-items" class="hidden" role="tabpanel" aria-labelledby="tab-items">
+      <section class="panel">
+        <h2>Items (SKU)</h2>
+        <label for="item-search">Search</label>
+        <input id="item-search" type="text" placeholder="sku, name, or barcode" />
+        <div class="actions">
+          <button class="btn primary" type="button" data-toast="New item (mock)">+ New</button>
+          <button class="btn ghost" type="button" data-toast="Read scanner (mock)">Read scanner</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Quick entry (with scan)</h2>
+        <label for="item-scan">Focus here and scan EAN/QR/SKU</label>
+        <input id="item-scan" type="text" inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Ex.: 8712345678901" />
+        <div class="row">
+          <div>
+            <label for="item-sku">SKU</label>
+            <input id="item-sku" type="text" placeholder="SKU-0001" />
+          </div>
+          <div>
+            <label for="item-unit">Unit</label>
+            <input id="item-unit" type="text" placeholder="UN" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="item-name">Display name</label>
+            <input id="item-name" type="text" placeholder="Fasteners box M6" />
+          </div>
+          <div>
+            <label for="item-barcode">Code (EAN/QR)</label>
+            <input id="item-barcode" type="text" placeholder="8712345678901" />
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn success" type="button" data-toast="Item saved (mock)">Save</button>
+          <button class="btn danger" type="button" data-toast="Item removed (mock)">Delete</button>
+        </div>
+        <p class="hint">The operation app uses `item_barcodes` to recognize items from the scanner.</p>
+      </section>
+
+      <section class="panel">
+        <h2>List</h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Name</th>
+                <th>Unit</th>
+                <th>Status</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">SKU-0001</td>
+                <td>Fasteners M6</td>
+                <td>UN</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit SKU-0001 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate SKU-0001 (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">SKU-0002</td>
+                <td>Cable tie 200mm</td>
+                <td>CX</td>
+                <td><span class="tag ok">Active</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit SKU-0002 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Deactivate SKU-0002 (mock)">Deactivate</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- MIN/MAX -->
+    <div id="panel-minmax" class="hidden" role="tabpanel" aria-labelledby="tab-minmax">
+      <section class="panel">
+        <h2>Min / Max (simple)</h2>
+        <div class="row">
+          <div>
+            <label for="mm-warehouse">Warehouse</label>
+            <select id="mm-warehouse">
+              <option>WH01 - Main</option>
+              <option>WH02 - Branch</option>
+            </select>
+          </div>
+          <div>
+            <label for="mm-sku">Item (SKU)</label>
+            <input id="mm-sku" type="text" placeholder="SKU-0001" />
+          </div>
+        </div>
+        <div class="row3">
+          <div>
+            <label for="mm-min">Min</label>
+            <input id="mm-min" type="number" min="0" value="10" />
+          </div>
+          <div>
+            <label for="mm-max">Max</label>
+            <input id="mm-max" type="number" min="0" value="200" />
+          </div>
+          <div>
+            <label for="mm-loc">Location (optional)</label>
+            <input id="mm-loc" type="text" maxlength="12" placeholder="A01-03-R2" />
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn success" type="button" data-toast="Min/Max saved (mock)">Save</button>
+          <button class="btn danger" type="button" data-toast="Min/Max removed (mock)">Delete</button>
+        </div>
+        <p class="hint">You can set it by <strong>item + warehouse</strong> and override by <strong>item + location</strong>.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Current settings</h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Warehouse</th>
+                <th>Location</th>
+                <th>SKU</th>
+                <th>Min</th>
+                <th>Max</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">WH01</td>
+                <td class="mono">—</td>
+                <td class="mono">SKU-0001</td>
+                <td>10</td>
+                <td>200</td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit Min/Max SKU-0001 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Delete Min/Max SKU-0001 (mock)">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">WH01</td>
+                <td class="mono">A01-03-R2</td>
+                <td class="mono">SKU-0002</td>
+                <td>40</td>
+                <td>120</td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="edit" type="button" data-toast="Edit Min/Max SKU-0002 (mock)">Edit</button>
+                    <button class="del" type="button" data-toast="Delete Min/Max SKU-0002 (mock)">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      var toastEl = document.getElementById("toast");
+
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(function () {
+          toastEl.classList.remove("show");
+        }, 2400);
+      }
+
+      // Tabs
+      var tabs = [
+        { tab: "tab-users", panel: "panel-users" },
+        { tab: "tab-wh", panel: "panel-wh" },
+        { tab: "tab-loc", panel: "panel-loc" },
+        { tab: "tab-prod", panel: "panel-prod" },
+        { tab: "tab-items", panel: "panel-items" },
+        { tab: "tab-minmax", panel: "panel-minmax" }
+      ];
+
+      function select(whichTabId) {
+        for (var i = 0; i < tabs.length; i++) {
+          var t = tabs[i];
+          var tabEl = document.getElementById(t.tab);
+          var panelEl = document.getElementById(t.panel);
+          var on = t.tab === whichTabId;
+          tabEl.setAttribute("aria-selected", on ? "true" : "false");
+          panelEl.classList.toggle("hidden", !on);
+        }
+      }
+
+      tabs.forEach(function (t) {
+        document.getElementById(t.tab).addEventListener("click", function () {
+          select(t.tab);
+        });
+      });
+
+      // Scan helpers (Enter commits)
+      var locScan = document.getElementById("loc-scan");
+      var locCode = document.getElementById("loc-code");
+      if (locScan && locCode) {
+        locScan.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            var code = (locScan.value || "").trim().toUpperCase();
+            locScan.value = "";
+            if (!code) return;
+            if (code.length > 12) {
+              showToast("Location code > 12 characters (shorten it)");
+              return;
+            }
+            locCode.value = code;
+            showToast("Location captured: " + code);
+          }
+        });
+      }
+
+      var itemScan = document.getElementById("item-scan");
+      var itemBarcode = document.getElementById("item-barcode");
+      if (itemScan && itemBarcode) {
+        itemScan.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            var code = (itemScan.value || "").trim();
+            itemScan.value = "";
+            if (!code) return;
+            itemBarcode.value = code;
+            showToast("Code captured: " + code);
+          }
+        });
+      }
+
+      // Generic toast buttons
+      var toastButtons = document.querySelectorAll("[data-toast]");
+      for (var j = 0; j < toastButtons.length; j++) {
+        toastButtons[j].addEventListener("click", function () {
+          showToast(this.getAttribute("data-toast") || "OK");
+        });
+      }
+
+      // Initial focus: quick ergonomics
+      var firstSearch = document.getElementById("user-search");
+      if (firstSearch) firstSearch.focus();
+    })();
+  </script>
+</body>
+</html>
+

@@ -1,54 +1,64 @@
-# Admin (MAUI Android / PDA) — Cadastros compactos
+<p align="center">
+  <img src="./images/logo?sense.png" alt="AdminSense" width="100">
+</p>
 
-Este documento descreve o **aplicativo administrador** (Android) feito em **.NET MAUI**, pensado para rodar em **PDA** (dispositivo Android com leitor de código de barras embutido) e manter os **cadastros mínimos** necessários para o app de operação de estoque (scan-driven).
+# Admin (MAUI Android / PDA) — Compact master data
 
-## Objetivo
+This document describes the **Admin app** built with **.NET MAUI**, designed to run on **Android PDAs** (devices with built-in barcode scanners) and maintain the **minimum master data** required by the stock operation app (scan-driven).
 
-- Ter um **cadastro simples e compacto** (sem excesso de telas/complexidade).
-- Permitir que o app de operação (PDA/web) **consuma** os dados cadastrais para movimentação e visibilidade de **mínimo/máximo**.
-- Operação **online** é aceitável no MVP.
-- **Sem integrações** externas no MVP (ERP/WMS “talvez depois”).
+## Goal
 
-## Plataformas
+- Keep registration **simple and compact** (few screens, low friction).
+- Allow the operation app to **consume** master data for movements and **min/max** visibility.
+- **Online** operation is acceptable for the MVP.
+- **No external integrations** in the MVP (ERP/WMS “maybe later”).
 
-- **Android (PDA)**: alvo principal.
-- **Windows desktop (opcional)**: mesma base MAUI, pensado para facilitar cadastros em tela grande/teclado.
+## Platforms
 
-## Premissas do dispositivo (PDA)
+- **Android (PDA)**: primary target.
+- **Windows desktop (optional)**: same MAUI codebase, useful for fast typing on a large screen/keyboard.
 
-- O leitor pode operar em modo “keyboard wedge”, enviando o código como texto.
-- O scanner pode ser configurado para enviar **Enter** ao final da leitura.
-- Códigos de **localização** (endereços) têm **até 12 caracteres**.
+## Device assumptions (PDA)
 
-## Escopo de cadastros (MVP)
+- Scanner can run as a “keyboard wedge”, sending the scanned code as text.
+- Scanner can be configured to send **Enter** after each scan.
+- **Location** codes are **up to 12 characters**.
 
-- **Usuários**: cadastro simples (sem roles).
-- **Armazéns** (warehouses).
-- **Localizações** (endereços) por armazém (código até 12 chars).
-- **Produtos**.
-- **Itens (SKU)**: unidade vendável/estocável e seus códigos de leitura (EAN/GTIN/QR/código interno).
-- **Preços** (simples; opcional por tabela/validade).
-- **Política de estoque**: mínimo/máximo por item (e opcionalmente por localização).
+## Master data scope (MVP)
 
-## Telas sugeridas (bem poucas)
+- **Users**: simple user registry (no roles).
+- **Warehouses**.
+- **Locations** per warehouse (code up to 12 chars).
+- **Products**.
+- **Items (SKU)**: sellable/stockable unit and its scan codes (EAN/GTIN/QR/internal code).
+- **Prices** (simple; optionally by price list / validity).
+- **Stock policy**: min/max per item (optionally per location).
 
-- **Login** (ou seleção de usuário, dependendo da estratégia de autenticação).
-- **Usuários**: lista + criar/editar/inativar.
-- **Armazéns**: lista + criar/editar/inativar.
-- **Localizações**: lista por armazém + criar/editar/inativar + leitura por scanner.
-- **Produtos**: lista + criar/editar/inativar.
-- **Itens (SKU)**: lista + criar/editar/inativar + códigos de barras/QR + mínimo/máximo.
-- **Preços**: lista por item + criar/editar (opcional no MVP).
-- **Sincronização**: botão “Atualizar dados” / “Enviar alterações” (caso exista modo offline no futuro).
+## Suggested screens (very few)
 
-## Mock de tabelas (modelo de dados mínimo)
+- **Login** (or user selection, depending on authentication strategy).
+- **Users**: list + create/edit/deactivate.
+- **Warehouses**: list + create/edit/deactivate.
+- **Locations**: list by warehouse + create/edit/deactivate + scanner input.
+- **Products**: list + create/edit/deactivate.
+- **Items (SKU)**: list + create/edit/deactivate + barcodes/QR + min/max.
+- **Prices**: list by item + create/edit (optional in MVP).
+- **Sync**: “Refresh data” / “Upload changes” (if offline is added later).
 
-> A ideia é **mínimo necessário** para cadastros + controle de estoque (auditável), sem complicar.
+## UI mock (HTML)
+
+To validate flow/ergonomics before the MAUI implementation:
+
+- `docs/stock-control-admin-mock.html`
+
+## Table mock (minimum data model)
+
+> The idea is **minimum necessary** for master data + auditable stock control, without overcomplicating.
 
 ### `users`
 
 - `id` (uuid/int)
-- `username` (string, único)
+- `username` (string, unique)
 - `password_hash` (string)
 - `name` (string)
 - `is_active` (bool)
@@ -57,7 +67,7 @@ Este documento descreve o **aplicativo administrador** (Android) feito em **.NET
 ### `warehouses`
 
 - `id`
-- `code` (string, único) — ex.: “WH01”
+- `code` (string, unique) — e.g., “WH01”
 - `name` (string)
 - `is_active`
 - `created_at`
@@ -66,36 +76,36 @@ Este documento descreve o **aplicativo administrador** (Android) feito em **.NET
 
 - `id`
 - `warehouse_id` (FK → `warehouses.id`)
-- `code` (string, **máx. 12**, único por armazém)
-- `description` (string, opcional)
+- `code` (string, **max 12**, unique per warehouse)
+- `description` (string, optional)
 - `is_active`
 - `created_at`
 
 ### `products`
 
 - `id`
-- `code` (string, único) — código interno do produto
+- `code` (string, unique) — internal product code
 - `name` (string)
-- `description` (string, opcional)
+- `description` (string, optional)
 - `is_active`
 - `created_at`
 
-### `items` (SKU / item estocável)
+### `items` (SKU / stockable item)
 
 - `id`
 - `product_id` (FK → `products.id`)
-- `sku` (string, único)
-- `name` (string) — nome exibido no PDA
-- `unit` (string) — ex.: “UN”, “CX”
+- `sku` (string, unique)
+- `name` (string) — display name on PDA
+- `unit` (string) — e.g., “EA”, “BX”
 - `is_active`
 - `created_at`
 
-### `item_barcodes` (códigos aceitos pelo scanner)
+### `item_barcodes` (codes accepted by the scanner)
 
 - `id`
 - `item_id` (FK → `items.id`)
-- `code` (string, único) — EAN/GTIN/QR/código interno
-- `code_type` (string, opcional) — ex.: EAN13, QR, INTERNAL
+- `code` (string, unique) — EAN/GTIN/QR/internal code
+- `code_type` (string, optional) — e.g., EAN13, QR, INTERNAL
 - `is_active`
 - `created_at`
 
@@ -103,25 +113,25 @@ Este documento descreve o **aplicativo administrador** (Android) feito em **.NET
 
 - `id`
 - `item_id` (FK → `items.id`)
-- `warehouse_id` (FK → `warehouses.id`, opcional)
-- `location_id` (FK → `locations.id`, opcional)
+- `warehouse_id` (FK → `warehouses.id`, optional)
+- `location_id` (FK → `locations.id`, optional)
 - `min_qty` (decimal/int)
 - `max_qty` (decimal/int)
 - `created_at`
 
-> Regra simples: configurar por **item + armazém** (padrão) e permitir sobrescrever por **item + localização** se necessário.
+> Simple rule: configure by **item + warehouse** (default) and optionally override by **item + location**.
 
-### `item_prices` (opcional no MVP)
+### `item_prices` (optional in MVP)
 
 - `id`
 - `item_id` (FK → `items.id`)
 - `price` (decimal)
-- `currency` (string, ex.: “BRL”)
-- `valid_from` (date, opcional)
-- `valid_to` (date, opcional)
+- `currency` (string, e.g., “BRL”)
+- `valid_from` (date, optional)
+- `valid_to` (date, optional)
 - `created_at`
 
-### `stock_balances` (saldo atual)
+### `stock_balances` (current balance)
 
 - `id`
 - `warehouse_id` (FK → `warehouses.id`)
@@ -130,9 +140,9 @@ Este documento descreve o **aplicativo administrador** (Android) feito em **.NET
 - `qty_on_hand` (decimal/int)
 - `updated_at` (datetime)
 
-> Alternativa: calcular saldo a partir de movimentos. Para PDA e relatórios rápidos, manter `stock_balances` é prático.
+> Alternative: compute balance from movements. For PDA and fast reporting, keeping `stock_balances` is practical.
 
-### `stock_movements` (linhas imutáveis / auditoria)
+### `stock_movements` (immutable lines / audit)
 
 - `id`
 - `created_at` (datetime)
@@ -140,29 +150,29 @@ Este documento descreve o **aplicativo administrador** (Android) feito em **.NET
 - `warehouse_id` (FK → `warehouses.id`)
 - `location_id` (FK → `locations.id`)
 - `item_id` (FK → `items.id`)
-- `direction` (string) — `IN` (entrada) / `OUT` (saída)
+- `direction` (string) — `IN` / `OUT`
 - `qty` (decimal/int)
-- `source` (string) — ex.: `PDA`, `ADMIN`
-- `notes` (string, opcional)
+- `source` (string) — e.g., `PDA`, `ADMIN`
+- `notes` (string, optional)
 
-## Regras e validações (simples)
+## Rules & validations (simple)
 
-- **Localização**: `locations.code` com **até 12 chars**; preferir uppercase; único por `warehouse_id`.
-- **Scanner + Enter**: nas telas com leitura, manter foco no campo “Scan” e tratar Enter como “confirmar”.
-- **Usuários sem roles**: todos os usuários têm o mesmo nível no MVP; no futuro, adicionar permissões/roles sem quebrar modelo.
-- **Estoque negativo**: decidir no MVP (bloquear ou permitir). Se bloquear, validar antes de gravar movimento `OUT`.
+- **Locations**: `locations.code` up to 12 chars; prefer uppercase; unique per `warehouse_id`.
+- **Scanner + Enter**: on scan fields, keep focus and treat Enter as “commit”.
+- **Users without roles**: all users have the same permissions in the MVP; add roles later without breaking the model.
+- **Negative stock**: decide in MVP (block or allow). If blocking, validate before saving `OUT`.
 
-## Sincronização / consumo pelo app de estoque
+## Sync / consumed by the stock app
 
-- O app de operação (PDA/web) deve conseguir:
-  - Buscar `warehouses`, `locations`, `items`, `item_barcodes`, `item_min_max` e `stock_balances`.
-  - Enviar `stock_movements` (e receber atualização de `stock_balances`).
+- The operation app should be able to:
+  - Fetch `warehouses`, `locations`, `items`, `item_barcodes`, `item_min_max`, and `stock_balances`.
+  - Post `stock_movements` (and receive updated `stock_balances`).
 
-## Futuras extensões (não-MVP)
+## Future extensions (non-MVP)
 
-- Integração ERP/WMS.
-- Offline no PDA (fila de movimentos).
-- Lotes/validade/serial.
-- Transferência entre localizações (gerar OUT/IN vinculados).
-- Roles/permissões e trilha de auditoria mais detalhada.
+- ERP/WMS integration.
+- Offline on PDA (movement queue).
+- Lots/expiry/serial.
+- Location transfers (paired OUT/IN linked).
+- Roles/permissions and deeper audit trail.
 

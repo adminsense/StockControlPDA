@@ -1,178 +1,179 @@
 <p align="center">
-  <img src="./images/logo?sense.png" alt="AdminSense" width="100">
+  <img src="./images/logo�sense.png" alt="AdminSense" width="100">
 </p>
 
-# Admin (MAUI Android / PDA) — Compact master data
+# 🧩 Admin (MAUI Android / PDA) — Compact master data
 
-This document describes the **Admin app** built with **.NET MAUI**, designed to run on **Android PDAs** (devices with built-in barcode scanners) and maintain the **minimum master data** required by the stock operation app (scan-driven).
+![Status](https://img.shields.io/badge/Status-Proposal%20%2B%20Mock-0dcaf0?style=flat-square)
+![Platform](https://img.shields.io/badge/Platform-Android%20PDA%20%2B%20Optional%20Windows-6f42c1?style=flat-square)
+![Stack](https://img.shields.io/badge/Stack-.NET%20MAUI-512BD4?style=flat-square)
 
-## Goal
+Compact **Admin app** built with **.NET MAUI** to maintain the **minimum master data** required by the scan-driven operation app.
+
+---
+
+## ✅ 1. Goals (MVP)
 
 - Keep registration **simple and compact** (few screens, low friction).
-- Allow the operation app to **consume** master data for movements and **min/max** visibility.
+- Support the operation app with master data for **stock movements** and **min/max** visibility.
 - **Online** operation is acceptable for the MVP.
 - **No external integrations** in the MVP (ERP/WMS “maybe later”).
 
-## Platforms
+## 📱 2. Platforms & device assumptions
+
+### 2.1 Platforms
 
 - **Android (PDA)**: primary target.
 - **Windows desktop (optional)**: same MAUI codebase, useful for fast typing on a large screen/keyboard.
 
-## Device assumptions (PDA)
+### 2.2 Scanner behavior (keyboard wedge)
 
-- Scanner can run as a “keyboard wedge”, sending the scanned code as text.
-- Scanner can be configured to send **Enter** after each scan.
-- **Location** codes are **up to 12 characters**.
+- The scanner types the code into the focused field.
+- It can be configured to send **Enter** after each scan.
+- **Location codes** are **up to 12 characters**.
 
-## Master data scope (MVP)
+## 🧾 3. Master data scope
 
-- **Users**: simple user registry (no roles).
-- **Warehouses**.
-- **Locations** per warehouse (code up to 12 chars).
-- **Products**.
-- **Items (SKU)**: sellable/stockable unit and its scan codes (EAN/GTIN/QR/internal code).
-- **Prices** (simple; optionally by price list / validity).
-- **Stock policy**: min/max per item (optionally per location).
+- **Users**: simple registry (no roles).
+- **Warehouses**
+- **Locations** (per warehouse, code ≤ 12 chars)
+- **Products**
+- **Items (SKU)** + accepted scan codes (EAN/GTIN/QR/internal codes)
+- **Min/Max policy** per item (optionally per location)
+- **Prices** (optional in MVP)
 
-## Suggested screens (very few)
+## 🧭 4. Suggested screens (minimal)
 
 - **Login** (or user selection, depending on authentication strategy).
 - **Users**: list + create/edit/deactivate.
 - **Warehouses**: list + create/edit/deactivate.
 - **Locations**: list by warehouse + create/edit/deactivate + scanner input.
 - **Products**: list + create/edit/deactivate.
-- **Items (SKU)**: list + create/edit/deactivate + barcodes/QR + min/max.
+- **Items (SKU)**: list + create/edit/deactivate + barcode/QR + min/max.
 - **Prices**: list by item + create/edit (optional in MVP).
 - **Sync**: “Refresh data” / “Upload changes” (if offline is added later).
 
-## UI mock (HTML)
+## 🧪 5. UI mock
 
-To validate flow/ergonomics before the MAUI implementation:
+- `../docs/stock-control-admin-mock.html`
 
-- `docs/stock-control-admin-mock.html`
+## 🗃️ 6. Table mock (minimum data model)
 
-## Table mock (minimum data model)
+> The goal is **minimum necessary** for master data + auditable stock control, without overcomplicating.
 
-> The idea is **minimum necessary** for master data + auditable stock control, without overcomplicating.
+### 6.1 Core tables
 
-### `users`
+- **`users`**
+  - `id` (uuid/int)
+  - `username` (string, unique)
+  - `password_hash` (string)
+  - `name` (string)
+  - `is_active` (bool)
+  - `created_at` (datetime)
 
-- `id` (uuid/int)
-- `username` (string, unique)
-- `password_hash` (string)
-- `name` (string)
-- `is_active` (bool)
-- `created_at` (datetime)
+- **`warehouses`**
+  - `id`
+  - `code` (string, unique) — e.g., “WH01”
+  - `name` (string)
+  - `is_active`
+  - `created_at`
 
-### `warehouses`
+- **`locations`**
+  - `id`
+  - `warehouse_id` (FK → `warehouses.id`)
+  - `code` (string, **max 12**, unique per warehouse)
+  - `description` (string, optional)
+  - `is_active`
+  - `created_at`
 
-- `id`
-- `code` (string, unique) — e.g., “WH01”
-- `name` (string)
-- `is_active`
-- `created_at`
+- **`products`**
+  - `id`
+  - `code` (string, unique) — internal product code
+  - `name` (string)
+  - `description` (string, optional)
+  - `is_active`
+  - `created_at`
 
-### `locations`
+- **`items`** (SKU / stockable item)
+  - `id`
+  - `product_id` (FK → `products.id`)
+  - `sku` (string, unique)
+  - `name` (string) — display name on PDA
+  - `unit` (string) — e.g., “EA”, “BX”
+  - `is_active`
+  - `created_at`
 
-- `id`
-- `warehouse_id` (FK → `warehouses.id`)
-- `code` (string, **max 12**, unique per warehouse)
-- `description` (string, optional)
-- `is_active`
-- `created_at`
+- **`item_barcodes`**
+  - `id`
+  - `item_id` (FK → `items.id`)
+  - `code` (string, unique)
+  - `code_type` (string, optional) — e.g., EAN13, QR, INTERNAL
+  - `is_active`
+  - `created_at`
 
-### `products`
+### 6.2 Min/Max
 
-- `id`
-- `code` (string, unique) — internal product code
-- `name` (string)
-- `description` (string, optional)
-- `is_active`
-- `created_at`
+- **`item_min_max`**
+  - `id`
+  - `item_id` (FK → `items.id`)
+  - `warehouse_id` (FK → `warehouses.id`, optional)
+  - `location_id` (FK → `locations.id`, optional)
+  - `min_qty` (decimal/int)
+  - `max_qty` (decimal/int)
+  - `created_at`
 
-### `items` (SKU / stockable item)
+Rule: configure by **item + warehouse** (default) and optionally override by **item + location**.
 
-- `id`
-- `product_id` (FK → `products.id`)
-- `sku` (string, unique)
-- `name` (string) — display name on PDA
-- `unit` (string) — e.g., “EA”, “BX”
-- `is_active`
-- `created_at`
+### 6.3 Optional tables (MVP+)
 
-### `item_barcodes` (codes accepted by the scanner)
+- **`item_prices`** (optional in MVP)
+  - `id`
+  - `item_id` (FK → `items.id`)
+  - `price` (decimal)
+  - `currency` (string, e.g., “BRL”)
+  - `valid_from` (date, optional)
+  - `valid_to` (date, optional)
+  - `created_at`
 
-- `id`
-- `item_id` (FK → `items.id`)
-- `code` (string, unique) — EAN/GTIN/QR/internal code
-- `code_type` (string, optional) — e.g., EAN13, QR, INTERNAL
-- `is_active`
-- `created_at`
+- **`stock_balances`** (current balance; optional if you compute from movements)
+  - `id`
+  - `warehouse_id` (FK → `warehouses.id`)
+  - `location_id` (FK → `locations.id`)
+  - `item_id` (FK → `items.id`)
+  - `qty_on_hand` (decimal/int)
+  - `updated_at` (datetime)
 
-### `item_min_max`
+- **`stock_movements`** (immutable audit lines)
+  - `id`
+  - `created_at` (datetime)
+  - `user_id` (FK → `users.id`)
+  - `warehouse_id` (FK → `warehouses.id`)
+  - `location_id` (FK → `locations.id`)
+  - `item_id` (FK → `items.id`)
+  - `direction` (string) — `IN` / `OUT`
+  - `qty` (decimal/int)
+  - `source` (string) — e.g., `PDA`, `ADMIN`
+  - `notes` (string, optional)
 
-- `id`
-- `item_id` (FK → `items.id`)
-- `warehouse_id` (FK → `warehouses.id`, optional)
-- `location_id` (FK → `locations.id`, optional)
-- `min_qty` (decimal/int)
-- `max_qty` (decimal/int)
-- `created_at`
+## ✅ 7. Simple rules & validations
 
-> Simple rule: configure by **item + warehouse** (default) and optionally override by **item + location**.
-
-### `item_prices` (optional in MVP)
-
-- `id`
-- `item_id` (FK → `items.id`)
-- `price` (decimal)
-- `currency` (string, e.g., “BRL”)
-- `valid_from` (date, optional)
-- `valid_to` (date, optional)
-- `created_at`
-
-### `stock_balances` (current balance)
-
-- `id`
-- `warehouse_id` (FK → `warehouses.id`)
-- `location_id` (FK → `locations.id`)
-- `item_id` (FK → `items.id`)
-- `qty_on_hand` (decimal/int)
-- `updated_at` (datetime)
-
-> Alternative: compute balance from movements. For PDA and fast reporting, keeping `stock_balances` is practical.
-
-### `stock_movements` (immutable lines / audit)
-
-- `id`
-- `created_at` (datetime)
-- `user_id` (FK → `users.id`)
-- `warehouse_id` (FK → `warehouses.id`)
-- `location_id` (FK → `locations.id`)
-- `item_id` (FK → `items.id`)
-- `direction` (string) — `IN` / `OUT`
-- `qty` (decimal/int)
-- `source` (string) — e.g., `PDA`, `ADMIN`
-- `notes` (string, optional)
-
-## Rules & validations (simple)
-
-- **Locations**: `locations.code` up to 12 chars; prefer uppercase; unique per `warehouse_id`.
+- **Locations**: `locations.code` ≤ 12 chars; prefer uppercase; unique per `warehouse_id`.
 - **Scanner + Enter**: on scan fields, keep focus and treat Enter as “commit”.
 - **Users without roles**: all users have the same permissions in the MVP; add roles later without breaking the model.
 - **Negative stock**: decide in MVP (block or allow). If blocking, validate before saving `OUT`.
 
-## Sync / consumed by the stock app
+## 🔄 8. Sync expectations (used by the operation app)
 
-- The operation app should be able to:
-  - Fetch `warehouses`, `locations`, `items`, `item_barcodes`, `item_min_max`, and `stock_balances`.
-  - Post `stock_movements` (and receive updated `stock_balances`).
+- Fetch: `warehouses`, `locations`, `items`, `item_barcodes`, `item_min_max` (and optionally `stock_balances`).
+- Post: `stock_movements` (and receive updated balance if applicable).
 
-## Future extensions (non-MVP)
+## Documentation
 
-- ERP/WMS integration.
-- Offline on PDA (movement queue).
-- Lots/expiry/serial.
-- Location transfers (paired OUT/IN linked).
-- Roles/permissions and deeper audit trail.
+- 🏠 [Main Documentation](../README.md) - Project overview and proposal
+- 📋 [Operation app (MAUI Android PDA)](README-operation-maui-pda.md) - Scan-driven stock movements
+- 📋 [UI patterns](UI_PATTERNS_QUICK_START.md) - UI consistency guidelines
+
+---
+
+**© 2026 AdminSense. All rights reserved.**
 

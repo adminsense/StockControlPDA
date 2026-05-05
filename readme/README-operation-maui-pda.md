@@ -12,6 +12,15 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 
 ---
 
+### 📌 Quick facts
+
+| Topic | Value |
+|------|-------|
+| **Platform** | Android PDA |
+| **Workflow** | Location → Item → Quantity → In/Out |
+| **Scanner** | Keyboard wedge (text + Enter) |
+| **Connectivity** | Online (MVP) |
+
 ## ✅ 1. Goals (MVP)
 
 - Register stock movements with a fast, repeatable flow: **Location → Item → Quantity → Inbound (+) / Outbound (−)**.
@@ -76,7 +85,13 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 - **Immediate feedback**: beep/visual on recognized location and item; clear error on unknown codes.
 - **Minimal taps**: ideally only tap quantity and the (+/−) button.
 
+---
+
 ## Documentation
 
 - 🏠 [Main Documentation](../README.md) - Project overview and proposal
+
+---
+
+**© 2026 AdminSense. All rights reserved.**
 

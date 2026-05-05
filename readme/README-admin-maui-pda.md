@@ -12,6 +12,15 @@ Compact **Admin app** built with **.NET MAUI** for **Android and Windows desktop
 
 ---
 
+### 📌 Quick facts
+
+| Topic | Value |
+|------|-------|
+| **Platforms** | Android (PDA) + Windows desktop |
+| **Purpose** | Master data for Operation app |
+| **Scanner input** | Keyboard wedge supported (text + Enter) |
+| **Location code** | Up to 12 characters |
+
 ## ✅ 1. Goals (MVP)
 
 - Keep registration **simple and compact** (few screens, low friction).
@@ -167,7 +176,13 @@ Rule: configure by **item + warehouse** (default) and optionally override by **i
 - Fetch: `warehouses`, `locations`, `items`, `item_barcodes`, `item_min_max` (and optionally `stock_balances`).
 - Post: `stock_movements` (and receive updated balance if applicable).
 
+---
+
 ## Documentation
 
 - 🏠 [Main Documentation](../README.md) - Project overview and proposal
+
+---
+
+**© 2026 AdminSense. All rights reserved.**
 

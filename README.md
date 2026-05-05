@@ -10,19 +10,20 @@ Client-facing proposal and **static UI mock** for a **stock keeping** applicatio
 
 Proposed delivery is **.NET MAUI**:
 
-- **Admin app**: MAUI (**Android** + **Windows desktop**) for compact master-data registration.
-- **Operation app (Stock Control PDA)**: MAUI (**Android**) optimized for scan-first warehouse workflows.
+### Admin app (Android + Windows desktop)
 
-## 🧩 Proposed prototype (preview)
-
-Reference screens for customer review and flow validation (implementation target is MAUI):
-
-<p align="center">
-  <img src="./readme/images/mock_template.png" alt="PDA prototype" />
-</p>
+Compact master-data registration (users, products, items/SKUs, warehouses, locations, min/max).
 
 <p align="center">
   <img src="./readme/images/mock_admin_template.png" alt="Admin prototype" />
+</p>
+
+### Operation app (Stock Control PDA) — Android
+
+Scan-first warehouse workflow (Location → Item → Quantity → In/Out) with min/max visibility.
+
+<p align="center">
+  <img src="./readme/images/mock_template.png" alt="PDA prototype" />
 </p>
 
 ---
@@ -32,15 +33,6 @@ Reference screens for customer review and flow validation (implementation target
 - Scan-driven movements with a fast **Location → Item → Quantity → In/Out** sequence.
 - Visibility of **minimum/maximum** thresholds and simple alerts.
 - **Keyboard-wedge scanner** support (scan as text, often terminated by **Enter**).
-
----
-
-## ✅ What we are building
-
-- **Admin app (MAUI Android + Windows desktop)**: users, products, items/SKUs, warehouses, locations, min/max.
-- **Operation app (MAUI Android PDA)**: scan-first stock movements and min/max visibility.
-
-Details live in the internal docs below.
 
 ## Documentation
 

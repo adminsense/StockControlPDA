@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./readme/images/logo�sense.png" alt="AdminSense" width="100">
+  <img src="readme/images/logoàsense.png" alt="AdminSense" width="100">
 </p>
 
 # <span style="color: #0066cc">Stock Control — PDA</span>

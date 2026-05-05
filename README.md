@@ -6,7 +6,12 @@
 
 ![Status](https://img.shields.io/badge/Status-Proposal%20%2B%20Mock-0dcaf0?style=flat-square) ![Product](https://img.shields.io/badge/Product-Web%20app%20%28mobile%2FPDA%29-512BD4?style=flat-square) ![Copyright](https://img.shields.io/badge/Copyright-2026-blue?style=flat-square)
 
-Client-facing proposal and **static UI mock** for a **stock keeping** web application aimed at **warehouse PDAs**: scan-driven workflow, **minimum / maximum** stock visibility, and **mobile-first** ergonomics.
+Client-facing proposal and **static UI mock** for a **stock keeping** application aimed at **warehouse PDAs**: scan-driven workflow, **minimum / maximum** stock visibility, and **mobile-first** ergonomics.
+
+**Update (2026-05)**: Proposed delivery is **.NET MAUI**:
+
+- **Admin app**: MAUI (**Android**, optional **Windows desktop**) for compact master-data registration.
+- **Operation app (Stock Control PDA)**: MAUI (**Android**) optimized for scan-first warehouse workflows.
 
 ## 🧩 Proposed prototype (preview)
 
@@ -37,7 +42,7 @@ This is the **proposed solution prototype** (a reference screen for the customer
 
 | Area | Proposal |
 |------|-----------|
-| **Architecture** | Responsive **web application** + **API** + database for items, locations, min/max thresholds, and **immutable movement lines** (who, when, where, +/- quantity). |
+| **Architecture** | **MAUI apps** (Admin + Operation) + **API** + database for items, locations, min/max thresholds, and **immutable movement lines** (who, when, where, +/- quantity). |
 | **Operator flow** | **1)** Confirm or scan **location** → **2)** Scan **item** (SKU / internal QR / GTIN) → **3)** Enter quantity and tap **Inbound (+)** or **Outbound (−)** → **4)** Optional confirmation / undo window. |
 | **Scanner integration** | The app **receives** scan data as keyboard input: focused fields, **suffix Enter** handling, and validation of code lengths / prefixes. No OS-level “injection” of keystrokes from the web app is required—the **PDA sends** characters to the page. |
 | **Reporting** | Dashboard or list: **below minimum**, **above maximum**, optional “healthy” band; filters by location / category; export (e.g. **Excel / PDF**) for purchasing. |
@@ -73,11 +78,11 @@ This is the **proposed solution prototype** (a reference screen for the customer
   <tbody>
     <tr>
       <td><nobr><strong>MVP</strong></nobr></td>
-      <td><nobr>Locations, items, inbound/outbound movements, stock by location, min/max alerts, mobile UI, keyboard-wedge-friendly scan handling, basic auth.</nobr></td>
+      <td><nobr>MAUI Operation app (Android) + MAUI Admin app (Android), API + DB, locations/items/min-max, inbound/outbound movements, stock by location, min/max alerts, scan handling (keyboard wedge + Enter), basic auth.</nobr></td>
     </tr>
     <tr>
       <td><nobr><strong>Phase&nbsp;2</strong></nobr></td>
-      <td><nobr><strong>PWA</strong> / offline queue, label printing, ERP or WMS integration, scheduled reports, advanced permissions.</nobr></td>
+      <td><nobr>Optional Windows desktop for Admin, offline queue, label printing, ERP or WMS integration, scheduled reports, advanced permissions.</nobr></td>
     </tr>
   </tbody>
 </table>
@@ -99,7 +104,7 @@ This is the **proposed solution prototype** (a reference screen for the customer
 
 Open in a browser (fake data for layout and flow validation only):
 
-- `docs/stock-control-pda-mock.html`
+- `docs/stock-control-pda-mock.html` (reference UX; implementation target is MAUI)
 
 The mock illustrates:
 

@@ -6,7 +6,7 @@
 
 ![Status](https://img.shields.io/badge/Status-Implemented-198754?style=flat-square) ![Product](https://img.shields.io/badge/Product-Blazor%20Server%20Desktop%20Admin-0d6efd?style=flat-square) ![Copyright](https://img.shields.io/badge/Copyright-2026-blue?style=flat-square)
 
-Desktop **Admin** application implemented in **Blazor Server** (Visual Studio 2022 / IIS Express) with **SQL Server + EF Core**. The UI follows the approved mock and provides **CRUD** for master data plus a **Stock** screen (warehouse/location balances) with Min/Max comparison.
+Desktop **Admin** application implemented in **Blazor Server** (Visual Studio 2026 / IIS Express) with **SQL Server + EF Core**. The UI follows the approved mock and provides **CRUD** for master data plus a **Stock** screen (warehouse/location balances) with Min/Max comparison.
 
 ---
 

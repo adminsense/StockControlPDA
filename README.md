@@ -46,8 +46,8 @@ Approved reference mock:
 ## 7. Documentation
 
 - 🏠 **Main documentation**: this file
-- 📋 **Admin documentation**: `readme/README-admin-stock.md`
-- 📋 **PDA documentation**: `readme/README-operation-stock-pda.md`
+- 📋 **Admin documentation**: [README-admin-stock](readme/README-admin-stock.md)
+- 📋 **PDA documentation**: [README-operation-stock-pda](readme/README-operation-stock-pda.md)
 
 ---
 

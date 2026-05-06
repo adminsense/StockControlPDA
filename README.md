@@ -2,73 +2,52 @@
   <img src="./readme/images/logo-asense.png" alt="AdminSense" width="100">
 </p>
 
-# <span style="color: #0066cc">Stock Control — PDA</span>
+# Stock Control — Admin (Desktop)
 
-![Status](https://img.shields.io/badge/Status-Proposal%20%2B%20Mock-0dcaf0?style=flat-square) ![Product](https://img.shields.io/badge/Product-.NET%20MAUI%20apps%20%28Admin%20%2B%20PDA%29-512BD4?style=flat-square) ![Copyright](https://img.shields.io/badge/Copyright-2026-blue?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Implemented-198754?style=flat-square) ![Product](https://img.shields.io/badge/Product-Blazor%20Server%20Desktop%20Admin-0d6efd?style=flat-square) ![Copyright](https://img.shields.io/badge/Copyright-2026-blue?style=flat-square)
 
-Client-facing proposal and **static UI mock** for a **stock keeping** solution aimed at **warehouse PDAs**: scan-driven workflow, **minimum / maximum** stock visibility, and **mobile-first** ergonomics.
+Desktop **Admin** application implemented in **Blazor Server** (Visual Studio 2022 / IIS Express) with **SQL Server + EF Core**. The UI follows the approved mock and provides **CRUD** for master data plus a **Stock** screen (warehouse/location balances) with Min/Max comparison.
 
 ---
 
-## 📋 1. Project overview
+## 1. Project overview
 
-This solution is split into **two .NET MAUI apps** backed by an **API + database**:
+This repository currently contains **one desktop Admin app**:
 
-- **Admin app** (Android + Windows desktop): compact master-data registration.
-- **Operation app** (Android PDA): scan-first stock movements on handheld devices.
+- **Admin (Blazor Server)**: compact master-data registration + stock visibility.
 
-## 🎯 2. Objective
+## 2. Objective
 
-- Enable fast warehouse movements using a repeatable **Location → Item → Quantity → In/Out** flow.
-- Provide clear **min/max** visibility and simple alerts.
+- Maintain master data (Users, Warehouses, Locations, Products, Items + Barcodes).
+- Configure **Min/Max** rules (inside Items).
+- View on-hand quantities by **Warehouse + Location + Item**.
 
-## ✨ 3. Key features (summary)
+## 3. Key features (summary)
 
-- **Scan-driven workflow** (keyboard wedge; scanners typically send text + **Enter**).
-- **Mobile-first ergonomics** for PDA screens (big touch targets, minimal typing).
-- **Min/Max visibility** (below-min / above-max highlighting).
-- **Audit-ready movements** (who/when/where/what/qty).
+- **6-tab navigation**: Users, Warehouses, Locations, Products, Items (SKU), Stock.
+- **CRUD + validations** on all forms (English messages).
+- **Min/Max inside Items** (warehouse default + optional location override, \(Max \ge Min\)).
+- **Stock page** with filters (warehouse, location, search, below-min/above-max) and pagination (10 rows/page).
 
-## 🧩 4. Apps (prototypes)
+## 4. UI reference (mock)
 
-### 4.1 Admin app (MAUI — Android + Windows desktop)
-
-Compact master-data registration (users, products, items/SKUs, warehouses, locations, min/max).
+Approved reference mock:
 
 <p align="center">
   <img src="./readme/images/mock_admin_template.png" alt="Admin prototype" />
 </p>
 
-### 4.2 Operation app (Stock Control PDA — MAUI Android)
+## 5. Tech stack
 
-Scan-first warehouse workflow (Location → Item → Quantity → In/Out) with min/max visibility.
+- **Frontend**: Blazor Server
+- **Database**: SQL Server
+- **ORM**: Entity Framework Core (migrations)
 
-<p align="center">
-  <img src="./readme/images/mock_template.png" alt="PDA prototype" />
-</p>
+## 7. Documentation
 
-## 🛠️ 5. Technologies used (MVP)
-
-| Layer | Stack |
-|------|-------|
-| **Apps** | .NET MAUI (Admin + Operation) |
-| **Backend** | API (to be implemented) |
-| **Database** | Relational DB (to be implemented) |
-
-## 🧪 6. UI mocks (HTML)
-
-Static mocks used only for UX validation:
-
-- `docs/stock-control-admin-mock.html`
-- `docs/stock-control-pda-mock.html`
-
----
-
-## 📚 7. Documentation
-
-- 🏠 [Main Documentation](README.md) - This document
-- 📋 [Admin app (MAUI)](readme/README-admin-maui-pda.md) - Compact master-data management (Android + Windows desktop)
-- 📋 [Operation app (MAUI Android PDA)](readme/README-operation-maui-pda.md) - Scan-driven stock movements
+- 🏠 **Main documentation**: this file
+- 📋 **Admin documentation**: `readme/README-admin-stock.md`
+- 📋 **PDA documentation**: `readme/README-operation-stock-pda.md`
 
 ---
 

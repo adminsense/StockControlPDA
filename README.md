@@ -13,20 +13,20 @@ Two-app solution for stock control:
 
 ---
 
-## 1. Project overview
+## 📋 1. Project overview
 
 This repository contains:
 
 - **Admin (Blazor Server)**: compact master-data registration + stock visibility.
 - **Operation (PDA, MAUI Android)**: scan-first workflow for stock movements.
 
-## 2. Objective
+## 🎯 2. Objective
 
 - Maintain master data (Users, Warehouses, Locations, Products, Items + Barcodes).
 - Execute warehouse operations on PDAs using a repeatable **Location → Item → Quantity → In/Out** flow.
 - Provide clear **Min/Max** visibility and stock status (below/above).
 
-## 3. Key features (summary)
+## ✨ 3. Key features (summary)
 
 - **Admin (desktop)**:
   - 6-tab navigation: Users, Warehouses, Locations, Products, Items (SKU), Stock
@@ -38,7 +38,7 @@ This repository contains:
   - Fast stock movements (Inbound/Outbound)
   - Min/Max visibility during operations
 
-## 4. UI reference (mock)
+## 🧪 4. UI reference (mock)
 
 Approved reference mock:
 
@@ -54,12 +54,12 @@ Approved reference mock:
   <img src="./readme/images/mock_template.png" alt="PDA prototype" />
 </p>
 
-## 5. Tech stack
+## 🛠️ 5. Tech stack
 
 - **Admin**: Blazor Server + EF Core + SQL Server
 - **PDA**: .NET MAUI (Android)
 
-## 7. Documentation
+## 📚 7. Documentation
 
 - 🏠 **Main documentation**: this file
 - 📋 **Admin documentation**: [README-admin-stock](readme/README-admin-stock.md)

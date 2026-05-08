@@ -20,7 +20,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 | 🧱 **App type** | Blazor Server (Admin) |
 | 🧭 **Navigation** | 6 tabs |
 | ✅ **CRUD** | Create / Edit / Activate / Deactivate |
-| 🔎 **Pagination** | 10 rows per page (Prev/Next) |
+| 🔎 **Pagination** | 10 (or 20??) rows per page (Prev/Next) |
 | 🧩 **Min/Max** | Inside Items tab (warehouse default + location override) |
 | 📦 **Stock** | On-hand per Warehouse + Location + Item |
 | 🌐 **Language** | English (UI + validation messages) |

@@ -1,0 +1,14 @@
+@if (!string.IsNullOrWhiteSpace(Success))
+{
+    <div class="alert alert-success" role="status">@Success</div>
+}
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="alert alert-danger" role="alert">@Error</div>
+}
+
+@code {
+    [Parameter] public string? Success { get; set; }
+    [Parameter] public string? Error { get; set; }
+}
+

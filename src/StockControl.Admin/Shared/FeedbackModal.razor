@@ -1,0 +1,51 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+@if (IsOpen)
+{
+    <div class="sc-modal-backdrop" role="presentation" @onclick="Close">
+        <div class="sc-modal" role="dialog" aria-modal="true" aria-label="@Title" @onclick:stopPropagation="true">
+            <div class="sc-modal-header">
+                <div class="sc-modal-title @KindClass">@Title</div>
+                <button class="sc-modal-x" type="button" @onclick="Close" aria-label="Close">✕</button>
+            </div>
+            <div class="sc-modal-body">
+                @Message
+            </div>
+            <div class="sc-modal-actions">
+                <button class="btn ghost" type="button" @onclick="Close">OK</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string? Success { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public string? FocusId { get; set; }
+    [Parameter] public EventCallback OnClosed { get; set; }
+
+    private bool IsOpen => !string.IsNullOrWhiteSpace(Success) || !string.IsNullOrWhiteSpace(Error);
+    private bool IsError => !string.IsNullOrWhiteSpace(Error);
+    private string Title => IsError ? "Error" : "Success";
+    private string Message => (IsError ? Error : Success) ?? "";
+    private string KindClass => IsError ? "danger" : "success";
+
+    private async Task Close()
+    {
+        await OnClosed.InvokeAsync();
+
+        if (!string.IsNullOrWhiteSpace(FocusId))
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("stockControl.focusById", FocusId);
+            }
+            catch
+            {
+                // ignore focus failures (element may not exist)
+            }
+        }
+    }
+}
+

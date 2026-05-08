@@ -1,0 +1,23 @@
+<nav class="tabs" role="tablist" aria-label="Admin sections">
+    <NavLink href="/users" role="tab" aria-selected="@IsActive("/users")" Match="NavLinkMatch.All">Users</NavLink>
+    <NavLink href="/warehouses" role="tab" aria-selected="@IsActive("/warehouses")">Warehouses</NavLink>
+    <NavLink href="/locations" role="tab" aria-selected="@IsActive("/locations")">Locations</NavLink>
+    <NavLink href="/products" role="tab" aria-selected="@IsActive("/products")">Products</NavLink>
+    <NavLink href="/items" role="tab" aria-selected="@IsActive("/items")">Items (SKU)</NavLink>
+    <NavLink href="/stock" role="tab" aria-selected="@IsActive("/stock")">Stock</NavLink>
+</nav>
+
+@code {
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private bool IsActive(string href)
+    {
+        var rel = Nav.ToBaseRelativePath(Nav.Uri);
+        if (string.IsNullOrWhiteSpace(rel))
+            rel = "/";
+        if (!rel.StartsWith("/"))
+            rel = "/" + rel;
+        return string.Equals(rel.TrimEnd('/'), href.TrimEnd('/'), StringComparison.OrdinalIgnoreCase);
+    }
+}
+

@@ -2,7 +2,7 @@
 
 ![Status](https://img.shields.io/badge/Status-Production%20Implemented-success?style=flat-square) ![Framework](https://img.shields.io/badge/Framework-.NET%2010.0-blue?style=flat-square) ![Blazor](https://img.shields.io/badge/Blazor-Server-purple?style=flat-square)
 
-**Comprehensive implementation of Microsoft® standard best practices for Blazor Server applications.**
+**Comprehensive implementation of Microsoft® standard best practices for Blazor Server applications and MAUI.**
 
 ---
 

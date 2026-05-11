@@ -1,0 +1,268 @@
+@page "/products"
+@using Microsoft.EntityFrameworkCore
+@using StockControl.Admin.Data
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<PageTitle>Products</PageTitle>
+
+<FeedbackModal Success="@_success" Error="@_error" OnClosed="() => { _success = null; _error = null; }" />
+
+<section class="panel">
+    <h2>Products</h2>
+    <label for="prod-search">Search</label>
+    <input id="prod-search" type="text" placeholder="code or name" @bind="_search" @bind:after="ResetPaging" />
+    <div class="actions">
+        <button class="btn primary" type="button" @onclick="StartCreate">+ New</button>
+        <button class="btn ghost" type="button" @onclick="ReloadAsync">Sync</button>
+    </div>
+</section>
+
+@if (_editing is not null)
+{
+    <section class="panel">
+        <h2>@(_editing.Id == 0 ? "New product" : "Edit product")</h2>
+        <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+            <div class="row">
+                <div>
+                    <label for="prod-code">Code *</label>
+                    <input id="prod-code" type="text" maxlength="40" @bind="_editing.Code"
+                           @onblur='() => ValidateMaxLength("Code", _editing.Code, 40)' required />
+                </div>
+                <div>
+                    <label for="prod-name">Name *</label>
+                    <input id="prod-name" type="text" maxlength="50" @bind="_editing.Name"
+                           @onblur='() => ValidateMaxLength("Name", _editing.Name, 50)' required />
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="prod-status">Status</label>
+                    <select id="prod-status" @bind="_editing.IsActive">
+                        <option value="@true">Active</option>
+                        <option value="@false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn success" type="submit" disabled="@_isSaving">Save</button>
+                <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
+            </div>
+        </form>
+    </section>
+}
+
+<section class="panel">
+    <h2>List</h2>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in PagedProducts)
+                {
+                    <tr @key="p.Id">
+                        <td class="mono">@p.Code</td>
+                        <td>@p.Name</td>
+                        <td><span class="tag @(p.IsActive ? "ok" : "off")">@(p.IsActive ? "Active" : "Inactive")</span></td>
+                        <td>
+                            <div class="mini-actions">
+                                <button class="edit" type="button" @onclick="@(() => StartEdit(p))">Edit</button>
+                                <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(p))">@(p.IsActive ? "Deactivate" : "Activate")</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="actions" style="justify-content:space-between">
+        <div class="hint" style="margin:0">Showing <strong>@_showFrom</strong>-<strong>@_showTo</strong> of <strong>@_totalRows</strong></div>
+        <div class="mini-actions">
+            <button class="edit" type="button" @onclick="PrevPage" disabled="@(_pageIndex == 0)">Prev</button>
+            <button class="edit" type="button" @onclick="NextPage" disabled="@(_pageIndex >= _maxPageIndex)">Next</button>
+        </div>
+    </div>
+</section>
+
+@code {
+    private string _search = "";
+    private string _status = "";
+    private bool _isSaving;
+    private Product? _editing;
+    private List<Product> _products = [];
+    private string? _success;
+    private string? _error;
+    private const int PageSize = 10;
+    private int _pageIndex;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private IEnumerable<Product> FilteredProducts
+        => _products.Where(p =>
+            (string.IsNullOrWhiteSpace(_search) ||
+             p.Code.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             p.Name.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            && (_status switch
+            {
+                "active" => p.IsActive,
+                "inactive" => !p.IsActive,
+                _ => true
+            }));
+
+    private int _totalRows => FilteredProducts.Count();
+    private int _maxPageIndex => Math.Max(0, (_totalRows - 1) / PageSize);
+    private int _showFrom => _totalRows == 0 ? 0 : (_pageIndex * PageSize) + 1;
+    private int _showTo => Math.Min(_totalRows, (_pageIndex * PageSize) + PageSize);
+    private IEnumerable<Product> PagedProducts => FilteredProducts.Skip(_pageIndex * PageSize).Take(PageSize);
+
+    private void ResetPaging()
+    {
+        _pageIndex = 0;
+    }
+
+    private async Task ReloadAsync()
+    {
+        ResetPaging();
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _products = await db.Products.OrderBy(x => x.Code).ToListAsync();
+    }
+
+    private void PrevPage()
+    {
+        if (_pageIndex > 0)
+            _pageIndex--;
+    }
+
+    private void NextPage()
+    {
+        if (_pageIndex < _maxPageIndex)
+            _pageIndex++;
+    }
+
+    private void StartCreate()
+    {
+        _success = null;
+        _error = null;
+        _editing = new Product();
+    }
+
+    private void StartEdit(Product p)
+    {
+        _success = null;
+        _error = null;
+        _editing = new Product
+        {
+            Id = p.Id,
+            Code = p.Code,
+            Name = p.Name,
+            IsActive = p.IsActive,
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt
+        };
+    }
+
+    private void CancelEdit() => _editing = null;
+
+    private async Task SaveAsync()
+    {
+        if (_editing is null)
+            return;
+
+        _success = null;
+        _error = null;
+        _editing.Code = (_editing.Code ?? "").Trim().ToUpperInvariant();
+        _editing.Name = (_editing.Name ?? "").Trim();
+
+        if (string.IsNullOrWhiteSpace(_editing.Code))
+        {
+            _error = "Code is required.";
+            return;
+        }
+        if (_editing.Code.Length > 40)
+        {
+            _error = "Code must be 40 characters or fewer.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_editing.Name))
+        {
+            _error = "Name is required.";
+            return;
+        }
+        if (_editing.Name.Length > 50)
+        {
+            _error = "Name must be 50 characters or fewer.";
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            if (_editing.Id == 0)
+            {
+                _editing.CreatedAt = DateTimeOffset.UtcNow;
+                db.Products.Add(_editing);
+            }
+            else
+            {
+                _editing.UpdatedAt = DateTimeOffset.UtcNow;
+                db.Products.Update(_editing);
+            }
+
+            await db.SaveChangesAsync();
+            _editing = null;
+            _success = "Saved successfully.";
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void ValidateMaxLength(string fieldName, string? value, int maxLength)
+    {
+        var v = value ?? "";
+        if (v.Length > maxLength)
+            _error = $"{fieldName} must be {maxLength} characters or fewer.";
+    }
+
+    private async Task ToggleActiveAsync(Product p)
+    {
+        _success = null;
+        _error = null;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var entity = await db.Products.FirstOrDefaultAsync(x => x.Id == p.Id);
+        if (entity is null)
+            return;
+
+        entity.IsActive = !entity.IsActive;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        try
+        {
+            await db.SaveChangesAsync();
+            _success = "Saved successfully.";
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.";
+        }
+    }
+}
+

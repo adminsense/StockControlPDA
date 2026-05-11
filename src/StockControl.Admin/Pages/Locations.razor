@@ -1,0 +1,339 @@
+@page "/locations"
+@using Microsoft.EntityFrameworkCore
+@using StockControl.Admin.Data
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<PageTitle>Locations</PageTitle>
+
+<FeedbackModal Success="@_success" Error="@_error" OnClosed="() => { _success = null; _error = null; }" />
+
+<section class="panel">
+    <h2>Locations</h2>
+    <div class="row">
+        <div>
+            <label for="loc-warehouse">Warehouse</label>
+            <select id="loc-warehouse" @bind="_warehouseIdFilter" @bind:after="ResetPaging">
+                <option value="0">All</option>
+                @foreach (var w in _warehouses)
+                {
+                    <option value="@w.Id">@w.Code - @w.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="loc-search">Search</label>
+            <input id="loc-search" type="text" placeholder="code" @bind="_search" @bind:after="ResetPaging" />
+        </div>
+    </div>
+    <div class="actions">
+        <button class="btn primary" type="button" @onclick="StartCreate">+ New</button>
+        <button class="btn ghost" type="button" @onclick="ReloadAsync">Sync</button>
+    </div>
+    <p class="hint">Location code: <strong>up to 12 characters</strong>. On PDA: keep focus and Enter confirms.</p>
+</section>
+
+@if (_editing is not null)
+{
+    <section class="panel">
+        <h2>@(_editing.Id == 0 ? "New location" : "Edit location")</h2>
+        <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+            <div class="row">
+                <div>
+                    <label for="loc-code">Code (≤12) *</label>
+                    <input id="loc-code" type="text" maxlength="12" @bind="_editing.Code"
+                           @onblur='() => ValidateMaxLength("Code", _editing.Code, 12)' required />
+                </div>
+                <div>
+                    <label for="loc-desc">Description</label>
+                    <input id="loc-desc" type="text" maxlength="50" @bind="_editing.Description"
+                           @onblur='() => ValidateMaxLength("Description", _editing.Description, 50)' />
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="loc-edit-warehouse">Warehouse *</label>
+                    <select id="loc-edit-warehouse" @bind="_editing.WarehouseId" required>
+                        <option value="0">-- Select warehouse --</option>
+                        @foreach (var w in _warehouses)
+                        {
+                            <option value="@w.Id">@w.Code - @w.Name</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="loc-status">Status</label>
+                    <select id="loc-status" @bind="_editing.IsActive">
+                        <option value="@true">Active</option>
+                        <option value="@false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn success" type="submit" disabled="@_isSaving">Save</button>
+                <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
+            </div>
+        </form>
+    </section>
+}
+
+<section class="panel">
+    <h2>List</h2>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Warehouse</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var l in PagedLocations)
+                {
+                    <tr @key="l.Id">
+                        <td class="mono">@l.WarehouseCode</td>
+                        <td class="mono">@l.Code</td>
+                        <td>@l.Description</td>
+                        <td><span class="tag @(l.IsActive ? "ok" : "off")">@(l.IsActive ? "Active" : "Inactive")</span></td>
+                        <td>
+                            <div class="mini-actions">
+                                <button class="edit" type="button" @onclick="@(() => StartEdit(l))">Edit</button>
+                                <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(l))">@(l.IsActive ? "Deactivate" : "Activate")</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="actions" style="justify-content:space-between">
+        <div class="hint" style="margin:0">Showing <strong>@_showFrom</strong>-<strong>@_showTo</strong> of <strong>@_totalRows</strong></div>
+        <div class="mini-actions">
+            <button class="edit" type="button" @onclick="PrevPage" disabled="@(_pageIndex == 0)">Prev</button>
+            <button class="edit" type="button" @onclick="NextPage" disabled="@(_pageIndex >= _maxPageIndex)">Next</button>
+        </div>
+    </div>
+</section>
+
+@code {
+    private string _search = "";
+    private string _status = "";
+    private int _warehouseIdFilter;
+    private bool _isSaving;
+    private Location? _editing;
+    private List<Warehouse> _warehouses = [];
+    private List<LocationRow> _locations = [];
+    private string? _success;
+    private string? _error;
+    private const int PageSize = 10;
+    private int _pageIndex;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private IEnumerable<LocationRow> FilteredLocations
+        => _locations.Where(l =>
+            (_warehouseIdFilter == 0 || l.WarehouseId == _warehouseIdFilter)
+            && (string.IsNullOrWhiteSpace(_search) ||
+                l.Code.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                (l.Description ?? "").Contains(_search, StringComparison.OrdinalIgnoreCase))
+            && (_status switch
+            {
+                "active" => l.IsActive,
+                "inactive" => !l.IsActive,
+                _ => true
+            }));
+
+    private int _totalRows => FilteredLocations.Count();
+    private int _maxPageIndex => Math.Max(0, (_totalRows - 1) / PageSize);
+    private int _showFrom => _totalRows == 0 ? 0 : (_pageIndex * PageSize) + 1;
+    private int _showTo => Math.Min(_totalRows, (_pageIndex * PageSize) + PageSize);
+    private IEnumerable<LocationRow> PagedLocations => FilteredLocations.Skip(_pageIndex * PageSize).Take(PageSize);
+
+    private void ResetPaging()
+    {
+        _pageIndex = 0;
+    }
+
+    private async Task ReloadAsync()
+    {
+        ResetPaging();
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _warehouses = await db.Warehouses.OrderBy(x => x.Code).ToListAsync();
+        var list = await db.Locations
+            .AsNoTracking()
+            .Include(l => l.Warehouse)
+            .OrderBy(l => l.Warehouse!.Code)
+            .ThenBy(l => l.Code)
+            .Select(l => new
+            {
+                l.Id,
+                l.WarehouseId,
+                WarehouseCode = l.Warehouse!.Code,
+                l.Code,
+                l.Description,
+                l.IsActive,
+                l.CreatedAt,
+                l.UpdatedAt
+            })
+            .ToListAsync();
+
+        _locations = list.Select(l => new LocationRow(
+            l.Id,
+            l.WarehouseId,
+            l.WarehouseCode,
+            l.Code,
+            l.Description,
+            l.IsActive,
+            l.CreatedAt,
+            l.UpdatedAt)).ToList();
+    }
+
+    private void PrevPage()
+    {
+        if (_pageIndex > 0)
+            _pageIndex--;
+    }
+
+    private void NextPage()
+    {
+        if (_pageIndex < _maxPageIndex)
+            _pageIndex++;
+    }
+
+    private void StartCreate()
+    {
+        _success = null;
+        _error = null;
+        _editing = new Location
+        {
+            WarehouseId = _warehouseIdFilter != 0 ? _warehouseIdFilter : 0
+        };
+    }
+
+    private void StartEdit(LocationRow row)
+    {
+        _success = null;
+        _error = null;
+        _editing = new Location
+        {
+            Id = row.Id,
+            WarehouseId = row.WarehouseId,
+            Code = row.Code,
+            Description = row.Description,
+            IsActive = row.IsActive,
+            CreatedAt = row.CreatedAt,
+            UpdatedAt = row.UpdatedAt
+        };
+    }
+
+    private void CancelEdit() => _editing = null;
+
+    private async Task SaveAsync()
+    {
+        if (_editing is null)
+            return;
+
+        _success = null;
+        _error = null;
+        _editing.Code = (_editing.Code ?? "").Trim().ToUpperInvariant();
+        _editing.Description = string.IsNullOrWhiteSpace(_editing.Description) ? null : _editing.Description.Trim();
+
+        if (_editing.WarehouseId <= 0)
+        {
+            _error = "Warehouse is required.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_editing.Code))
+        {
+            _error = "Code is required.";
+            return;
+        }
+        if (_editing.Code.Length > 12)
+        {
+            _error = "Code must be 12 characters or fewer.";
+            return;
+        }
+        if ((_editing.Description?.Length ?? 0) > 50)
+        {
+            _error = "Description must be 50 characters or fewer.";
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            if (_editing.Id == 0)
+            {
+                _editing.CreatedAt = DateTimeOffset.UtcNow;
+                db.Locations.Add(_editing);
+            }
+            else
+            {
+                _editing.UpdatedAt = DateTimeOffset.UtcNow;
+                db.Locations.Update(_editing);
+            }
+
+            await db.SaveChangesAsync();
+            _editing = null;
+            _success = "Saved successfully.";
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void ValidateMaxLength(string fieldName, string? value, int maxLength)
+    {
+        var v = value ?? "";
+        if (v.Length > maxLength)
+            _error = $"{fieldName} must be {maxLength} characters or fewer.";
+    }
+
+    private async Task ToggleActiveAsync(LocationRow row)
+    {
+        _success = null;
+        _error = null;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var entity = await db.Locations.FirstOrDefaultAsync(x => x.Id == row.Id);
+        if (entity is null)
+            return;
+
+        entity.IsActive = !entity.IsActive;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        try
+        {
+            await db.SaveChangesAsync();
+            _success = "Saved successfully.";
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.";
+        }
+    }
+
+    private record LocationRow(
+        int Id,
+        int WarehouseId,
+        string WarehouseCode,
+        string Code,
+        string? Description,
+        bool IsActive,
+        DateTimeOffset CreatedAt,
+        DateTimeOffset? UpdatedAt);
+}
+

@@ -1,0 +1,270 @@
+@page "/users"
+@using Microsoft.EntityFrameworkCore
+@using StockControl.Admin.Data
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<PageTitle>Users</PageTitle>
+
+<FeedbackModal Success="@_success" Error="@_error" OnClosed="() => { _success = null; _error = null; }" />
+
+<section class="panel">
+    <h2>Users</h2>
+    <label for="user-search">Search</label>
+    <input id="user-search" type="text" placeholder="name or username" @bind="_search" @bind:after="ResetPaging" />
+    <div class="actions">
+        <button class="btn primary" type="button" @onclick="StartCreate" title="Create user">+ New</button>
+        <button class="btn ghost" type="button" @onclick="ReloadAsync" title="Reload data">Sync</button>
+    </div>
+</section>
+
+@if (_editing is not null)
+{
+    <section class="panel">
+        <h2>@(_editing.Id == 0 ? "New user" : "Edit user")</h2>
+        <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+            <div class="row">
+                <div>
+                    <label for="user-username">Username *</label>
+                    <input id="user-username" type="text" maxlength="50" @bind="_editing.Username"
+                           @onblur='() => ValidateMaxLength("Username", _editing.Username, 50)' required />
+                </div>
+                <div>
+                    <label for="user-name">Name *</label>
+                    <input id="user-name" type="text" maxlength="50" @bind="_editing.Name"
+                           @onblur='() => ValidateMaxLength("Name", _editing.Name, 50)' required />
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="user-status">Status</label>
+                    <select id="user-status" @bind="_editing.IsActive">
+                        <option value="@true">Active</option>
+                        <option value="@false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn success" type="submit" disabled="@_isSaving">Save</button>
+                <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
+            </div>
+        </form>
+    </section>
+}
+
+<section class="panel">
+    <h2>List</h2>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in PagedUsers)
+                {
+                    <tr @key="u.Id">
+                        <td class="mono">@u.Username</td>
+                        <td>@u.Name</td>
+                        <td><span class="tag @(u.IsActive ? "ok" : "off")">@(u.IsActive ? "Active" : "Inactive")</span></td>
+                        <td>
+                            <div class="mini-actions">
+                                <button class="edit" type="button" @onclick="@(() => StartEdit(u))">Edit</button>
+                                <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(u))">@(u.IsActive ? "Deactivate" : "Activate")</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="actions" style="justify-content:space-between">
+        <div class="hint" style="margin:0">Showing <strong>@_showFrom</strong>-<strong>@_showTo</strong> of <strong>@_totalRows</strong></div>
+        <div class="mini-actions">
+            <button class="edit" type="button" @onclick="PrevPage" disabled="@(_pageIndex == 0)">Prev</button>
+            <button class="edit" type="button" @onclick="NextPage" disabled="@(_pageIndex >= _maxPageIndex)">Next</button>
+        </div>
+    </div>
+    <p class="hint">Simple user registry (no roles). Suggestion: deactivate instead of deleting.</p>
+</section>
+
+@code {
+    private string _search = "";
+    private string _status = "";
+    private bool _isSaving;
+    private AppUser? _editing;
+    private string? _success;
+    private string? _error;
+
+    private List<AppUser> _users = [];
+    private const int PageSize = 10;
+    private int _pageIndex;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private IEnumerable<AppUser> FilteredUsers
+        => _users.Where(u =>
+            (string.IsNullOrWhiteSpace(_search) ||
+             u.Username.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             u.Name.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            && (_status switch
+            {
+                "active" => u.IsActive,
+                "inactive" => !u.IsActive,
+                _ => true
+            }));
+
+    private int _totalRows => FilteredUsers.Count();
+    private int _maxPageIndex => Math.Max(0, (_totalRows - 1) / PageSize);
+    private int _showFrom => _totalRows == 0 ? 0 : (_pageIndex * PageSize) + 1;
+    private int _showTo => Math.Min(_totalRows, (_pageIndex * PageSize) + PageSize);
+    private IEnumerable<AppUser> PagedUsers => FilteredUsers.Skip(_pageIndex * PageSize).Take(PageSize);
+
+    private void ResetPaging()
+    {
+        _pageIndex = 0;
+    }
+
+    private async Task ReloadAsync()
+    {
+        ResetPaging();
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _users = await db.Users.OrderBy(x => x.Username).ToListAsync();
+    }
+
+    private void PrevPage()
+    {
+        if (_pageIndex > 0)
+            _pageIndex--;
+    }
+
+    private void NextPage()
+    {
+        if (_pageIndex < _maxPageIndex)
+            _pageIndex++;
+    }
+
+    private void StartCreate()
+    {
+        _success = null;
+        _error = null;
+        _editing = new AppUser();
+    }
+
+    private void StartEdit(AppUser u)
+    {
+        _success = null;
+        _error = null;
+        _editing = new AppUser
+        {
+            Id = u.Id,
+            Username = u.Username,
+            Name = u.Name,
+            IsActive = u.IsActive,
+            CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt
+        };
+    }
+
+    private void CancelEdit() => _editing = null;
+
+    private async Task SaveAsync()
+    {
+        if (_editing is null)
+            return;
+
+        _success = null;
+        _error = null;
+        _editing.Username = (_editing.Username ?? "").Trim();
+        _editing.Name = (_editing.Name ?? "").Trim();
+
+        if (string.IsNullOrWhiteSpace(_editing.Username))
+        {
+            _error = "Username is required.";
+            return;
+        }
+        if (_editing.Username.Length > 50)
+        {
+            _error = "Username must be 50 characters or fewer.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_editing.Name))
+        {
+            _error = "Name is required.";
+            return;
+        }
+        if (_editing.Name.Length > 50)
+        {
+            _error = "Name must be 50 characters or fewer.";
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            if (_editing.Id == 0)
+            {
+                _editing.CreatedAt = DateTimeOffset.UtcNow;
+                db.Users.Add(_editing);
+            }
+            else
+            {
+                _editing.UpdatedAt = DateTimeOffset.UtcNow;
+                db.Users.Update(_editing);
+            }
+
+            await db.SaveChangesAsync();
+            _editing = null;
+            _success = "Saved successfully.";
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void ValidateMaxLength(string fieldName, string? value, int maxLength)
+    {
+        var v = value ?? "";
+        if (v.Length > maxLength)
+            _error = $"{fieldName} must be {maxLength} characters or fewer.";
+    }
+
+    private async Task ToggleActiveAsync(AppUser u)
+    {
+        _success = null;
+        _error = null;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var entity = await db.Users.FirstOrDefaultAsync(x => x.Id == u.Id);
+        if (entity is null)
+            return;
+
+        entity.IsActive = !entity.IsActive;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        try
+        {
+            await db.SaveChangesAsync();
+            _success = "Saved successfully.";
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.";
+        }
+    }
+}
+

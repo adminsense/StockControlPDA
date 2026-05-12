@@ -1,0 +1,264 @@
+@page "/"
+@page "/stock"
+@using Microsoft.EntityFrameworkCore
+@using StockControl.Admin.Data
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<PageTitle>Stock</PageTitle>
+
+<FeedbackModal Success="@_success" Error="@_error" OnClosed="() => { _success = null; _error = null; }" />
+
+<section class="panel">
+    <h2>Stock</h2>
+    <div class="row">
+        <div>
+            <label for="stock-warehouse">Warehouse</label>
+            <select id="stock-warehouse" @bind="_warehouseId" @bind:after="OnWarehouseChanged">
+                <option value="0">All</option>
+                @foreach (var w in _warehouses)
+                {
+                    <option value="@w.Id">@w.Code - @w.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="stock-location">Location</label>
+            <select id="stock-location" @bind="_locationId">
+                <option value="0">All</option>
+                @foreach (var l in _locationsForFilter)
+                {
+                    <option value="@l.Id">@l.Code</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <label for="stock-search">Search</label>
+            <input id="stock-search" type="text" placeholder="sku or name" @bind="_search" />
+        </div>
+        <div>
+            <label for="stock-only-belowmin">Filter</label>
+            <select id="stock-only-belowmin" @bind="_filter">
+                <option value="">All</option>
+                <option value="below">Below min</option>
+                <option value="above">Above max</option>
+            </select>
+        </div>
+    </div>
+    <div class="actions">
+        <button class="btn ghost" type="button" @onclick="ReloadAsync">Sync</button>
+    </div>
+    <p class="hint">This screen shows current on-hand quantities per <strong>warehouse + location</strong> and compares to Min/Max when available.</p>
+</section>
+
+<section class="panel">
+    <h2>List</h2>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Warehouse</th>
+                    <th>Location</th>
+                    <th>SKU</th>
+                    <th>Name</th>
+                    <th style="text-align:right">On hand</th>
+                    <th style="text-align:right">Min</th>
+                    <th style="text-align:right">Max</th>
+                    <th style="text-align:right">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in PagedRows)
+                {
+                    <tr @key="r.Id">
+                        <td class="mono">@r.WarehouseCode</td>
+                        <td class="mono">@r.LocationCode</td>
+                        <td class="mono">@r.Sku</td>
+                        <td>@r.DisplayName</td>
+                        <td style="text-align:right">@r.QuantityOnHand.ToString("0.###")</td>
+                        <td style="text-align:right">@(r.Min?.ToString() ?? "—")</td>
+                        <td style="text-align:right">@(r.Max?.ToString() ?? "—")</td>
+                        <td style="text-align:right">
+                            @if (r.Min is not null && r.QuantityOnHand < r.Min)
+                            {
+                                <span class="tag off">Below</span>
+                            }
+                            else if (r.Max is not null && r.QuantityOnHand > r.Max)
+                            {
+                                <span class="tag off">Above</span>
+                            }
+                            else
+                            {
+                                <span class="tag ok">OK</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="actions" style="justify-content:space-between">
+        <div class="hint" style="margin:0">
+            Showing <strong>@_showFrom</strong>-<strong>@_showTo</strong> of <strong>@_totalRows</strong>
+        </div>
+        <div class="mini-actions">
+            <button class="edit" type="button" @onclick="PrevPage" disabled="@(_pageIndex == 0)">Prev</button>
+            <button class="edit" type="button" @onclick="NextPage" disabled="@(_pageIndex >= _maxPageIndex)">Next</button>
+        </div>
+    </div>
+</section>
+
+@code {
+    private string? _success;
+    private string? _error;
+
+    private int _warehouseId;
+    private int _locationId;
+    private string _search = "";
+    private string _filter = "";
+
+    private List<Warehouse> _warehouses = [];
+    private List<Location> _allLocations = [];
+    private List<Location> _locationsForFilter = [];
+    private List<Row> _rows = [];
+    private const int PageSize = 10;
+    private int _pageIndex;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private IEnumerable<Row> FilteredRows
+        => _rows.Where(r =>
+            (_warehouseId == 0 || r.WarehouseId == _warehouseId)
+            && (_locationId == 0 || r.LocationId == _locationId)
+            && (string.IsNullOrWhiteSpace(_search)
+                || r.Sku.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                || r.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase))
+            && (_filter switch
+            {
+                "below" => r.Min is not null && r.QuantityOnHand < r.Min,
+                "above" => r.Max is not null && r.QuantityOnHand > r.Max,
+                _ => true
+            }));
+
+    private int _totalRows => FilteredRows.Count();
+    private int _maxPageIndex => Math.Max(0, (_totalRows - 1) / PageSize);
+    private int _showFrom => _totalRows == 0 ? 0 : (_pageIndex * PageSize) + 1;
+    private int _showTo => Math.Min(_totalRows, (_pageIndex * PageSize) + PageSize);
+
+    private IEnumerable<Row> PagedRows
+        => FilteredRows
+            .Skip(_pageIndex * PageSize)
+            .Take(PageSize);
+
+    private async Task ReloadAsync()
+    {
+        _success = null;
+        _error = null;
+
+        _pageIndex = 0;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _warehouses = await db.Warehouses.OrderBy(x => x.Code).ToListAsync();
+        _allLocations = await db.Locations.OrderBy(x => x.Code).ToListAsync();
+        SyncLocationsForFilter();
+
+        // Min/Max override logic:
+        // 1) Prefer (warehouse + item + location)
+        // 2) Else fallback to (warehouse + item) where location is null
+        var minmaxByLocation = await db.MinMaxSettings
+            .AsNoTracking()
+            .Where(x => x.LocationId != null)
+            .ToDictionaryAsync(x => (x.WarehouseId, x.ItemId, x.LocationId!.Value), x => (x.Min, x.Max));
+
+        var minmaxByWarehouse = await db.MinMaxSettings
+            .AsNoTracking()
+            .Where(x => x.LocationId == null)
+            .ToDictionaryAsync(x => (x.WarehouseId, x.ItemId), x => (x.Min, x.Max));
+
+        var list = await db.StockBalances
+            .AsNoTracking()
+            .Include(x => x.Warehouse)
+            .Include(x => x.Location)
+            .Include(x => x.Item)
+            .Select(b => new
+            {
+                b.Id,
+                b.WarehouseId,
+                WarehouseCode = b.Warehouse!.Code,
+                b.LocationId,
+                LocationCode = b.Location!.Code,
+                b.ItemId,
+                Sku = b.Item!.Sku,
+                DisplayName = b.Item!.DisplayName,
+                b.QuantityOnHand
+            })
+            .OrderBy(x => x.WarehouseCode)
+            .ThenBy(x => x.LocationCode)
+            .ThenBy(x => x.Sku)
+            .ToListAsync();
+
+        _rows = list.Select(x =>
+        {
+            (int Min, int Max)? mm = null;
+            if (minmaxByLocation.TryGetValue((x.WarehouseId, x.ItemId, x.LocationId), out var locMm))
+                mm = locMm;
+            else if (minmaxByWarehouse.TryGetValue((x.WarehouseId, x.ItemId), out var whMm))
+                mm = whMm;
+
+            return new Row(
+                x.Id,
+                x.WarehouseId,
+                x.WarehouseCode,
+                x.LocationId,
+                x.LocationCode,
+                x.Sku,
+                x.DisplayName,
+                x.QuantityOnHand,
+                mm?.Min,
+                mm?.Max);
+        }).ToList();
+    }
+
+    private void OnWarehouseChanged()
+    {
+        _locationId = 0;
+        _pageIndex = 0;
+        SyncLocationsForFilter();
+    }
+
+    private void SyncLocationsForFilter()
+    {
+        _locationsForFilter = _warehouseId == 0
+            ? _allLocations.OrderBy(x => x.Code).ToList()
+            : _allLocations.Where(x => x.WarehouseId == _warehouseId).OrderBy(x => x.Code).ToList();
+    }
+
+    private void PrevPage()
+    {
+        if (_pageIndex > 0)
+            _pageIndex--;
+    }
+
+    private void NextPage()
+    {
+        if (_pageIndex < _maxPageIndex)
+            _pageIndex++;
+    }
+
+    private record Row(
+        int Id,
+        int WarehouseId,
+        string WarehouseCode,
+        int LocationId,
+        string LocationCode,
+        string Sku,
+        string DisplayName,
+        decimal QuantityOnHand,
+        int? Min,
+        int? Max);
+}
+

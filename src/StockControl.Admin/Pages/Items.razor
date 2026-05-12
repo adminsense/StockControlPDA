@@ -1,0 +1,725 @@
+@page "/items"
+@using Microsoft.EntityFrameworkCore
+@using StockControl.Admin.Data
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<PageTitle>Items (SKU)</PageTitle>
+
+<FeedbackModal Success="@_success" Error="@_error" FocusId="@_focusId" OnClosed="OnModalClosed" />
+
+<section class="panel">
+    <h2>Items (SKU)</h2>
+    <label for="item-search">Search</label>
+    <input id="item-search" type="text" placeholder="sku, name, or barcode" @bind="_search" @bind:after="ResetItemsPaging" />
+    <div class="actions">
+        <button class="btn primary" type="button" @onclick="StartCreate">+ New</button>
+        <button class="btn ghost" type="button" @onclick="ReloadAsync">Sync</button>
+    </div>
+</section>
+
+@if (_editing is not null)
+{
+    <section class="panel">
+        <h2>@(_editing.Id == 0 ? "New item" : "Edit item")</h2>
+        <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+            <div class="row">
+                <div>
+                    <label for="item-sku">SKU *</label>
+                    <input id="item-sku" type="text" maxlength="40" @bind="_editing.Sku"
+                           @onblur='() => ValidateMaxLength("SKU", _editing.Sku, 40)' required />
+                </div>
+                <div>
+                    <label for="item-unit">Unit *</label>
+                    <input id="item-unit" type="text" maxlength="10" @bind="_editing.Unit"
+                           @onblur='() => ValidateMaxLength("Unit", _editing.Unit, 10)' required />
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="item-name">Display name *</label>
+                    <input id="item-name" type="text" maxlength="50" @bind="_editing.DisplayName"
+                           @onblur='() => ValidateMaxLength("Display name", _editing.DisplayName, 50)' required />
+                </div>
+                <div>
+                    <label for="item-status">Status</label>
+                    <select id="item-status" @bind="_editing.IsActive">
+                        <option value="@true">Active</option>
+                        <option value="@false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="item-barcodes">Barcodes (one per line)</label>
+                    <textarea id="item-barcodes" rows="4" @bind="_barcodesText" placeholder="Ex.: 8712345678901"></textarea>
+                    <p class="hint">The operation app uses <span class="mono">item_barcodes</span> to recognize items from the scanner.</p>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn success" type="submit" disabled="@_isSaving">Save</button>
+                <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
+            </div>
+        </form>
+    </section>
+}
+
+<section class="panel">
+    <h2>List</h2>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th>Name</th>
+                    <th>Unit</th>
+                    <th>Status</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var i in PagedItems)
+                {
+                    <tr @key="i.Id">
+                        <td class="mono">@i.Sku</td>
+                        <td>@i.DisplayName</td>
+                        <td>@i.Unit</td>
+                        <td><span class="tag @(i.IsActive ? "ok" : "off")">@(i.IsActive ? "Active" : "Inactive")</span></td>
+                        <td>
+                            <div class="mini-actions">
+                                <button class="edit" type="button" @onclick="@(() => StartEdit(i.Id))">Edit</button>
+                                <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(i.Id))">@(i.IsActive ? "Deactivate" : "Activate")</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="actions" style="justify-content:space-between">
+        <div class="hint" style="margin:0">Showing <strong>@_itemsShowFrom</strong>-<strong>@_itemsShowTo</strong> of <strong>@_itemsTotalRows</strong></div>
+        <div class="mini-actions">
+            <button class="edit" type="button" @onclick="PrevItemsPage" disabled="@(_itemsPageIndex == 0)">Prev</button>
+            <button class="edit" type="button" @onclick="NextItemsPage" disabled="@(_itemsPageIndex >= _itemsMaxPageIndex)">Next</button>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Min / Max</h2>
+    <div class="row">
+        <div>
+            <label for="mm-warehouse">Warehouse</label>
+            <select id="mm-warehouse" @bind="_mmWarehouseId" @bind:after="OnMmWarehouseChanged">
+                <option value="0">All</option>
+                @foreach (var w in _mmWarehouses)
+                {
+                    <option value="@w.Id">@w.Code - @w.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="mm-item">Item (SKU)</label>
+            <select id="mm-item" @bind="_mmItemId" @bind:after="ResetMinMaxPaging">
+                <option value="0">All</option>
+                @foreach (var i in _mmItems)
+                {
+                    <option value="@i.Id">@i.Sku - @i.DisplayName</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="actions">
+        <button class="btn primary" type="button" @onclick="StartMmCreate">+ New</button>
+        <button class="btn ghost" type="button" @onclick="ReloadMinMaxAsync">Sync</button>
+    </div>
+    <p class="hint">Set Min/Max by <strong>item + warehouse</strong> and override by <strong>item + location</strong>.</p>
+</section>
+
+@if (_mmEditing is not null)
+{
+    <section class="panel">
+        <h2>@(_mmEditing.Id == 0 ? "New min/max" : "Edit min/max")</h2>
+        <form @onsubmit="SaveMinMaxAsync" @onsubmit:preventDefault="true">
+            <div class="row">
+                <div>
+                    <label for="mm-edit-warehouse">Warehouse *</label>
+                    <select id="mm-edit-warehouse" @bind="_mmEditing.WarehouseId" @bind:after="OnMmEditingWarehouseChanged" required>
+                        <option value="0">-- Select --</option>
+                        @foreach (var w in _mmWarehouses)
+                        {
+                            <option value="@w.Id">@w.Code - @w.Name</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="mm-edit-item">Item (SKU) *</label>
+                    <select id="mm-edit-item" @bind="_mmEditing.ItemId" required>
+                        <option value="0">-- Select --</option>
+                        @foreach (var i in _mmItems)
+                        {
+                            <option value="@i.Id">@i.Sku - @i.DisplayName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="row3">
+                <div>
+                    <label for="mm-min">Min *</label>
+                    <input id="mm-min" type="number" min="0" @bind="_mmEditing.Min" required />
+                </div>
+                <div>
+                    <label for="mm-max">Max *</label>
+                    <input id="mm-max" type="number" min="0" @bind="_mmEditing.Max" required />
+                </div>
+                <div>
+                    <label for="mm-loc">Location (optional)</label>
+                    <select id="mm-loc" @bind="_mmEditing.LocationId">
+                        <option value="">—</option>
+                        @foreach (var l in _mmLocationsForEditing)
+                        {
+                            <option value="@l.Id">@l.Code</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn success" type="submit" disabled="@_mmIsSaving">Save</button>
+                <button class="btn danger" type="button" @onclick="CancelMmEdit">Cancel</button>
+            </div>
+        </form>
+    </section>
+}
+
+<section class="panel">
+    <h2>Current settings</h2>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Warehouse</th>
+                    <th>Location</th>
+                    <th>SKU</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in PagedMinMax)
+                {
+                    <tr @key="m.Id">
+                        <td class="mono">@m.WarehouseCode</td>
+                        <td class="mono">@(!string.IsNullOrWhiteSpace(m.LocationCode) ? m.LocationCode : "—")</td>
+                        <td class="mono">@m.ItemSku</td>
+                        <td>@m.Min</td>
+                        <td>@m.Max</td>
+                        <td>
+                            <div class="mini-actions">
+                                <button class="edit" type="button" @onclick="@(() => StartMmEdit(m.Id))">Edit</button>
+                                <button class="del" type="button" @onclick="@(() => ToggleMinMaxActiveAsync(m.Id))">@(m.IsActive ? "Deactivate" : "Activate")</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="actions" style="justify-content:space-between">
+        <div class="hint" style="margin:0">Showing <strong>@_mmShowFrom</strong>-<strong>@_mmShowTo</strong> of <strong>@_mmTotalRows</strong></div>
+        <div class="mini-actions">
+            <button class="edit" type="button" @onclick="PrevMinMaxPage" disabled="@(_mmPageIndex == 0)">Prev</button>
+            <button class="edit" type="button" @onclick="NextMinMaxPage" disabled="@(_mmPageIndex >= _mmMaxPageIndex)">Next</button>
+        </div>
+    </div>
+</section>
+
+@code {
+    private string _search = "";
+    private string _status = "";
+    private bool _isSaving;
+    private Item? _editing;
+    private string _barcodesText = "";
+    private List<ItemRow> _items = [];
+    private string? _success;
+    private string? _error;
+    private string? _focusId;
+
+    // Min/Max inside Items
+    private int _mmWarehouseId;
+    private int _mmItemId;
+    private bool _mmIsSaving;
+    private MinMaxSetting? _mmEditing;
+    private List<Warehouse> _mmWarehouses = [];
+    private List<Item> _mmItems = [];
+    private List<Location> _mmAllLocations = [];
+    private List<Location> _mmLocationsForEditing = [];
+    private List<MinMaxRow> _mmRows = [];
+
+    private const int PageSize = 10;
+    private int _itemsPageIndex;
+    private int _mmPageIndex;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+        await ReloadMinMaxAsync();
+    }
+
+    private IEnumerable<ItemRow> FilteredItems
+        => _items.Where(i =>
+            (string.IsNullOrWhiteSpace(_search) ||
+             i.Sku.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             i.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             (i.BarcodesCsv ?? "").Contains(_search, StringComparison.OrdinalIgnoreCase))
+            && (_status switch
+            {
+                "active" => i.IsActive,
+                "inactive" => !i.IsActive,
+                _ => true
+            }));
+
+    private int _itemsTotalRows => FilteredItems.Count();
+    private int _itemsMaxPageIndex => Math.Max(0, (_itemsTotalRows - 1) / PageSize);
+    private int _itemsShowFrom => _itemsTotalRows == 0 ? 0 : (_itemsPageIndex * PageSize) + 1;
+    private int _itemsShowTo => Math.Min(_itemsTotalRows, (_itemsPageIndex * PageSize) + PageSize);
+    private IEnumerable<ItemRow> PagedItems => FilteredItems.Skip(_itemsPageIndex * PageSize).Take(PageSize);
+
+    private void ResetItemsPaging()
+    {
+        _itemsPageIndex = 0;
+    }
+
+    private async Task ReloadAsync()
+    {
+        ResetItemsPaging();
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var list = await db.Items
+            .AsNoTracking()
+            .Include(i => i.Barcodes)
+            .OrderBy(i => i.Sku)
+            .ToListAsync();
+
+        // EF can't translate string.Join() over a navigation collection.
+        _items = list.Select(i => new ItemRow(
+            i.Id,
+            i.Sku,
+            i.DisplayName,
+            i.Unit,
+            i.IsActive,
+            i.Barcodes.Count == 0 ? null : string.Join(", ", i.Barcodes.Select(b => b.Code))
+        )).ToList();
+    }
+
+    private void PrevItemsPage()
+    {
+        if (_itemsPageIndex > 0)
+            _itemsPageIndex--;
+    }
+
+    private void NextItemsPage()
+    {
+        if (_itemsPageIndex < _itemsMaxPageIndex)
+            _itemsPageIndex++;
+    }
+
+    private IEnumerable<MinMaxRow> FilteredMinMax
+        => _mmRows.Where(m =>
+            (_mmWarehouseId == 0 || m.WarehouseId == _mmWarehouseId)
+            && (_mmItemId == 0 || m.ItemId == _mmItemId));
+
+    private int _mmTotalRows => FilteredMinMax.Count();
+    private int _mmMaxPageIndex => Math.Max(0, (_mmTotalRows - 1) / PageSize);
+    private int _mmShowFrom => _mmTotalRows == 0 ? 0 : (_mmPageIndex * PageSize) + 1;
+    private int _mmShowTo => Math.Min(_mmTotalRows, (_mmPageIndex * PageSize) + PageSize);
+    private IEnumerable<MinMaxRow> PagedMinMax => FilteredMinMax.Skip(_mmPageIndex * PageSize).Take(PageSize);
+
+    private void ResetMinMaxPaging()
+    {
+        _mmPageIndex = 0;
+    }
+
+    private async Task ReloadMinMaxAsync()
+    {
+        ResetMinMaxPaging();
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _mmWarehouses = await db.Warehouses.OrderBy(x => x.Code).ToListAsync();
+        _mmItems = await db.Items.OrderBy(x => x.Sku).ToListAsync();
+        _mmAllLocations = await db.Locations.OrderBy(x => x.Code).ToListAsync();
+
+        // Some EF providers/versions struggle to translate ordering over left-joined navigation props.
+        // Load the minimal projection and order in-memory.
+        var list = await db.MinMaxSettings
+            .AsNoTracking()
+            .Include(x => x.Warehouse)
+            .Include(x => x.Item)
+            .Include(x => x.Location)
+            .ToListAsync();
+
+        _mmRows = list
+            .Select(x => new MinMaxRow(
+                x.Id,
+                x.WarehouseId,
+                x.Warehouse?.Code ?? "",
+                x.ItemId,
+                x.Item?.Sku ?? "",
+                x.LocationId,
+                x.Location?.Code,
+                x.Min,
+                x.Max,
+                x.IsActive))
+            .OrderBy(x => x.WarehouseCode)
+            .ThenBy(x => x.ItemSku)
+            .ThenBy(x => x.LocationCode)
+            .ToList();
+    }
+
+    private void OnMmWarehouseChanged()
+    {
+        ResetMinMaxPaging();
+        _mmItemId = 0;
+    }
+
+    private void PrevMinMaxPage()
+    {
+        if (_mmPageIndex > 0)
+            _mmPageIndex--;
+    }
+
+    private void NextMinMaxPage()
+    {
+        if (_mmPageIndex < _mmMaxPageIndex)
+            _mmPageIndex++;
+    }
+
+    private void StartMmCreate()
+    {
+        _success = null;
+        _error = null;
+        _mmEditing = new MinMaxSetting
+        {
+            WarehouseId = _mmWarehouseId != 0 ? _mmWarehouseId : 0,
+            ItemId = _mmItemId != 0 ? _mmItemId : 0,
+            Min = 0,
+            Max = 0
+        };
+        SyncMmLocationsForEditing();
+    }
+
+    private async Task StartMmEdit(int id)
+    {
+        _success = null;
+        _error = null;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var entity = await db.MinMaxSettings.FirstOrDefaultAsync(x => x.Id == id);
+        if (entity is null)
+            return;
+
+        _mmEditing = new MinMaxSetting
+        {
+            Id = entity.Id,
+            WarehouseId = entity.WarehouseId,
+            ItemId = entity.ItemId,
+            LocationId = entity.LocationId,
+            Min = entity.Min,
+            Max = entity.Max,
+            IsActive = entity.IsActive,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt
+        };
+        SyncMmLocationsForEditing();
+    }
+
+    private void SyncMmLocationsForEditing()
+    {
+        if (_mmEditing is null || _mmEditing.WarehouseId == 0)
+        {
+            _mmLocationsForEditing = [];
+            return;
+        }
+
+        _mmLocationsForEditing = _mmAllLocations
+            .Where(l => l.WarehouseId == _mmEditing.WarehouseId)
+            .OrderBy(l => l.Code)
+            .ToList();
+    }
+
+    private void OnMmEditingWarehouseChanged()
+    {
+        if (_mmEditing is null)
+            return;
+
+        _mmEditing.LocationId = null;
+        SyncMmLocationsForEditing();
+    }
+
+    private void CancelMmEdit()
+    {
+        _mmEditing = null;
+        _mmLocationsForEditing = [];
+    }
+
+    private async Task SaveMinMaxAsync()
+    {
+        if (_mmEditing is null)
+            return;
+
+        _success = null;
+        _error = null;
+        _focusId = null;
+
+        if (_mmEditing.WarehouseId <= 0) { ShowError("Warehouse is required.", "mm-edit-warehouse"); return; }
+        if (_mmEditing.ItemId <= 0) { ShowError("Item is required.", "mm-edit-item"); return; }
+        if (_mmEditing.Min < 0) { ShowError("Min must be zero or greater.", "mm-min"); return; }
+        if (_mmEditing.Max < 0) { ShowError("Max must be zero or greater.", "mm-max"); return; }
+        if (_mmEditing.Max < _mmEditing.Min) { ShowError("Max must be greater than or equal to Min.", "mm-max"); return; }
+
+        _mmIsSaving = true;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            if (_mmEditing.Id == 0)
+            {
+                _mmEditing.CreatedAt = DateTimeOffset.UtcNow;
+                db.MinMaxSettings.Add(_mmEditing);
+            }
+            else
+            {
+                _mmEditing.UpdatedAt = DateTimeOffset.UtcNow;
+                db.MinMaxSettings.Update(_mmEditing);
+            }
+
+            await db.SaveChangesAsync();
+            _success = "Saved successfully.";
+            CancelMmEdit();
+            await ReloadMinMaxAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError(DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.");
+        }
+        finally
+        {
+            _mmIsSaving = false;
+        }
+    }
+
+    private async Task ToggleMinMaxActiveAsync(int id)
+    {
+        _success = null;
+        _error = null;
+        _focusId = null;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var entity = await db.MinMaxSettings.FirstOrDefaultAsync(x => x.Id == id);
+        if (entity is null)
+            return;
+
+        entity.IsActive = !entity.IsActive;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        try
+        {
+            await db.SaveChangesAsync();
+            _success = "Saved successfully.";
+            await ReloadMinMaxAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError(DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.");
+        }
+    }
+
+    private void ShowError(string message, string? focusId = null)
+    {
+        _error = message;
+        _success = null;
+        _focusId = focusId;
+    }
+
+    private Task OnModalClosed()
+    {
+        _success = null;
+        _error = null;
+        _focusId = null;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private record MinMaxRow(
+        int Id,
+        int WarehouseId,
+        string WarehouseCode,
+        int ItemId,
+        string ItemSku,
+        int? LocationId,
+        string? LocationCode,
+        int Min,
+        int Max,
+        bool IsActive);
+
+    private void StartCreate()
+    {
+        _success = null;
+        _error = null;
+        _editing = new Item();
+        _barcodesText = "";
+    }
+
+    private async Task StartEdit(int itemId)
+    {
+        _success = null;
+        _error = null;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var entity = await db.Items.Include(x => x.Barcodes).FirstOrDefaultAsync(x => x.Id == itemId);
+        if (entity is null)
+            return;
+
+        _editing = new Item
+        {
+            Id = entity.Id,
+            Sku = entity.Sku,
+            DisplayName = entity.DisplayName,
+            Unit = entity.Unit,
+            IsActive = entity.IsActive,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt
+        };
+        _barcodesText = string.Join(Environment.NewLine, entity.Barcodes.OrderBy(b => b.Code).Select(b => b.Code));
+    }
+
+    private void CancelEdit()
+    {
+        _editing = null;
+        _barcodesText = "";
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editing is null)
+            return;
+
+        _success = null;
+        _error = null;
+        _editing.Sku = (_editing.Sku ?? "").Trim().ToUpperInvariant();
+        _editing.DisplayName = (_editing.DisplayName ?? "").Trim();
+        _editing.Unit = (_editing.Unit ?? "").Trim().ToUpperInvariant();
+
+        if (string.IsNullOrWhiteSpace(_editing.Sku))
+        {
+            _error = "SKU is required.";
+            return;
+        }
+        if (_editing.Sku.Length > 40)
+        {
+            _error = "SKU must be 40 characters or fewer.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_editing.DisplayName))
+        {
+            _error = "Display name is required.";
+            return;
+        }
+        if (_editing.DisplayName.Length > 50)
+        {
+            _error = "Display name must be 50 characters or fewer.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_editing.Unit))
+        {
+            _error = "Unit is required.";
+            return;
+        }
+        if (_editing.Unit.Length > 10)
+        {
+            _error = "Unit must be 10 characters or fewer.";
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            var barcodeCodes = _barcodesText
+                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            if (_editing.Id == 0)
+            {
+                _editing.CreatedAt = DateTimeOffset.UtcNow;
+                _editing.Barcodes = barcodeCodes.Select(c => new ItemBarcode { Code = c, CreatedAt = DateTimeOffset.UtcNow }).ToList();
+                db.Items.Add(_editing);
+            }
+            else
+            {
+                var entity = await db.Items.Include(x => x.Barcodes).FirstOrDefaultAsync(x => x.Id == _editing.Id);
+                if (entity is null)
+                    return;
+
+                entity.Sku = _editing.Sku;
+                entity.DisplayName = _editing.DisplayName;
+                entity.Unit = _editing.Unit;
+                entity.IsActive = _editing.IsActive;
+                entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+                var existing = entity.Barcodes.Select(b => b.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var incoming = barcodeCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                entity.Barcodes.RemoveAll(b => !incoming.Contains(b.Code));
+                foreach (var code in incoming)
+                {
+                    if (!existing.Contains(code))
+                        entity.Barcodes.Add(new ItemBarcode { Code = code, CreatedAt = DateTimeOffset.UtcNow });
+                }
+            }
+
+            await db.SaveChangesAsync();
+            CancelEdit();
+            _success = "Saved successfully.";
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void ValidateMaxLength(string fieldName, string? value, int maxLength)
+    {
+        var v = value ?? "";
+        if (v.Length > maxLength)
+            _error = $"{fieldName} must be {maxLength} characters or fewer.";
+    }
+
+    private async Task ToggleActiveAsync(int itemId)
+    {
+        _success = null;
+        _error = null;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var entity = await db.Items.FirstOrDefaultAsync(x => x.Id == itemId);
+        if (entity is null)
+            return;
+
+        entity.IsActive = !entity.IsActive;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        try
+        {
+            await db.SaveChangesAsync();
+            _success = "Saved successfully.";
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.";
+        }
+    }
+
+    private record ItemRow(int Id, string Sku, string DisplayName, string Unit, bool IsActive, string? BarcodesCsv);
+}
+

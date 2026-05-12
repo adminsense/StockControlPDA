@@ -22,7 +22,7 @@ This repository contains:
 
 ## 🎯 2. Objective
 
-- Maintain master data (Users, Warehouses, Locations, Suppliers, Products, Items + Barcodes).
+- Maintain master data (Users, Warehouses, Locations, Suppliers, Products, Items + barcodes: **SKU** internal code and **article number** supplier/catalog code).
 - Configure **Min/Max** per warehouse (and optional location override) on its own Admin screen.
 - Execute warehouse operations on PDAs using a repeatable **Location → Item → Quantity → In/Out** flow.
 - Provide clear **Min/Max** visibility and stock status (below/above).

@@ -25,6 +25,8 @@ public static class DbErrorTranslator
                         => "Warehouse code already exists.",
                     var m when m.Contains("IX_locations_WarehouseId_Code", StringComparison.OrdinalIgnoreCase)
                         => "Location code already exists for this warehouse.",
+                    var m when m.Contains("IX_suppliers_Code", StringComparison.OrdinalIgnoreCase)
+                        => "Supplier code already exists.",
                     var m when m.Contains("IX_products_Code", StringComparison.OrdinalIgnoreCase)
                         => "Product code already exists.",
                     var m when m.Contains("IX_items_Sku", StringComparison.OrdinalIgnoreCase)

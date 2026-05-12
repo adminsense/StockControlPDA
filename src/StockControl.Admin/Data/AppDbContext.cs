@@ -7,6 +7,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<Location> Locations => Set<Location>();
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Item> Items => Set<Item>();
     public DbSet<ItemBarcode> ItemBarcodes => Set<ItemBarcode>();
@@ -46,6 +47,15 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<Supplier>(b =>
+        {
+            b.ToTable("suppliers");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Code).HasMaxLength(20).IsRequired();
+            b.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            b.HasIndex(x => x.Code).IsUnique();
+        });
+
         modelBuilder.Entity<Product>(b =>
         {
             b.ToTable("products");
@@ -53,6 +63,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.Property(x => x.Code).HasMaxLength(40).IsRequired();
             b.Property(x => x.Name).HasMaxLength(50).IsRequired();
             b.HasIndex(x => x.Code).IsUnique();
+            b.HasOne(x => x.Supplier).WithMany(x => x.Products).HasForeignKey(x => x.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Item>(b =>
@@ -62,7 +74,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.Property(x => x.Sku).HasMaxLength(40).IsRequired();
             b.Property(x => x.DisplayName).HasMaxLength(50).IsRequired();
             b.Property(x => x.Unit).HasMaxLength(10).IsRequired();
+            b.Property(x => x.PackagingType).HasConversion<int>();
+            b.Property(x => x.PackageQuantity).HasColumnType("decimal(18,3)").IsRequired();
+            b.Property(x => x.Price).HasColumnType("decimal(18,2)").IsRequired();
             b.HasIndex(x => x.Sku).IsUnique();
+            b.HasOne(x => x.Product).WithMany(x => x.Items).HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ItemBarcode>(b =>
@@ -103,4 +120,3 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         });
     }
 }
-

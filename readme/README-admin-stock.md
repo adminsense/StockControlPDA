@@ -18,23 +18,33 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 |------|-------|
 | 🖥️ **Platform** | Windows desktop |
 | 🧱 **App type** | Blazor Server (Admin) |
-| 🧭 **Navigation** | 6 tabs |
+| 🧭 **Navigation** | 7 tabs |
 | ✅ **CRUD** | Create / Edit / Activate / Deactivate |
-| 🔎 **Pagination** | 10 (or 20??) rows per page (Prev/Next) |
+| 🔎 **Pagination** | 10 rows per page (Prev/Next) |
 | 🧩 **Min/Max** | Inside Items tab (warehouse default + location override) |
 | 📦 **Stock** | On-hand per Warehouse + Location + Item |
 | 🌐 **Language** | English (UI + validation messages) |
 
 ---
 
-## 🧭 Tabs (exactly 6)
+## 🧭 Tabs (exactly 7)
 
 - **Users**
 - **Warehouses**
 - **Locations**
+- **Suppliers**
 - **Products**
 - **Items (SKU)** *(includes Min/Max inside this page)*
 - **Stock**
+
+---
+
+## 🗄️ Database (EF Core)
+
+- Migrations live under `src/StockControl.Admin/Migrations/`. The baseline is a single **`InitialCreate`** migration that creates the full schema (including `suppliers`, product–supplier and item–product links, packaging, and price on items).
+- On an **empty** SQL Server database, apply the schema from the repo root:
+
+  `dotnet ef database update --project src/StockControl.Admin/StockControl.Admin.csproj --startup-project src/StockControl.Admin/StockControl.Admin.csproj`
 
 ---
 
@@ -98,12 +108,25 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
       </td>
     </tr>
     <tr>
-      <td><code>products</code></td>
+      <td><code>suppliers</code></td>
       <td>
         <code>Code</code>, <code>Name</code>, <code>IsActive</code>
       </td>
       <td>
         <ul>
+          <li><code>Code</code> required, unique, ≤ 20 (stored upper-case)</li>
+          <li><code>Name</code> required, ≤ 100</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code>products</code></td>
+      <td>
+        <code>SupplierId</code>, <code>Code</code>, <code>Name</code>, <code>IsActive</code>
+      </td>
+      <td>
+        <ul>
+          <li><code>SupplierId</code> required (FK to <code>suppliers</code>, delete restricted)</li>
           <li><code>Code</code> required, unique, ≤ 40 (stored upper-case)</li>
           <li><code>Name</code> required, ≤ 50</li>
         </ul>
@@ -112,13 +135,17 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
     <tr>
       <td><code>items</code></td>
       <td>
-        <code>Sku</code>, <code>DisplayName</code>, <code>Unit</code>, <code>IsActive</code>
+        <code>ProductId</code>, <code>Sku</code>, <code>DisplayName</code>, <code>Unit</code>, <code>PackagingType</code>, <code>PackageQuantity</code>, <code>Price</code>, <code>IsActive</code>
       </td>
       <td>
         <ul>
+          <li><code>ProductId</code> required (FK to <code>products</code>, delete restricted)</li>
           <li><code>Sku</code> required, unique, ≤ 40 (stored upper-case)</li>
           <li><code>DisplayName</code> required, ≤ 50</li>
-          <li><code>Unit</code> required, ≤ 10</li>
+          <li><code>Unit</code> required, ≤ 10 (physical unit; <code>stock_balances.QuantityOnHand</code> is expressed in this same unit)</li>
+          <li><code>PackagingType</code> stored as <code>int</code> enum: Unit, Box, Case, Pallet, Bag, Kit</li>
+          <li><code>PackageQuantity</code> decimal &gt; 0; must be <strong>1</strong> when packaging is <strong>Unit</strong></li>
+          <li><code>Price</code> decimal ≥ 0</li>
         </ul>
       </td>
     </tr>
@@ -156,7 +183,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
       <td>
         <ul>
           <li>Unique: (<code>WarehouseId</code>, <code>LocationId</code>, <code>ItemId</code>)</li>
-          <li>Represents the current on-hand quantity per warehouse + location + item</li>
+          <li>Represents the current on-hand quantity per warehouse + location + item (same unit as the item’s <code>Unit</code>)</li>
         </ul>
       </td>
     </tr>
@@ -219,13 +246,27 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
       </td>
     </tr>
     <tr>
-      <td>🧾 <strong>Products</strong></td>
-      <td>Create / Edit / Activate / Deactivate products</td>
+      <td>🏷️ <strong>Suppliers</strong></td>
+      <td>Create / Edit / Activate / Deactivate suppliers</td>
       <td>
         <code>Code</code>, <code>Name</code>, <code>Status</code>
       </td>
       <td>
         <ul>
+          <li><code>Code</code> required, unique, ≤ 20 (stored upper-case)</li>
+          <li><code>Name</code> required, ≤ 100</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>🧾 <strong>Products</strong></td>
+      <td>Create / Edit / Activate / Deactivate products</td>
+      <td>
+        <code>Supplier</code>, <code>Code</code>, <code>Name</code>, <code>Status</code>
+      </td>
+      <td>
+        <ul>
+          <li><code>Supplier</code> required</li>
           <li><code>Code</code> required, unique, ≤ 40 (stored upper-case)</li>
           <li><code>Name</code> required, ≤ 50</li>
         </ul>
@@ -235,13 +276,16 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
       <td>🧩 <strong>Items (SKU)</strong></td>
       <td>Create / Edit / Activate / Deactivate items, manage barcodes, manage Min/Max</td>
       <td>
-        <code>Sku</code>, <code>DisplayName</code>, <code>Unit</code>, <code>Barcodes</code>, <code>Status</code>
+        <code>Product</code>, <code>Sku</code>, <code>DisplayName</code>, <code>Unit</code>, <code>Packaging type</code>, <code>Package quantity</code>, <code>Price</code>, <code>Barcodes</code>, <code>Status</code>
       </td>
       <td>
         <ul>
+          <li><code>Product</code> required</li>
           <li><code>Sku</code> required, unique, ≤ 40 (stored upper-case)</li>
           <li><code>DisplayName</code> required, ≤ 50</li>
           <li><code>Unit</code> required, ≤ 10</li>
+          <li><code>Package quantity</code> &gt; 0; must be <strong>1</strong> when packaging is <strong>Unit</strong></li>
+          <li><code>Price</code> ≥ 0</li>
           <li>Barcodes: one per line; <code>item_barcodes.Code</code> is unique</li>
           <li>Min/Max (inside Items): <code>Min</code>, <code>Max</code> required, ≥ 0 and <code>Max ≥ Min</code></li>
           <li>Min/Max uniqueness: default (Warehouse+Item) where Location is NULL; override (Warehouse+Item+Location) where Location is NOT NULL</li>
@@ -252,7 +296,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
       <td>📦 <strong>Stock</strong></td>
       <td>View on-hand quantities by warehouse + location + item, compare to Min/Max</td>
       <td>
-        Filters: <code>Warehouse</code>, <code>Location</code>, <code>Search</code>, <code>Below/Above</code>
+        Filters: <code>Warehouse</code>, <code>Location</code>, <code>Search</code> (SKU, product code, or name), <code>Below/Above</code>
       </td>
       <td>
         <ul>

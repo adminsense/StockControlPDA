@@ -55,7 +55,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 1. **Scan location**
    - Validate size (≤ 12) and existence/active status.
 2. **Scan item**
-   - Accept any code present in `item_barcodes.code`.
+   - Accept any barcode line stored on the item (`items.Barcodes`, newline-separated).
 3. **Enter quantity**
    - Default = 1; numeric keypad; minimal validation.
 4. **Confirm action**
@@ -65,7 +65,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 ## ✅ 5. Rules & validations (MVP)
 
 - **Location**: code ≤ 12; must exist and be active.
-- **Item**: code must exist and be active.
+- **Item**: scanned or typed code must match an active item (typically **SKU** or a **barcode** from `items.Barcodes`; **article number** is maintained in Admin for catalog alignment, not necessarily what the scanner sends).
 - **Quantity**: > 0.
 - **Negative stock**: business decision in MVP
   - Option A: block `OUT` if balance is insufficient
@@ -75,7 +75,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 ## 🔌 6. Data consumed/sent (API)
 
 - **Read**
-  - `warehouses`, `locations`, `items`, `item_barcodes`, `minmax_settings` (or equivalent API surface for min/max)
+  - `warehouses`, `locations`, `items` (including `Barcodes`), `minmax_settings` (or equivalent API surface for min/max)
   - `stock_balances` (for lookup/alerts)
 - **Write**
   - `stock_movements` (immutable lines)

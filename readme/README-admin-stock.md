@@ -8,7 +8,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20desktop-0d6efd?style=flat-square)
 ![Stack](https://img.shields.io/badge/Stack-Blazor%20Server%20%2B%20EF%20Core-6f42c1?style=flat-square)
 
-Blazor Server **desktop Admin** used to register master data and view stock balances. UI follows the approved mock and the whole Admin is **English** (labels + validation messages).
+Blazor Server **desktop Admin** used to register master data and view stock balances. The Admin UI is **English** (labels + validation messages).
 
 ---
 
@@ -18,10 +18,10 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 |------|-------|
 | 🖥️ **Platform** | Windows desktop |
 | 🧱 **App type** | Blazor Server (Admin) |
-| 🧭 **Navigation** | 7 tabs |
+| 🧭 **Navigation** | 8 tabs (4 + 4 rows) |
 | ✅ **CRUD** | Create / Edit / Activate / Deactivate |
 | 🔎 **Pagination** | 10 rows per page (Prev/Next) |
-| 🧩 **Min/Max** | Inside Items tab (warehouse default + location override) |
+| 🧩 **Min/Max** | Dedicated **Min / Max** tab (`/minmax`): warehouse default + location override |
 | 📦 **Stock** | On-hand per Warehouse + Location + Item |
 | 🌐 **Language** | English (UI + validation messages) |
 
@@ -34,7 +34,8 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 - **Locations**
 - **Suppliers**
 - **Products**
-- **Items (SKU)** *(includes Min/Max inside this page)*
+- **Items (SKU)**
+- **Min / Max**
 - **Stock**
 
 ---
@@ -274,7 +275,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
     </tr>
     <tr>
       <td>🧩 <strong>Items (SKU)</strong></td>
-      <td>Create / Edit / Activate / Deactivate items, manage barcodes, manage Min/Max</td>
+      <td>Create / Edit / Activate / Deactivate items, manage barcodes</td>
       <td>
         <code>Product</code>, <code>Sku</code>, <code>DisplayName</code>, <code>Unit</code>, <code>Packaging type</code>, <code>Package quantity</code>, <code>Price</code>, <code>Barcodes</code>, <code>Status</code>
       </td>
@@ -287,8 +288,20 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
           <li><code>Package quantity</code> &gt; 0; must be <strong>1</strong> when packaging is <strong>Unit</strong></li>
           <li><code>Price</code> ≥ 0</li>
           <li>Barcodes: one per line; <code>item_barcodes.Code</code> is unique</li>
-          <li>Min/Max (inside Items): <code>Min</code>, <code>Max</code> required, ≥ 0 and <code>Max ≥ Min</code></li>
-          <li>Min/Max uniqueness: default (Warehouse+Item) where Location is NULL; override (Warehouse+Item+Location) where Location is NOT NULL</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>📊 <strong>Min / Max</strong></td>
+      <td>Create / Edit / Activate / Deactivate Min/Max targets per warehouse (and optional location override)</td>
+      <td>
+        <code>Warehouse</code>, <code>Item</code>, <code>Location</code> (optional), <code>Min</code>, <code>Max</code>, <code>Status</code>
+      </td>
+      <td>
+        <ul>
+          <li>Route <code>/minmax</code></li>
+          <li><code>Min</code>, <code>Max</code> required, ≥ 0 and <code>Max ≥ Min</code></li>
+          <li>Uniqueness: default (<code>Warehouse</code>+<code>Item</code>) where Location is NULL; override (<code>Warehouse</code>+<code>Item</code>+<code>Location</code>) where Location is NOT NULL</li>
         </ul>
       </td>
     </tr>

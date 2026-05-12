@@ -4,7 +4,7 @@
 
 # 📦 Operation (Stock Control) — MAUI Android (PDA)
 
-![Status](https://img.shields.io/badge/Status-Proposal%20%2B%20Mock-0dcaf0?style=flat-square)
+![Status](https://img.shields.io/badge/Status-In%20development-0dcaf0?style=flat-square)
 ![Platform](https://img.shields.io/badge/Platform-Android%20PDA-6f42c1?style=flat-square)
 ![Stack](https://img.shields.io/badge/Stack-.NET%20MAUI-512BD4?style=flat-square)
 

@@ -2,5 +2,6 @@
   <Folder Name="/src/">
     <Project Path="src/StockControl.Admin.Client/StockControl.Admin.Client.csproj" />
     <Project Path="src/StockControl.Admin/StockControl.Admin.csproj" />
+    <Project Path="src/StockControl.PDA/StockControl.PDA.csproj" />
   </Folder>
 </Solution>

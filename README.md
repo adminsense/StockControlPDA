@@ -8,7 +8,7 @@
 
 Two-app solution for stock control:
 
-- **Admin (desktop)**: Blazor Server app to manage master data and view stock balances (Min/Max included).
+- **Admin (desktop)**: Blazor Server app to manage master data, Min/Max targets, and stock balances.
 - **PDA (Android)**: MAUI app for scan-driven warehouse operations on handheld devices.
 
 ---
@@ -22,42 +22,50 @@ This repository contains:
 
 ## 🎯 2. Objective
 
-- Maintain master data (Users, Warehouses, Locations, Products, Items + Barcodes).
+- Maintain master data (Users, Warehouses, Locations, Suppliers, Products, Items + Barcodes).
+- Configure **Min/Max** per warehouse (and optional location override) on its own Admin screen.
 - Execute warehouse operations on PDAs using a repeatable **Location → Item → Quantity → In/Out** flow.
 - Provide clear **Min/Max** visibility and stock status (below/above).
 
 ## ✨ 3. Key features (summary)
 
 - **Admin (desktop)**:
-  - 6-tab navigation: Users, Warehouses, Locations, Products, Items (SKU), Stock
-  - CRUD + validations (English)
-  - Min/Max inside Items (warehouse default + optional location override, \(Max \ge Min\))
-  - Stock page with filters + pagination (10 rows/page)
+  - **8 tabs** (two rows of 4): Users, Warehouses, Locations, Suppliers, Products, Items (SKU), **Min / Max**, Stock Control
+  - CRUD + validations (English); **Min / Max** lives on `/minmax` (not inside the Items form)
+  - **Stock** (`/` and `/stock`): filters + pagination (10 rows/page); **Sync** checks whether `items` changed since the last baseline — if not, modal *“Everything is synchronized.”*; if yes, a **busy** overlay then reload (balances + Min/Max resolution)
+  - **UI**: stronger contrast for inputs, placeholders, and dropdowns for warehouse lighting (`StockControl.Admin.Client` → `admin-theme.css`, `color-scheme: dark`)
 - **PDA (Android)**:
+  - MAUI app contains **`Platforms/Android` only** (iOS / Windows / Mac Catalyst folders removed)
   - Scan-first flow (keyboard wedge / Enter)
   - Fast stock movements (Inbound/Outbound)
   - Min/Max visibility during operations
 
-## 🧪 4. UI reference (mock)
+## 🧪 4. UI reference
 
-Approved reference mock:
+Screenshots: Admin file name is legacy (`mock_admin_template.png`) but the image should match the **current** desktop UI when updated in-repo.
 
 ### 4.1 Admin (desktop)
 
 <p align="center">
-  <img src="./readme/images/mock_admin_template.png" alt="Admin prototype" />
+  <img src="./readme/images/mock_admin_template.png" alt="Stock Control — Admin (current desktop UI)" />
 </p>
 
 ### 4.2 PDA (Android)
 
 <p align="center">
-  <img src="./readme/images/mock_template.png" alt="PDA prototype" />
+  <img src="./readme/images/mock_template.png" alt="PDA reference screenshot" />
 </p>
 
 ## 🛠️ 5. Tech stack
 
 - **Admin**: Blazor Server + EF Core + SQL Server
 - **PDA**: .NET MAUI (Android)
+
+## 📁 6. Repository layout
+
+- `src/StockControl.Admin/` — Blazor Server Admin
+- `src/StockControl.Admin.Client/` — Razor Class Library (shared UI/CSS with Admin)
+- `src/StockControl.PDA/` — .NET MAUI app, **`net10.0-android` only**; **`Platforms/Android`** only (no iOS / Windows / Mac Catalyst in repo)
 
 ## 📚 7. Documentation
 

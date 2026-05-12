@@ -10,6 +10,10 @@
 
 Blazor Server **desktop Admin** used to register master data and view stock balances. The Admin UI is **English** (labels + validation messages).
 
+<p align="center">
+  <img src="../readme/images/mock_admin_template.png" alt="Stock Control — Admin (current desktop UI)" width="920" />
+</p>
+
 ---
 
 ### 📌 Quick facts
@@ -27,7 +31,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 
 ---
 
-## 🧭 Tabs (exactly 7)
+## 🧭 Tabs (8)
 
 - **Users**
 - **Warehouses**
@@ -35,8 +39,8 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 - **Suppliers**
 - **Products**
 - **Items (SKU)**
-- **Min / Max**
-- **Stock**
+- **Min / Max** (`/minmax`)
+- **Stock** (`/` and `/stock`)
 
 ---
 
@@ -56,6 +60,16 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 - **CRUD**: create/edit + deactivate/activate (no hard delete in the UI).
 - **Validations**: user-friendly messages in English; `maxlength` enforced in inputs.
 - **Feedback**: messages are shown as a **modal** (theme colors). When it is a validation error, closing the modal focuses the field that needs correction.
+
+### Stock page — Sync
+
+- **Sync** removes keyboard focus from the button (avoids a “stuck” focus ring), then compares the latest catalog activity on **`items`** (`MAX(UpdatedAt ?? CreatedAt)`) to a baseline taken after the last successful sync (including the first page load).
+- If nothing changed: success modal **“Everything is synchronized.”**
+- If the catalog changed: a **busy** overlay (spinner) appears briefly while the grid reloads (`stock_balances` + Min/Max resolution); then **“Synchronization completed.”**
+
+### UI — readability
+
+- Form controls use **higher-contrast** backgrounds, borders, placeholders, and `select` / `option` colors in `StockControl.Admin.Client/wwwroot/css/admin-theme.css`, with `color-scheme: dark` for better native dropdown rendering.
 
 ---
 
@@ -313,7 +327,8 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
       </td>
       <td>
         <ul>
-          <li>Home page: route <code>/</code></li>
+          <li>Home page: route <code>/</code> (also <code>/stock</code>)</li>
+          <li><strong>Sync</strong>: compares latest <code>items</code> activity to last baseline; modal when unchanged; busy overlay + reload when catalog changed</li>
           <li>Min/Max resolve order: location override first, then warehouse default</li>
           <li>Status tag: OK / Below / Above</li>
         </ul>

@@ -20,6 +20,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 | **Workflow** | Location → Item → Quantity → In/Out |
 | **Scanner** | Keyboard wedge (text + Enter) |
 | **Connectivity** | Online (MVP) |
+| **MAUI targets** | **Android only** — `Platforms/Android` only (`net10.0-android`, min API 21). iOS / Windows / Mac Catalyst folders are not in this repo. |
 
 ## ✅ 1. Goals (MVP)
 
@@ -74,7 +75,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 ## 🔌 6. Data consumed/sent (API)
 
 - **Read**
-  - `warehouses`, `locations`, `items`, `item_barcodes`, `item_min_max`
+  - `warehouses`, `locations`, `items`, `item_barcodes`, `minmax_settings` (or equivalent API surface for min/max)
   - `stock_balances` (for lookup/alerts)
 - **Write**
   - `stock_movements` (immutable lines)
@@ -89,7 +90,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 
 ## Documentation
 
-- 🏠 [Main Documentation](../README.md) - Project overview and proposal
+- 🏠 [Main Documentation](../README.md) — Project overview
 
 ---
 

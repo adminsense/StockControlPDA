@@ -12,38 +12,20 @@ namespace StockControl.Admin.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "items",
+                name: "suppliers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Sku = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
-                    DisplayName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Unit = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_items", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "products",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Code = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_products", x => x.Id);
+                    table.PrimaryKey("PK_suppliers", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -81,26 +63,27 @@ namespace StockControl.Admin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "item_barcodes",
+                name: "products",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ItemId = table.Column<int>(type: "int", nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
+                    SupplierId = table.Column<int>(type: "int", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_item_barcodes", x => x.Id);
+                    table.PrimaryKey("PK_products", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_item_barcodes_items_ItemId",
-                        column: x => x.ItemId,
-                        principalTable: "items",
+                        name: "FK_products_suppliers_SupplierId",
+                        column: x => x.SupplierId,
+                        principalTable: "suppliers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -125,6 +108,57 @@ namespace StockControl.Admin.Migrations
                         principalTable: "warehouses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "items",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    Sku = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
+                    DisplayName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Unit = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    PackagingType = table.Column<int>(type: "int", nullable: false),
+                    PackageQuantity = table.Column<decimal>(type: "decimal(18,3)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_items", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_items_products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "item_barcodes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ItemId = table.Column<int>(type: "int", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_item_barcodes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_item_barcodes_items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "items",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -214,6 +248,11 @@ namespace StockControl.Admin.Migrations
                 column: "ItemId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_items_ProductId",
+                table: "items",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_items_Sku",
                 table: "items",
                 column: "Sku",
@@ -256,6 +295,11 @@ namespace StockControl.Admin.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_products_SupplierId",
+                table: "products",
+                column: "SupplierId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_stock_balances_ItemId",
                 table: "stock_balances",
                 column: "ItemId");
@@ -269,6 +313,12 @@ namespace StockControl.Admin.Migrations
                 name: "IX_stock_balances_WarehouseId_LocationId_ItemId",
                 table: "stock_balances",
                 columns: new[] { "WarehouseId", "LocationId", "ItemId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_suppliers_Code",
+                table: "suppliers",
+                column: "Code",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -294,9 +344,6 @@ namespace StockControl.Admin.Migrations
                 name: "minmax_settings");
 
             migrationBuilder.DropTable(
-                name: "products");
-
-            migrationBuilder.DropTable(
                 name: "stock_balances");
 
             migrationBuilder.DropTable(
@@ -309,7 +356,13 @@ namespace StockControl.Admin.Migrations
                 name: "locations");
 
             migrationBuilder.DropTable(
+                name: "products");
+
+            migrationBuilder.DropTable(
                 name: "warehouses");
+
+            migrationBuilder.DropTable(
+                name: "suppliers");
         }
     }
 }

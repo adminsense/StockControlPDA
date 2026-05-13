@@ -10,9 +10,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Item> Items => Set<Item>();
-    public DbSet<ItemBarcode> ItemBarcodes => Set<ItemBarcode>();
     public DbSet<MinMaxSetting> MinMaxSettings => Set<MinMaxSetting>();
     public DbSet<StockBalance> StockBalances => Set<StockBalance>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,7 +61,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.ToTable("products");
             b.HasKey(x => x.Id);
             b.Property(x => x.Code).HasMaxLength(40).IsRequired();
-            b.Property(x => x.Name).HasMaxLength(50).IsRequired();
+            b.Property(x => x.Name).HasMaxLength(100).IsRequired();
             b.HasIndex(x => x.Code).IsUnique();
             b.HasOne(x => x.Supplier).WithMany(x => x.Products).HasForeignKey(x => x.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -72,24 +72,16 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.ToTable("items");
             b.HasKey(x => x.Id);
             b.Property(x => x.Sku).HasMaxLength(40).IsRequired();
-            b.Property(x => x.DisplayName).HasMaxLength(50).IsRequired();
+            b.Property(x => x.ArticleNumber).HasMaxLength(50).IsRequired();
+            b.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
             b.Property(x => x.Unit).HasMaxLength(10).IsRequired();
             b.Property(x => x.PackagingType).HasConversion<int>();
             b.Property(x => x.PackageQuantity).HasColumnType("decimal(18,3)").IsRequired();
             b.Property(x => x.Price).HasColumnType("decimal(18,2)").IsRequired();
+            b.Property(x => x.Barcodes).HasColumnType("nvarchar(max)").IsRequired();
             b.HasIndex(x => x.Sku).IsUnique();
             b.HasOne(x => x.Product).WithMany(x => x.Items).HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        modelBuilder.Entity<ItemBarcode>(b =>
-        {
-            b.ToTable("item_barcodes");
-            b.HasKey(x => x.Id);
-            b.Property(x => x.Code).HasMaxLength(80).IsRequired();
-            b.HasIndex(x => x.Code).IsUnique();
-            b.HasOne(x => x.Item).WithMany(x => x.Barcodes).HasForeignKey(x => x.ItemId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<MinMaxSetting>(b =>
@@ -103,9 +95,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.HasOne(x => x.Location).WithMany().HasForeignKey(x => x.LocationId).OnDelete(DeleteBehavior.Restrict);
 
             b.HasIndex(x => new { x.WarehouseId, x.ItemId, x.LocationId }).IsUnique();
-            b.HasIndex(x => new { x.WarehouseId, x.ItemId })
-                .IsUnique()
-                .HasFilter("[LocationId] IS NULL");
         });
 
         modelBuilder.Entity<StockBalance>(b =>
@@ -117,6 +106,19 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.HasOne(x => x.Location).WithMany().HasForeignKey(x => x.LocationId).OnDelete(DeleteBehavior.Restrict);
             b.HasOne(x => x.Item).WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
             b.HasIndex(x => new { x.WarehouseId, x.LocationId, x.ItemId }).IsUnique();
+        });
+
+        modelBuilder.Entity<StockMovement>(b =>
+        {
+            b.ToTable("stock_movements");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Quantity).HasColumnType("decimal(18,3)").IsRequired();
+            b.Property(x => x.Direction).HasMaxLength(10).IsRequired();
+            b.Property(x => x.CreatedAt).IsRequired();
+            b.HasOne(x => x.Warehouse).WithMany().HasForeignKey(x => x.WarehouseId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne(x => x.Location).WithMany().HasForeignKey(x => x.LocationId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne(x => x.Item).WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

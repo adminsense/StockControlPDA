@@ -1,0 +1,40 @@
+@using Microsoft.AspNetCore.Components
+
+<th class="th-sort-wrap @(AlignEnd ? "th-sort-wrap--numeric" : "") @CssClass" scope="col" style="@Style">
+    <div class="th-sort-row">
+        <span class="th-sort-label">@Label</span>
+        <button type="button"
+                class="@ButtonClass"
+                @onclick="ClickAsync"
+                title="@Tooltip"
+                aria-label="@Tooltip">
+            <span class="th-sort-glyph" aria-hidden="true">@Glyph</span>
+        </button>
+    </div>
+</th>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public string SortKey { get; set; } = "";
+    [Parameter] public string? ActiveKey { get; set; }
+    [Parameter] public bool Descending { get; set; }
+    [Parameter] public EventCallback<string> SortRequested { get; set; }
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public string? Style { get; set; }
+    [Parameter] public bool AlignEnd { get; set; }
+
+    private bool IsActive => string.Equals(ActiveKey, SortKey, StringComparison.Ordinal);
+
+    private string ButtonClass => IsActive ? "th-sort-btn th-sort-btn--on" : "th-sort-btn th-sort-btn--idle";
+
+    /// <summary>Inactive: ↓ (default newest first). Active: ↓ desc, ↑ asc.</summary>
+    private string Glyph => !IsActive ? "↓" : (Descending ? "↓" : "↑");
+
+    private string Tooltip => !IsActive
+        ? $"Sort by {Label} (newest first)"
+        : Descending
+            ? "Switch to ascending (oldest first)"
+            : "Switch to descending (newest first)";
+
+    private Task ClickAsync() => SortRequested.InvokeAsync(SortKey);
+}

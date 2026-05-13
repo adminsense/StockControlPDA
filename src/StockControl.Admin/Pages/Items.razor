@@ -5,12 +5,12 @@
 
 <PageTitle>Items (SKU)</PageTitle>
 
-<FeedbackModal Success="@_success" Error="@_error" FocusId="@_focusId" OnClosed="OnModalClosed" />
+<FeedbackModal Success="@_success" Error="@_error" OnClosed="OnModalClosed" />
 
 <section class="panel">
     <h2>Items (SKU)</h2>
     <label for="item-search">Search</label>
-    <input id="item-search" type="text" placeholder="sku, name, or barcode" @bind="_search" @bind:after="ResetItemsPaging" />
+    <input id="item-search" type="text" placeholder="sku, article no., product, name, or barcode" @bind="_search" @bind:after="ResetItemsPaging" />
     <div class="actions">
         <button class="btn primary" type="button" @onclick="StartCreate">+ New</button>
         <button class="btn ghost" type="button" @onclick="ReloadAsync">Sync</button>
@@ -29,16 +29,23 @@
                            @onblur='() => ValidateMaxLength("SKU", _editing.Sku, 40)' required />
                 </div>
                 <div>
-                    <label for="item-unit">Unit *</label>
+                    <label for="item-article">Article number</label>
+                    <input id="item-article" type="text" maxlength="50" @bind="_editing.ArticleNumber"
+                           @onblur='() => ValidateMaxLength("Article number", _editing.ArticleNumber, 50)' />
+                    <p class="hint" style="margin-top:6px;margin-bottom:0">Supplier / catalog article code (Artikelnummer). Distinct from internal SKU.</p>
+                </div>
+                <div>
+                    <label for="item-unit">Quantity unit *</label>
                     <input id="item-unit" type="text" maxlength="10" @bind="_editing.Unit"
-                           @onblur='() => ValidateMaxLength("Unit", _editing.Unit, 10)' required />
+                           @onblur='() => ValidateMaxLength("Quantity unit", _editing.Unit, 10)' required />
+                    <p class="hint" style="margin-top:6px;margin-bottom:0">Short code used with on-hand quantities (e.g. <span class="mono">ST</span>, <span class="mono">KG</span>, <span class="mono">M2</span>).</p>
                 </div>
             </div>
             <div class="row">
                 <div>
                     <label for="item-name">Display name *</label>
-                    <input id="item-name" type="text" maxlength="50" @bind="_editing.DisplayName"
-                           @onblur='() => ValidateMaxLength("Display name", _editing.DisplayName, 50)' required />
+                    <input id="item-name" type="text" maxlength="100" @bind="_editing.DisplayName"
+                           @onblur='() => ValidateMaxLength("Display name", _editing.DisplayName, 100)' required />
                 </div>
                 <div>
                     <label for="item-status">Status</label>
@@ -50,11 +57,45 @@
             </div>
             <div class="row">
                 <div>
-                    <label for="item-barcodes">Barcodes (one per line)</label>
-                    <textarea id="item-barcodes" rows="4" @bind="_barcodesText" placeholder="Ex.: 8712345678901"></textarea>
-                    <p class="hint">The operation app uses <span class="mono">item_barcodes</span> to recognize items from the scanner.</p>
+                    <label for="item-product">Product *</label>
+                    <select id="item-product" @bind="_editing.ProductId" required>
+                        <option value="0">-- Select --</option>
+                        @foreach (var p in _productOptions)
+                        {
+                            <option value="@p.Id">@p.Code — @p.Name</option>
+                        }
+                    </select>
                 </div>
             </div>
+            <div class="row">
+                <div>
+                    <label for="item-packaging">Packaging *</label>
+                    <select id="item-packaging" value="@((int)_editing.PackagingType)" @onchange="OnPackagingSelectChanged">
+                        @foreach (var pt in Enum.GetValues<PackagingType>())
+                        {
+                            <option value="@((int)pt)">@PackagingLabel(pt)</option>
+                        }
+                    </select>
+                    <p class="hint" style="margin-top:6px;margin-bottom:0">How the item is counted when receiving or selling (each, box of N, pallet…). Not the same as quantity unit.</p>
+                </div>
+                <div>
+                    <label for="item-pkgqty">Package quantity *</label>
+                    <input id="item-pkgqty" type="number" step="0.001" min="0.001" @bind="_editing.PackageQuantity" />
+                </div>
+                <div>
+                    <label for="item-price">Price *</label>
+                    <input id="item-price" type="number" step="0.01" min="0" @bind="_editing.Price" />
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="item-barcodes">Barcodes (one per line)</label>
+                    <textarea id="item-barcodes" rows="4" @bind="_barcodesText" placeholder="Ex.: 8712345678901"></textarea>
+                    <p class="hint">One code per line; stored on the item. Each code must be unique across all items (scanner / wedge).</p>
+                </div>
+            </div>
+
+            <p class="hint hint-anchor">Min/Max stock targets: use the dedicated <a href="/minmax"><strong>Min / Max</strong></a> page.</p>
 
             <div class="actions">
                 <button class="btn success" type="submit" disabled="@_isSaving">Save</button>
@@ -66,15 +107,32 @@
 
 <section class="panel">
     <h2>List</h2>
-    <div style="overflow-x:auto">
-        <table>
+    <div class="list-table-wrap">
+        <table class="admin-items-table admin-grid-table">
+            <colgroup>
+                <col class="admin-it-col-sku" />
+                <col class="admin-it-col-art" />
+                <col class="admin-it-col-product" />
+                <col class="admin-it-col-name" />
+                <col class="admin-it-col-unit" />
+                <col class="admin-it-col-pkg" />
+                <col class="admin-it-col-pkgqty" />
+                <col class="admin-it-col-price" />
+                <col class="admin-it-col-status" />
+                <col class="admin-it-col-actions" />
+            </colgroup>
             <thead>
                 <tr>
-                    <th>SKU</th>
-                    <th>Name</th>
-                    <th>Unit</th>
-                    <th>Status</th>
-                    <th style="text-align:right">Actions</th>
+                    <SortableHeaderCell Label="SKU" SortKey="sku" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Art. no." SortKey="articleno" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Product" SortKey="product" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Name" SortKey="name" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Qty unit" SortKey="unit" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Packaging" SortKey="packaging" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Pkg qty" SortKey="pkgqty" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
+                    <SortableHeaderCell Label="Price" SortKey="price" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
+                    <SortableHeaderCell Label="Status" SortKey="status" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <th class="admin-grid-th-actions" scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -82,13 +140,19 @@
                 {
                     <tr @key="i.Id">
                         <td class="mono">@i.Sku</td>
+                        <td class="mono">@(string.IsNullOrWhiteSpace(i.ArticleNumber) ? "—" : i.ArticleNumber)</td>
+                        <td class="mono">@i.ProductCode</td>
                         <td>@i.DisplayName</td>
                         <td>@i.Unit</td>
+                        <td>@PackagingLabel(i.PackagingType)</td>
+                        <td class="col-num admin-it-td-num">@i.PackageQuantity.ToString("0.###")</td>
+                        <td class="col-num admin-it-td-num">@i.Price.ToString("0.00")</td>
                         <td><span class="tag @(i.IsActive ? "ok" : "off")">@(i.IsActive ? "Active" : "Inactive")</span></td>
-                        <td>
-                            <div class="mini-actions">
+                        <td class="admin-grid-td-actions">
+                            <div class="mini-actions mini-actions-row">
                                 <button class="edit" type="button" @onclick="@(() => StartEdit(i.Id))">Edit</button>
-                                <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(i.Id))">@(i.IsActive ? "Deactivate" : "Activate")</button>
+                                <button class="del" type="button" disabled="@(!i.IsActive)" @onclick="@(() => ToggleActiveAsync(i.Id))">Deactivate</button>
+                                <button class="edit" type="button" disabled="@(i.IsActive)" @onclick="@(() => ToggleActiveAsync(i.Id))">Activate</button>
                             </div>
                         </td>
                     </tr>
@@ -105,135 +169,6 @@
     </div>
 </section>
 
-<section class="panel">
-    <h2>Min / Max</h2>
-    <div class="row">
-        <div>
-            <label for="mm-warehouse">Warehouse</label>
-            <select id="mm-warehouse" @bind="_mmWarehouseId" @bind:after="OnMmWarehouseChanged">
-                <option value="0">All</option>
-                @foreach (var w in _mmWarehouses)
-                {
-                    <option value="@w.Id">@w.Code - @w.Name</option>
-                }
-            </select>
-        </div>
-        <div>
-            <label for="mm-item">Item (SKU)</label>
-            <select id="mm-item" @bind="_mmItemId" @bind:after="ResetMinMaxPaging">
-                <option value="0">All</option>
-                @foreach (var i in _mmItems)
-                {
-                    <option value="@i.Id">@i.Sku - @i.DisplayName</option>
-                }
-            </select>
-        </div>
-    </div>
-    <div class="actions">
-        <button class="btn primary" type="button" @onclick="StartMmCreate">+ New</button>
-        <button class="btn ghost" type="button" @onclick="ReloadMinMaxAsync">Sync</button>
-    </div>
-    <p class="hint">Set Min/Max by <strong>item + warehouse</strong> and override by <strong>item + location</strong>.</p>
-</section>
-
-@if (_mmEditing is not null)
-{
-    <section class="panel">
-        <h2>@(_mmEditing.Id == 0 ? "New min/max" : "Edit min/max")</h2>
-        <form @onsubmit="SaveMinMaxAsync" @onsubmit:preventDefault="true">
-            <div class="row">
-                <div>
-                    <label for="mm-edit-warehouse">Warehouse *</label>
-                    <select id="mm-edit-warehouse" @bind="_mmEditing.WarehouseId" @bind:after="OnMmEditingWarehouseChanged" required>
-                        <option value="0">-- Select --</option>
-                        @foreach (var w in _mmWarehouses)
-                        {
-                            <option value="@w.Id">@w.Code - @w.Name</option>
-                        }
-                    </select>
-                </div>
-                <div>
-                    <label for="mm-edit-item">Item (SKU) *</label>
-                    <select id="mm-edit-item" @bind="_mmEditing.ItemId" required>
-                        <option value="0">-- Select --</option>
-                        @foreach (var i in _mmItems)
-                        {
-                            <option value="@i.Id">@i.Sku - @i.DisplayName</option>
-                        }
-                    </select>
-                </div>
-            </div>
-            <div class="row3">
-                <div>
-                    <label for="mm-min">Min *</label>
-                    <input id="mm-min" type="number" min="0" @bind="_mmEditing.Min" required />
-                </div>
-                <div>
-                    <label for="mm-max">Max *</label>
-                    <input id="mm-max" type="number" min="0" @bind="_mmEditing.Max" required />
-                </div>
-                <div>
-                    <label for="mm-loc">Location (optional)</label>
-                    <select id="mm-loc" @bind="_mmEditing.LocationId">
-                        <option value="">—</option>
-                        @foreach (var l in _mmLocationsForEditing)
-                        {
-                            <option value="@l.Id">@l.Code</option>
-                        }
-                    </select>
-                </div>
-            </div>
-            <div class="actions">
-                <button class="btn success" type="submit" disabled="@_mmIsSaving">Save</button>
-                <button class="btn danger" type="button" @onclick="CancelMmEdit">Cancel</button>
-            </div>
-        </form>
-    </section>
-}
-
-<section class="panel">
-    <h2>Current settings</h2>
-    <div style="overflow-x:auto">
-        <table>
-            <thead>
-                <tr>
-                    <th>Warehouse</th>
-                    <th>Location</th>
-                    <th>SKU</th>
-                    <th>Min</th>
-                    <th>Max</th>
-                    <th style="text-align:right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var m in PagedMinMax)
-                {
-                    <tr @key="m.Id">
-                        <td class="mono">@m.WarehouseCode</td>
-                        <td class="mono">@(!string.IsNullOrWhiteSpace(m.LocationCode) ? m.LocationCode : "—")</td>
-                        <td class="mono">@m.ItemSku</td>
-                        <td>@m.Min</td>
-                        <td>@m.Max</td>
-                        <td>
-                            <div class="mini-actions">
-                                <button class="edit" type="button" @onclick="@(() => StartMmEdit(m.Id))">Edit</button>
-                                <button class="del" type="button" @onclick="@(() => ToggleMinMaxActiveAsync(m.Id))">@(m.IsActive ? "Deactivate" : "Activate")</button>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-    <div class="actions" style="justify-content:space-between">
-        <div class="hint" style="margin:0">Showing <strong>@_mmShowFrom</strong>-<strong>@_mmShowTo</strong> of <strong>@_mmTotalRows</strong></div>
-        <div class="mini-actions">
-            <button class="edit" type="button" @onclick="PrevMinMaxPage" disabled="@(_mmPageIndex == 0)">Prev</button>
-            <button class="edit" type="button" @onclick="NextMinMaxPage" disabled="@(_mmPageIndex >= _mmMaxPageIndex)">Next</button>
-        </div>
-    </div>
-</section>
-
 @code {
     private string _search = "";
     private string _status = "";
@@ -241,35 +176,26 @@
     private Item? _editing;
     private string _barcodesText = "";
     private List<ItemRow> _items = [];
+    private List<Product> _productOptions = [];
     private string? _success;
     private string? _error;
-    private string? _focusId;
-
-    // Min/Max inside Items
-    private int _mmWarehouseId;
-    private int _mmItemId;
-    private bool _mmIsSaving;
-    private MinMaxSetting? _mmEditing;
-    private List<Warehouse> _mmWarehouses = [];
-    private List<Item> _mmItems = [];
-    private List<Location> _mmAllLocations = [];
-    private List<Location> _mmLocationsForEditing = [];
-    private List<MinMaxRow> _mmRows = [];
 
     private const int PageSize = 10;
     private int _itemsPageIndex;
-    private int _mmPageIndex;
+    private string? _sortKey;
+    private bool _sortDesc;
 
     protected override async Task OnInitializedAsync()
     {
         await ReloadAsync();
-        await ReloadMinMaxAsync();
     }
 
     private IEnumerable<ItemRow> FilteredItems
         => _items.Where(i =>
             (string.IsNullOrWhiteSpace(_search) ||
              i.Sku.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             (!string.IsNullOrWhiteSpace(i.ArticleNumber) && i.ArticleNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)) ||
+             i.ProductCode.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
              i.DisplayName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
              (i.BarcodesCsv ?? "").Contains(_search, StringComparison.OrdinalIgnoreCase))
             && (_status switch
@@ -279,11 +205,46 @@
                 _ => true
             }));
 
-    private int _itemsTotalRows => FilteredItems.Count();
+    private int _itemsTotalRows => OrderedFilteredItems.Count();
     private int _itemsMaxPageIndex => Math.Max(0, (_itemsTotalRows - 1) / PageSize);
     private int _itemsShowFrom => _itemsTotalRows == 0 ? 0 : (_itemsPageIndex * PageSize) + 1;
     private int _itemsShowTo => Math.Min(_itemsTotalRows, (_itemsPageIndex * PageSize) + PageSize);
-    private IEnumerable<ItemRow> PagedItems => FilteredItems.Skip(_itemsPageIndex * PageSize).Take(PageSize);
+    private IEnumerable<ItemRow> PagedItems => OrderedFilteredItems.Skip(_itemsPageIndex * PageSize).Take(PageSize);
+
+    private IEnumerable<ItemRow> OrderedFilteredItems
+    {
+        get
+        {
+            var q = FilteredItems;
+            if (string.IsNullOrEmpty(_sortKey))
+                return q.OrderByDescending(i => i.Id);
+            return _sortKey switch
+            {
+                "sku" => _sortDesc ? q.OrderByDescending(i => i.Sku) : q.OrderBy(i => i.Sku),
+                "articleno" => _sortDesc ? q.OrderByDescending(i => i.ArticleNumber) : q.OrderBy(i => i.ArticleNumber),
+                "product" => _sortDesc ? q.OrderByDescending(i => i.ProductCode) : q.OrderBy(i => i.ProductCode),
+                "name" => _sortDesc ? q.OrderByDescending(i => i.DisplayName) : q.OrderBy(i => i.DisplayName),
+                "unit" => _sortDesc ? q.OrderByDescending(i => i.Unit) : q.OrderBy(i => i.Unit),
+                "packaging" => _sortDesc ? q.OrderByDescending(i => (int)i.PackagingType) : q.OrderBy(i => (int)i.PackagingType),
+                "pkgqty" => _sortDesc ? q.OrderByDescending(i => i.PackageQuantity) : q.OrderBy(i => i.PackageQuantity),
+                "price" => _sortDesc ? q.OrderByDescending(i => i.Price) : q.OrderBy(i => i.Price),
+                "status" => _sortDesc ? q.OrderByDescending(i => i.IsActive) : q.OrderBy(i => i.IsActive),
+                _ => q.OrderByDescending(i => i.Id)
+            };
+        }
+    }
+
+    private void RequestSort(string key)
+    {
+        if (string.Equals(_sortKey, key, StringComparison.Ordinal))
+            _sortDesc = !_sortDesc;
+        else
+        {
+            _sortKey = key;
+            _sortDesc = true;
+        }
+        _itemsPageIndex = 0;
+    }
 
     private void ResetItemsPaging()
     {
@@ -294,20 +255,26 @@
     {
         ResetItemsPaging();
         await using var db = await DbFactory.CreateDbContextAsync();
+        _productOptions = await db.Products.AsNoTracking().OrderBy(p => p.Code).ToListAsync();
+
         var list = await db.Items
             .AsNoTracking()
-            .Include(i => i.Barcodes)
+            .Include(i => i.Product)
             .OrderBy(i => i.Sku)
             .ToListAsync();
 
-        // EF can't translate string.Join() over a navigation collection.
         _items = list.Select(i => new ItemRow(
             i.Id,
             i.Sku,
+            i.ArticleNumber,
+            i.Product?.Code ?? "",
             i.DisplayName,
             i.Unit,
+            i.PackagingType,
+            i.PackageQuantity,
+            i.Price,
             i.IsActive,
-            i.Barcodes.Count == 0 ? null : string.Join(", ", i.Barcodes.Select(b => b.Code))
+            ItemBarcodeInput.Preview(i.Barcodes)
         )).ToList();
     }
 
@@ -323,245 +290,17 @@
             _itemsPageIndex++;
     }
 
-    private IEnumerable<MinMaxRow> FilteredMinMax
-        => _mmRows.Where(m =>
-            (_mmWarehouseId == 0 || m.WarehouseId == _mmWarehouseId)
-            && (_mmItemId == 0 || m.ItemId == _mmItemId));
-
-    private int _mmTotalRows => FilteredMinMax.Count();
-    private int _mmMaxPageIndex => Math.Max(0, (_mmTotalRows - 1) / PageSize);
-    private int _mmShowFrom => _mmTotalRows == 0 ? 0 : (_mmPageIndex * PageSize) + 1;
-    private int _mmShowTo => Math.Min(_mmTotalRows, (_mmPageIndex * PageSize) + PageSize);
-    private IEnumerable<MinMaxRow> PagedMinMax => FilteredMinMax.Skip(_mmPageIndex * PageSize).Take(PageSize);
-
-    private void ResetMinMaxPaging()
-    {
-        _mmPageIndex = 0;
-    }
-
-    private async Task ReloadMinMaxAsync()
-    {
-        ResetMinMaxPaging();
-        await using var db = await DbFactory.CreateDbContextAsync();
-        _mmWarehouses = await db.Warehouses.OrderBy(x => x.Code).ToListAsync();
-        _mmItems = await db.Items.OrderBy(x => x.Sku).ToListAsync();
-        _mmAllLocations = await db.Locations.OrderBy(x => x.Code).ToListAsync();
-
-        // Some EF providers/versions struggle to translate ordering over left-joined navigation props.
-        // Load the minimal projection and order in-memory.
-        var list = await db.MinMaxSettings
-            .AsNoTracking()
-            .Include(x => x.Warehouse)
-            .Include(x => x.Item)
-            .Include(x => x.Location)
-            .ToListAsync();
-
-        _mmRows = list
-            .Select(x => new MinMaxRow(
-                x.Id,
-                x.WarehouseId,
-                x.Warehouse?.Code ?? "",
-                x.ItemId,
-                x.Item?.Sku ?? "",
-                x.LocationId,
-                x.Location?.Code,
-                x.Min,
-                x.Max,
-                x.IsActive))
-            .OrderBy(x => x.WarehouseCode)
-            .ThenBy(x => x.ItemSku)
-            .ThenBy(x => x.LocationCode)
-            .ToList();
-    }
-
-    private void OnMmWarehouseChanged()
-    {
-        ResetMinMaxPaging();
-        _mmItemId = 0;
-    }
-
-    private void PrevMinMaxPage()
-    {
-        if (_mmPageIndex > 0)
-            _mmPageIndex--;
-    }
-
-    private void NextMinMaxPage()
-    {
-        if (_mmPageIndex < _mmMaxPageIndex)
-            _mmPageIndex++;
-    }
-
-    private void StartMmCreate()
-    {
-        _success = null;
-        _error = null;
-        _mmEditing = new MinMaxSetting
-        {
-            WarehouseId = _mmWarehouseId != 0 ? _mmWarehouseId : 0,
-            ItemId = _mmItemId != 0 ? _mmItemId : 0,
-            Min = 0,
-            Max = 0
-        };
-        SyncMmLocationsForEditing();
-    }
-
-    private async Task StartMmEdit(int id)
-    {
-        _success = null;
-        _error = null;
-        await using var db = await DbFactory.CreateDbContextAsync();
-        var entity = await db.MinMaxSettings.FirstOrDefaultAsync(x => x.Id == id);
-        if (entity is null)
-            return;
-
-        _mmEditing = new MinMaxSetting
-        {
-            Id = entity.Id,
-            WarehouseId = entity.WarehouseId,
-            ItemId = entity.ItemId,
-            LocationId = entity.LocationId,
-            Min = entity.Min,
-            Max = entity.Max,
-            IsActive = entity.IsActive,
-            CreatedAt = entity.CreatedAt,
-            UpdatedAt = entity.UpdatedAt
-        };
-        SyncMmLocationsForEditing();
-    }
-
-    private void SyncMmLocationsForEditing()
-    {
-        if (_mmEditing is null || _mmEditing.WarehouseId == 0)
-        {
-            _mmLocationsForEditing = [];
-            return;
-        }
-
-        _mmLocationsForEditing = _mmAllLocations
-            .Where(l => l.WarehouseId == _mmEditing.WarehouseId)
-            .OrderBy(l => l.Code)
-            .ToList();
-    }
-
-    private void OnMmEditingWarehouseChanged()
-    {
-        if (_mmEditing is null)
-            return;
-
-        _mmEditing.LocationId = null;
-        SyncMmLocationsForEditing();
-    }
-
-    private void CancelMmEdit()
-    {
-        _mmEditing = null;
-        _mmLocationsForEditing = [];
-    }
-
-    private async Task SaveMinMaxAsync()
-    {
-        if (_mmEditing is null)
-            return;
-
-        _success = null;
-        _error = null;
-        _focusId = null;
-
-        if (_mmEditing.WarehouseId <= 0) { ShowError("Warehouse is required.", "mm-edit-warehouse"); return; }
-        if (_mmEditing.ItemId <= 0) { ShowError("Item is required.", "mm-edit-item"); return; }
-        if (_mmEditing.Min < 0) { ShowError("Min must be zero or greater.", "mm-min"); return; }
-        if (_mmEditing.Max < 0) { ShowError("Max must be zero or greater.", "mm-max"); return; }
-        if (_mmEditing.Max < _mmEditing.Min) { ShowError("Max must be greater than or equal to Min.", "mm-max"); return; }
-
-        _mmIsSaving = true;
-        try
-        {
-            await using var db = await DbFactory.CreateDbContextAsync();
-            if (_mmEditing.Id == 0)
-            {
-                _mmEditing.CreatedAt = DateTimeOffset.UtcNow;
-                db.MinMaxSettings.Add(_mmEditing);
-            }
-            else
-            {
-                _mmEditing.UpdatedAt = DateTimeOffset.UtcNow;
-                db.MinMaxSettings.Update(_mmEditing);
-            }
-
-            await db.SaveChangesAsync();
-            _success = "Saved successfully.";
-            CancelMmEdit();
-            await ReloadMinMaxAsync();
-        }
-        catch (Exception ex)
-        {
-            ShowError(DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.");
-        }
-        finally
-        {
-            _mmIsSaving = false;
-        }
-    }
-
-    private async Task ToggleMinMaxActiveAsync(int id)
-    {
-        _success = null;
-        _error = null;
-        _focusId = null;
-
-        await using var db = await DbFactory.CreateDbContextAsync();
-        var entity = await db.MinMaxSettings.FirstOrDefaultAsync(x => x.Id == id);
-        if (entity is null)
-            return;
-
-        entity.IsActive = !entity.IsActive;
-        entity.UpdatedAt = DateTimeOffset.UtcNow;
-        try
-        {
-            await db.SaveChangesAsync();
-            _success = "Saved successfully.";
-            await ReloadMinMaxAsync();
-        }
-        catch (Exception ex)
-        {
-            ShowError(DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.");
-        }
-    }
-
-    private void ShowError(string message, string? focusId = null)
-    {
-        _error = message;
-        _success = null;
-        _focusId = focusId;
-    }
-
-    private Task OnModalClosed()
-    {
-        _success = null;
-        _error = null;
-        _focusId = null;
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
-    private record MinMaxRow(
-        int Id,
-        int WarehouseId,
-        string WarehouseCode,
-        int ItemId,
-        string ItemSku,
-        int? LocationId,
-        string? LocationCode,
-        int Min,
-        int Max,
-        bool IsActive);
-
     private void StartCreate()
     {
         _success = null;
         _error = null;
-        _editing = new Item();
+        _editing = new Item
+        {
+            PackagingType = PackagingType.Unit,
+            PackageQuantity = 1m,
+            Price = 0m,
+            Barcodes = ""
+        };
         _barcodesText = "";
     }
 
@@ -570,21 +309,27 @@
         _success = null;
         _error = null;
         await using var db = await DbFactory.CreateDbContextAsync();
-        var entity = await db.Items.Include(x => x.Barcodes).FirstOrDefaultAsync(x => x.Id == itemId);
+        var entity = await db.Items.FirstOrDefaultAsync(x => x.Id == itemId);
         if (entity is null)
             return;
 
         _editing = new Item
         {
             Id = entity.Id,
+            ProductId = entity.ProductId,
             Sku = entity.Sku,
+            ArticleNumber = entity.ArticleNumber,
             DisplayName = entity.DisplayName,
             Unit = entity.Unit,
+            PackagingType = entity.PackagingType,
+            PackageQuantity = entity.PackageQuantity,
+            Price = entity.Price,
             IsActive = entity.IsActive,
+            Barcodes = entity.Barcodes,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt
         };
-        _barcodesText = string.Join(Environment.NewLine, entity.Barcodes.OrderBy(b => b.Code).Select(b => b.Code));
+        _barcodesText = ItemBarcodeInput.FormatForEditor(entity.Barcodes);
     }
 
     private void CancelEdit()
@@ -601,78 +346,64 @@
         _success = null;
         _error = null;
         _editing.Sku = (_editing.Sku ?? "").Trim().ToUpperInvariant();
+        _editing.ArticleNumber = (_editing.ArticleNumber ?? "").Trim();
         _editing.DisplayName = (_editing.DisplayName ?? "").Trim();
         _editing.Unit = (_editing.Unit ?? "").Trim().ToUpperInvariant();
 
-        if (string.IsNullOrWhiteSpace(_editing.Sku))
+        var barcodeCodes = ItemBarcodeInput.ParseLines(_barcodesText);
+        var validationError = ItemsSaveValidation.ValidateSave(
+            _editing.Sku,
+            _editing.ArticleNumber,
+            _editing.DisplayName,
+            _editing.Unit,
+            _editing.ProductId,
+            _editing.PackageQuantity,
+            _editing.PackagingType,
+            _editing.Price,
+            barcodeCodes);
+        if (validationError is not null)
         {
-            _error = "SKU is required.";
-            return;
-        }
-        if (_editing.Sku.Length > 40)
-        {
-            _error = "SKU must be 40 characters or fewer.";
-            return;
-        }
-        if (string.IsNullOrWhiteSpace(_editing.DisplayName))
-        {
-            _error = "Display name is required.";
-            return;
-        }
-        if (_editing.DisplayName.Length > 50)
-        {
-            _error = "Display name must be 50 characters or fewer.";
-            return;
-        }
-        if (string.IsNullOrWhiteSpace(_editing.Unit))
-        {
-            _error = "Unit is required.";
-            return;
-        }
-        if (_editing.Unit.Length > 10)
-        {
-            _error = "Unit must be 10 characters or fewer.";
+            _error = validationError;
             return;
         }
 
         _isSaving = true;
         try
         {
-            var barcodeCodes = _barcodesText
-                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
             await using var db = await DbFactory.CreateDbContextAsync();
+
+            var conflict = await ItemBarcodeConflictFinder.FindConflictAsync(db, _editing.Id, barcodeCodes);
+            if (conflict is not null)
+            {
+                _error = conflict;
+                return;
+            }
+
+            var barcodesNormalized = ItemBarcodeInput.Join(barcodeCodes);
 
             if (_editing.Id == 0)
             {
                 _editing.CreatedAt = DateTimeOffset.UtcNow;
-                _editing.Barcodes = barcodeCodes.Select(c => new ItemBarcode { Code = c, CreatedAt = DateTimeOffset.UtcNow }).ToList();
+                _editing.Barcodes = barcodesNormalized;
                 db.Items.Add(_editing);
             }
             else
             {
-                var entity = await db.Items.Include(x => x.Barcodes).FirstOrDefaultAsync(x => x.Id == _editing.Id);
+                var entity = await db.Items.FirstOrDefaultAsync(x => x.Id == _editing.Id);
                 if (entity is null)
                     return;
 
+                entity.ProductId = _editing.ProductId;
                 entity.Sku = _editing.Sku;
+                entity.ArticleNumber = _editing.ArticleNumber;
                 entity.DisplayName = _editing.DisplayName;
                 entity.Unit = _editing.Unit;
+                entity.PackagingType = _editing.PackagingType;
+                entity.PackageQuantity = _editing.PackageQuantity;
+                entity.Price = _editing.Price;
                 entity.IsActive = _editing.IsActive;
+                entity.Barcodes = barcodesNormalized;
                 entity.UpdatedAt = DateTimeOffset.UtcNow;
-
-                var existing = entity.Barcodes.Select(b => b.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                var incoming = barcodeCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-                entity.Barcodes.RemoveAll(b => !incoming.Contains(b.Code));
-                foreach (var code in incoming)
-                {
-                    if (!existing.Contains(code))
-                        entity.Barcodes.Add(new ItemBarcode { Code = code, CreatedAt = DateTimeOffset.UtcNow });
-                }
             }
 
             await db.SaveChangesAsync();
@@ -690,11 +421,19 @@
         }
     }
 
+    private Task OnModalClosed()
+    {
+        _success = null;
+        _error = null;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
     private void ValidateMaxLength(string fieldName, string? value, int maxLength)
     {
-        var v = value ?? "";
-        if (v.Length > maxLength)
-            _error = $"{fieldName} must be {maxLength} characters or fewer.";
+        var err = FieldBlurValidation.MaxLengthExceeded(fieldName, value, maxLength);
+        if (err is not null)
+            _error = err;
     }
 
     private async Task ToggleActiveAsync(int itemId)
@@ -720,6 +459,40 @@
         }
     }
 
-    private record ItemRow(int Id, string Sku, string DisplayName, string Unit, bool IsActive, string? BarcodesCsv);
+    private void OnPackagingSelectChanged(ChangeEventArgs e)
+    {
+        if (_editing is null)
+            return;
+        if (int.TryParse(e.Value?.ToString(), out var v) && Enum.IsDefined(typeof(PackagingType), v))
+        {
+            _editing.PackagingType = (PackagingType)v;
+            if (_editing.PackagingType == PackagingType.Unit)
+                _editing.PackageQuantity = 1m;
+        }
+    }
+
+    private static string PackagingLabel(PackagingType t) => t switch
+    {
+        PackagingType.Unit => "Unit",
+        PackagingType.Box => "Box",
+        PackagingType.Case => "Case",
+        PackagingType.Pallet => "Pallet",
+        PackagingType.Bag => "Bag",
+        PackagingType.Kit => "Kit",
+        _ => t.ToString()
+    };
+
+    private record ItemRow(
+        int Id,
+        string Sku,
+        string ArticleNumber,
+        string ProductCode,
+        string DisplayName,
+        string Unit,
+        PackagingType PackagingType,
+        decimal PackageQuantity,
+        decimal Price,
+        bool IsActive,
+        string? BarcodesCsv);
 }
 

@@ -1,16 +1,16 @@
-@page "/warehouses"
+@page "/suppliers"
 @using Microsoft.EntityFrameworkCore
 @using StockControl.Admin.Data
 @inject IDbContextFactory<AppDbContext> DbFactory
 
-<PageTitle>Warehouses</PageTitle>
+<PageTitle>Suppliers</PageTitle>
 
 <FeedbackModal Success="@_success" Error="@_error" OnClosed="() => { _success = null; _error = null; }" />
 
 <section class="panel">
-    <h2>Warehouses</h2>
-    <label for="wh-search">Search</label>
-    <input id="wh-search" type="text" placeholder="code or name" @bind="_search" @bind:after="ResetPaging" />
+    <h2>Suppliers</h2>
+    <label for="sup-search">Search</label>
+    <input id="sup-search" type="text" placeholder="code or name" @bind="_search" @bind:after="ResetPaging" />
     <div class="actions">
         <button class="btn primary" type="button" @onclick="StartCreate">+ New</button>
         <button class="btn ghost" type="button" @onclick="ReloadAsync">Sync</button>
@@ -20,24 +20,24 @@
 @if (_editing is not null)
 {
     <section class="panel">
-        <h2>@(_editing.Id == 0 ? "New warehouse" : "Edit warehouse")</h2>
+        <h2>@(_editing.Id == 0 ? "New supplier" : "Edit supplier")</h2>
         <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
             <div class="row">
                 <div>
-                    <label for="wh-code">Code *</label>
-                    <input id="wh-code" type="text" maxlength="20" @bind="_editing.Code"
+                    <label for="sup-code">Code *</label>
+                    <input id="sup-code" type="text" maxlength="20" @bind="_editing.Code"
                            @onblur='() => ValidateMaxLength("Code", _editing.Code, 20)' required />
                 </div>
                 <div>
-                    <label for="wh-name">Name *</label>
-                    <input id="wh-name" type="text" maxlength="50" @bind="_editing.Name"
-                           @onblur='() => ValidateMaxLength("Name", _editing.Name, 50)' required />
+                    <label for="sup-name">Name *</label>
+                    <input id="sup-name" type="text" maxlength="100" @bind="_editing.Name"
+                           @onblur='() => ValidateMaxLength("Name", _editing.Name, 100)' required />
                 </div>
             </div>
             <div class="row">
                 <div>
-                    <label for="wh-status">Status</label>
-                    <select id="wh-status" @bind="_editing.IsActive">
+                    <label for="sup-status">Status</label>
+                    <select id="sup-status" @bind="_editing.IsActive">
                         <option value="@true">Active</option>
                         <option value="@false">Inactive</option>
                     </select>
@@ -71,16 +71,16 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var w in PagedWarehouses)
+                @foreach (var s in PagedSuppliers)
                 {
-                    <tr @key="w.Id">
-                        <td class="mono">@w.Code</td>
-                        <td>@w.Name</td>
-                        <td><span class="tag @(w.IsActive ? "ok" : "off")">@(w.IsActive ? "Active" : "Inactive")</span></td>
+                    <tr @key="s.Id">
+                        <td class="mono">@s.Code</td>
+                        <td>@s.Name</td>
+                        <td><span class="tag @(s.IsActive ? "ok" : "off")">@(s.IsActive ? "Active" : "Inactive")</span></td>
                         <td class="admin-grid-td-actions">
                             <div class="mini-actions">
-                                <button class="edit" type="button" @onclick="@(() => StartEdit(w))">Edit</button>
-                                <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(w))">@(w.IsActive ? "Deactivate" : "Activate")</button>
+                                <button class="edit" type="button" @onclick="@(() => StartEdit(s))">Edit</button>
+                                <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(s))">@(s.IsActive ? "Deactivate" : "Activate")</button>
                             </div>
                         </td>
                     </tr>
@@ -101,8 +101,8 @@
     private string _search = "";
     private string _status = "";
     private bool _isSaving;
-    private Warehouse? _editing;
-    private List<Warehouse> _warehouses = [];
+    private Supplier? _editing;
+    private List<Supplier> _suppliers = [];
     private string? _success;
     private string? _error;
     private const int PageSize = 10;
@@ -115,29 +115,29 @@
         await ReloadAsync();
     }
 
-    private IEnumerable<Warehouse> FilteredWarehouses
-        => _warehouses.Where(w =>
+    private IEnumerable<Supplier> FilteredSuppliers
+        => _suppliers.Where(s =>
             (string.IsNullOrWhiteSpace(_search) ||
-             w.Code.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
-             w.Name.Contains(_search, StringComparison.OrdinalIgnoreCase))
+             s.Code.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             s.Name.Contains(_search, StringComparison.OrdinalIgnoreCase))
             && (_status switch
             {
-                "active" => w.IsActive,
-                "inactive" => !w.IsActive,
+                "active" => s.IsActive,
+                "inactive" => !s.IsActive,
                 _ => true
             }));
 
-    private int _totalRows => OrderedFilteredWarehouses.Count();
+    private int _totalRows => OrderedFilteredSuppliers.Count();
     private int _maxPageIndex => Math.Max(0, (_totalRows - 1) / PageSize);
     private int _showFrom => _totalRows == 0 ? 0 : (_pageIndex * PageSize) + 1;
     private int _showTo => Math.Min(_totalRows, (_pageIndex * PageSize) + PageSize);
-    private IEnumerable<Warehouse> PagedWarehouses => OrderedFilteredWarehouses.Skip(_pageIndex * PageSize).Take(PageSize);
+    private IEnumerable<Supplier> PagedSuppliers => OrderedFilteredSuppliers.Skip(_pageIndex * PageSize).Take(PageSize);
 
-    private IEnumerable<Warehouse> OrderedFilteredWarehouses
+    private IEnumerable<Supplier> OrderedFilteredSuppliers
     {
         get
         {
-            var q = FilteredWarehouses;
+            var q = FilteredSuppliers;
             if (string.IsNullOrEmpty(_sortKey))
                 return q.OrderByDescending(x => x.Id);
             return _sortKey switch
@@ -171,7 +171,7 @@
     {
         ResetPaging();
         await using var db = await DbFactory.CreateDbContextAsync();
-        _warehouses = await db.Warehouses.OrderBy(x => x.Code).ToListAsync();
+        _suppliers = await db.Suppliers.OrderBy(x => x.Code).ToListAsync();
     }
 
     private void PrevPage()
@@ -190,21 +190,21 @@
     {
         _success = null;
         _error = null;
-        _editing = new Warehouse();
+        _editing = new Supplier();
     }
 
-    private void StartEdit(Warehouse w)
+    private void StartEdit(Supplier s)
     {
         _success = null;
         _error = null;
-        _editing = new Warehouse
+        _editing = new Supplier
         {
-            Id = w.Id,
-            Code = w.Code,
-            Name = w.Name,
-            IsActive = w.IsActive,
-            CreatedAt = w.CreatedAt,
-            UpdatedAt = w.UpdatedAt
+            Id = s.Id,
+            Code = s.Code,
+            Name = s.Name,
+            IsActive = s.IsActive,
+            CreatedAt = s.CreatedAt,
+            UpdatedAt = s.UpdatedAt
         };
     }
 
@@ -220,7 +220,7 @@
         _editing.Code = (_editing.Code ?? "").Trim().ToUpperInvariant();
         _editing.Name = (_editing.Name ?? "").Trim();
 
-        var validationError = WarehousesSaveValidation.ValidateSave(_editing.Code, _editing.Name);
+        var validationError = SuppliersSaveValidation.ValidateSave(_editing.Code, _editing.Name);
         if (validationError is not null)
         {
             _error = validationError;
@@ -235,12 +235,12 @@
             if (_editing.Id == 0)
             {
                 _editing.CreatedAt = DateTimeOffset.UtcNow;
-                db.Warehouses.Add(_editing);
+                db.Suppliers.Add(_editing);
             }
             else
             {
                 _editing.UpdatedAt = DateTimeOffset.UtcNow;
-                db.Warehouses.Update(_editing);
+                db.Suppliers.Update(_editing);
             }
 
             await db.SaveChangesAsync();
@@ -265,12 +265,12 @@
             _error = err;
     }
 
-    private async Task ToggleActiveAsync(Warehouse w)
+    private async Task ToggleActiveAsync(Supplier s)
     {
         _success = null;
         _error = null;
         await using var db = await DbFactory.CreateDbContextAsync();
-        var entity = await db.Warehouses.FirstOrDefaultAsync(x => x.Id == w.Id);
+        var entity = await db.Suppliers.FirstOrDefaultAsync(x => x.Id == s.Id);
         if (entity is null)
             return;
 
@@ -288,4 +288,3 @@
         }
     }
 }
-

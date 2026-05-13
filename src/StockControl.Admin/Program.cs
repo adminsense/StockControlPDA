@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using StockControl.Admin.Api;
 using StockControl.Admin.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,10 +12,18 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("connWebshop"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("connStockControlPDA"));
 });
 
 var app = builder.Build();
+
+// Keep SQL schema in sync with EF migrations (avoids "invalid column" after pulling new code).
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+    await using var db = await factory.CreateDbContextAsync();
+    await db.Database.MigrateAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -29,6 +39,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.MapStockMovementApi();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

@@ -11,3 +11,11 @@ window.stockControl.focusById = (id) => {
   }
 };
 
+window.stockControl.blurActive = () => {
+  try {
+    const a = document.activeElement;
+    if (a && typeof a.blur === "function") a.blur();
+  } catch {
+    // ignore
+  }
+};

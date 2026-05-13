@@ -54,14 +54,20 @@
 
 <section class="panel">
     <h2>List</h2>
-    <div style="overflow-x:auto">
-        <table>
+    <div class="list-table-wrap">
+        <table class="admin-users-table admin-grid-table">
+            <colgroup>
+                <col class="admin-us-col-user" />
+                <col class="admin-us-col-name" />
+                <col class="admin-us-col-status" />
+                <col class="admin-us-col-actions" />
+            </colgroup>
             <thead>
                 <tr>
-                    <th>User</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th style="text-align:right">Actions</th>
+                    <SortableHeaderCell Label="User" SortKey="username" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Name" SortKey="name" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Status" SortKey="status" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <th class="admin-grid-th-actions" scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -71,7 +77,7 @@
                         <td class="mono">@u.Username</td>
                         <td>@u.Name</td>
                         <td><span class="tag @(u.IsActive ? "ok" : "off")">@(u.IsActive ? "Active" : "Inactive")</span></td>
-                        <td>
+                        <td class="admin-grid-td-actions">
                             <div class="mini-actions">
                                 <button class="edit" type="button" @onclick="@(() => StartEdit(u))">Edit</button>
                                 <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(u))">@(u.IsActive ? "Deactivate" : "Activate")</button>
@@ -103,6 +109,8 @@
     private List<AppUser> _users = [];
     private const int PageSize = 10;
     private int _pageIndex;
+    private string? _sortKey;
+    private bool _sortDesc;
 
     protected override async Task OnInitializedAsync()
     {
@@ -121,11 +129,40 @@
                 _ => true
             }));
 
-    private int _totalRows => FilteredUsers.Count();
+    private int _totalRows => OrderedFilteredUsers.Count();
     private int _maxPageIndex => Math.Max(0, (_totalRows - 1) / PageSize);
     private int _showFrom => _totalRows == 0 ? 0 : (_pageIndex * PageSize) + 1;
     private int _showTo => Math.Min(_totalRows, (_pageIndex * PageSize) + PageSize);
-    private IEnumerable<AppUser> PagedUsers => FilteredUsers.Skip(_pageIndex * PageSize).Take(PageSize);
+    private IEnumerable<AppUser> PagedUsers => OrderedFilteredUsers.Skip(_pageIndex * PageSize).Take(PageSize);
+
+    private IEnumerable<AppUser> OrderedFilteredUsers
+    {
+        get
+        {
+            var q = FilteredUsers;
+            if (string.IsNullOrEmpty(_sortKey))
+                return q.OrderByDescending(x => x.Id);
+            return _sortKey switch
+            {
+                "username" => _sortDesc ? q.OrderByDescending(x => x.Username) : q.OrderBy(x => x.Username),
+                "name" => _sortDesc ? q.OrderByDescending(x => x.Name) : q.OrderBy(x => x.Name),
+                "status" => _sortDesc ? q.OrderByDescending(x => x.IsActive) : q.OrderBy(x => x.IsActive),
+                _ => q.OrderByDescending(x => x.Id)
+            };
+        }
+    }
+
+    private void RequestSort(string key)
+    {
+        if (string.Equals(_sortKey, key, StringComparison.Ordinal))
+            _sortDesc = !_sortDesc;
+        else
+        {
+            _sortKey = key;
+            _sortDesc = true;
+        }
+        _pageIndex = 0;
+    }
 
     private void ResetPaging()
     {
@@ -185,24 +222,10 @@
         _editing.Username = (_editing.Username ?? "").Trim();
         _editing.Name = (_editing.Name ?? "").Trim();
 
-        if (string.IsNullOrWhiteSpace(_editing.Username))
+        var validationError = UsersSaveValidation.ValidateSave(_editing.Username, _editing.Name);
+        if (validationError is not null)
         {
-            _error = "Username is required.";
-            return;
-        }
-        if (_editing.Username.Length > 50)
-        {
-            _error = "Username must be 50 characters or fewer.";
-            return;
-        }
-        if (string.IsNullOrWhiteSpace(_editing.Name))
-        {
-            _error = "Name is required.";
-            return;
-        }
-        if (_editing.Name.Length > 50)
-        {
-            _error = "Name must be 50 characters or fewer.";
+            _error = validationError;
             return;
         }
 
@@ -239,9 +262,9 @@
 
     private void ValidateMaxLength(string fieldName, string? value, int maxLength)
     {
-        var v = value ?? "";
-        if (v.Length > maxLength)
-            _error = $"{fieldName} must be {maxLength} characters or fewer.";
+        var err = FieldBlurValidation.MaxLengthExceeded(fieldName, value, maxLength);
+        if (err is not null)
+            _error = err;
     }
 
     private async Task ToggleActiveAsync(AppUser u)

@@ -31,12 +31,8 @@ public static class DbErrorTranslator
                         => "Product code already exists.",
                     var m when m.Contains("IX_items_Sku", StringComparison.OrdinalIgnoreCase)
                         => "SKU already exists.",
-                    var m when m.Contains("IX_item_barcodes_Code", StringComparison.OrdinalIgnoreCase)
-                        => "Barcode already exists (it must be unique).",
                     var m when m.Contains("IX_minmax_settings_WarehouseId_ItemId_LocationId", StringComparison.OrdinalIgnoreCase)
                         => "A Min/Max setting already exists for this warehouse + item + location.",
-                    var m when m.Contains("IX_minmax_settings_WarehouseId_ItemId", StringComparison.OrdinalIgnoreCase)
-                        => "A Min/Max setting already exists for this warehouse + item (without location).",
                     _ => "Duplicate value. Please review the fields and try again."
                 };
                 return true;

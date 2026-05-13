@@ -1,0 +1,449 @@
+@page "/minmax"
+@using Microsoft.EntityFrameworkCore
+@using StockControl.Admin.Data
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<PageTitle>Min / Max</PageTitle>
+
+<FeedbackModal Success="@_success" Error="@_error" FocusId="@_focusId" OnClosed="OnModalClosed" />
+
+<section class="panel">
+    <h2>Min / Max</h2>
+    <div class="row">
+        <div>
+            <label for="mm-warehouse">Warehouse</label>
+            <select id="mm-warehouse" @bind="_mmWarehouseId" @bind:after="OnMmWarehouseChanged">
+                <option value="0">All</option>
+                @foreach (var w in _mmWarehouses)
+                {
+                    <option value="@w.Id">@w.Code - @w.Name</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="mm-item">Item (SKU)</label>
+            <select id="mm-item" @bind="_mmItemId" @bind:after="ResetMinMaxPaging">
+                <option value="0">All</option>
+                @foreach (var i in _mmItems)
+                {
+                    <option value="@i.Id">@i.Sku@if (!string.IsNullOrWhiteSpace(i.ArticleNumber)) { <text> · @i.ArticleNumber</text> } — @i.DisplayName</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="actions">
+        <button class="btn primary" type="button" @onclick="StartMmCreate">+ New</button>
+        <button class="btn ghost" type="button" @onclick="ReloadMinMaxAsync">Sync</button>
+    </div>
+    <p class="hint">Set Min/Max per <strong>warehouse + item + location</strong> (location is required).</p>
+</section>
+
+@if (_mmEditing is not null)
+{
+    <section class="panel">
+        <h2>@(_mmEditing.Id == 0 ? "New min/max" : "Edit min/max")</h2>
+        <form @onsubmit="SaveMinMaxAsync" @onsubmit:preventDefault="true">
+            <div class="row">
+                <div>
+                    <label for="mm-edit-warehouse">Warehouse *</label>
+                    <select id="mm-edit-warehouse" @bind="_mmEditing.WarehouseId" @bind:after="OnMmEditingWarehouseChanged" required>
+                        <option value="0">-- Select --</option>
+                        @foreach (var w in _mmWarehouses)
+                        {
+                            <option value="@w.Id">@w.Code - @w.Name</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="mm-edit-item">Item (SKU) *</label>
+                    <select id="mm-edit-item" @bind="_mmEditing.ItemId" required>
+                        <option value="0">-- Select --</option>
+                        @foreach (var i in _mmItems)
+                        {
+                            <option value="@i.Id">@i.Sku@if (!string.IsNullOrWhiteSpace(i.ArticleNumber)) { <text> · @i.ArticleNumber</text> } — @i.DisplayName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="row3">
+                <div>
+                    <label for="mm-min">Min *</label>
+                    <input id="mm-min" type="number" min="0" @bind="_mmEditing.Min" required />
+                </div>
+                <div>
+                    <label for="mm-max">Max *</label>
+                    <input id="mm-max" type="number" min="0" @bind="_mmEditing.Max" required />
+                </div>
+                <div>
+                    <label for="mm-loc">Location *</label>
+                    <select id="mm-loc" @bind="_mmEditing.LocationId" required>
+                        <option value="0">-- Select --</option>
+                        @foreach (var l in _mmLocationsForEditing)
+                        {
+                            <option value="@l.Id">@l.Code</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn success" type="submit" disabled="@_mmIsSaving">Save</button>
+                <button class="btn danger" type="button" @onclick="CancelMmEdit">Cancel</button>
+            </div>
+        </form>
+    </section>
+}
+
+<section class="panel">
+    <h2>Current settings</h2>
+    <div class="list-table-wrap">
+        <table class="admin-mm-table admin-grid-table">
+            <colgroup>
+                <col class="admin-mm-col-wh" />
+                <col class="admin-mm-col-loc" />
+                <col class="admin-mm-col-sku" />
+                <col class="admin-mm-col-art" />
+                <col class="admin-mm-col-num" />
+                <col class="admin-mm-col-num" />
+                <col class="admin-mm-col-actions" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <SortableHeaderCell Label="Warehouse" SortKey="warehouse" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Location" SortKey="location" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="SKU" SortKey="sku" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Art. no." SortKey="articleno" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Min" SortKey="min" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
+                    <SortableHeaderCell Label="Max" SortKey="max" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
+                    <th class="admin-grid-th-actions" scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in PagedMinMax)
+                {
+                    <tr @key="m.Id">
+                        <td class="mono">@m.WarehouseCode</td>
+                        <td class="mono">@m.LocationCode</td>
+                        <td class="mono">@m.ItemSku</td>
+                        <td class="mono">@(string.IsNullOrWhiteSpace(m.ItemArticleNumber) ? "—" : m.ItemArticleNumber)</td>
+                        <td class="col-num admin-mm-td-num">@m.Min</td>
+                        <td class="col-num admin-mm-td-num">@m.Max</td>
+                        <td class="admin-grid-td-actions">
+                            <div class="mini-actions mini-actions-row">
+                                <button class="edit" type="button" @onclick="@(() => StartMmEdit(m.Id))">Edit</button>
+                                <button class="del" type="button" disabled="@(!m.IsActive)" @onclick="@(() => ToggleMinMaxActiveAsync(m.Id))">Deactivate</button>
+                                <button class="edit" type="button" disabled="@(m.IsActive)" @onclick="@(() => ToggleMinMaxActiveAsync(m.Id))">Activate</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="actions" style="justify-content:space-between">
+        <div class="hint" style="margin:0">Showing <strong>@_mmShowFrom</strong>-<strong>@_mmShowTo</strong> of <strong>@_mmTotalRows</strong></div>
+        <div class="mini-actions">
+            <button class="edit" type="button" @onclick="PrevMinMaxPage" disabled="@(_mmPageIndex == 0)">Prev</button>
+            <button class="edit" type="button" @onclick="NextMinMaxPage" disabled="@(_mmPageIndex >= _mmMaxPageIndex)">Next</button>
+        </div>
+    </div>
+</section>
+
+@code {
+    private int _mmWarehouseId;
+    private int _mmItemId;
+    private bool _mmIsSaving;
+    private MinMaxSetting? _mmEditing;
+    private List<Warehouse> _mmWarehouses = [];
+    private List<Item> _mmItems = [];
+    private List<Location> _mmAllLocations = [];
+    private List<Location> _mmLocationsForEditing = [];
+    private List<MinMaxRow> _mmRows = [];
+    private string? _success;
+    private string? _error;
+    private string? _focusId;
+
+    private const int PageSize = 10;
+    private int _mmPageIndex;
+    private string? _sortKey;
+    private bool _sortDesc;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadMinMaxAsync();
+    }
+
+    private IEnumerable<MinMaxRow> FilteredMinMax
+        => _mmRows.Where(m =>
+            (_mmWarehouseId == 0 || m.WarehouseId == _mmWarehouseId)
+            && (_mmItemId == 0 || m.ItemId == _mmItemId));
+
+    private int _mmTotalRows => OrderedFilteredMinMax.Count();
+    private int _mmMaxPageIndex => Math.Max(0, (_mmTotalRows - 1) / PageSize);
+    private int _mmShowFrom => _mmTotalRows == 0 ? 0 : (_mmPageIndex * PageSize) + 1;
+    private int _mmShowTo => Math.Min(_mmTotalRows, (_mmPageIndex * PageSize) + PageSize);
+    private IEnumerable<MinMaxRow> PagedMinMax => OrderedFilteredMinMax.Skip(_mmPageIndex * PageSize).Take(PageSize);
+
+    private IEnumerable<MinMaxRow> OrderedFilteredMinMax
+    {
+        get
+        {
+            var q = FilteredMinMax;
+            if (string.IsNullOrEmpty(_sortKey))
+                return q.OrderByDescending(m => m.Id);
+            return _sortKey switch
+            {
+                "warehouse" => _sortDesc ? q.OrderByDescending(m => m.WarehouseCode) : q.OrderBy(m => m.WarehouseCode),
+                "location" => _sortDesc
+                    ? q.OrderByDescending(m => m.LocationCode)
+                    : q.OrderBy(m => m.LocationCode),
+                "sku" => _sortDesc ? q.OrderByDescending(m => m.ItemSku) : q.OrderBy(m => m.ItemSku),
+                "articleno" => _sortDesc ? q.OrderByDescending(m => m.ItemArticleNumber) : q.OrderBy(m => m.ItemArticleNumber),
+                "min" => _sortDesc ? q.OrderByDescending(m => m.Min) : q.OrderBy(m => m.Min),
+                "max" => _sortDesc ? q.OrderByDescending(m => m.Max) : q.OrderBy(m => m.Max),
+                _ => q.OrderByDescending(m => m.Id)
+            };
+        }
+    }
+
+    private void RequestSort(string key)
+    {
+        if (string.Equals(_sortKey, key, StringComparison.Ordinal))
+            _sortDesc = !_sortDesc;
+        else
+        {
+            _sortKey = key;
+            _sortDesc = true;
+        }
+        _mmPageIndex = 0;
+    }
+
+    private void ResetMinMaxPaging()
+    {
+        _mmPageIndex = 0;
+    }
+
+    private async Task ReloadMinMaxAsync()
+    {
+        ResetMinMaxPaging();
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _mmWarehouses = await db.Warehouses.OrderBy(x => x.Code).ToListAsync();
+        _mmItems = await db.Items.OrderBy(x => x.Sku).ToListAsync();
+        _mmAllLocations = await db.Locations.OrderBy(x => x.Code).ToListAsync();
+
+        var list = await db.MinMaxSettings
+            .AsNoTracking()
+            .Include(x => x.Warehouse)
+            .Include(x => x.Item)
+            .Include(x => x.Location)
+            .ToListAsync();
+
+        _mmRows = list
+            .Select(x => new MinMaxRow(
+                x.Id,
+                x.WarehouseId,
+                x.Warehouse?.Code ?? "",
+                x.ItemId,
+                x.Item?.Sku ?? "",
+                x.Item?.ArticleNumber ?? "",
+                x.LocationId,
+                x.Location?.Code ?? "",
+                x.Min,
+                x.Max,
+                x.IsActive))
+            .OrderBy(x => x.WarehouseCode)
+            .ThenBy(x => x.ItemSku)
+            .ThenBy(x => x.LocationCode)
+            .ToList();
+    }
+
+    private void OnMmWarehouseChanged()
+    {
+        ResetMinMaxPaging();
+        _mmItemId = 0;
+    }
+
+    private void PrevMinMaxPage()
+    {
+        if (_mmPageIndex > 0)
+            _mmPageIndex--;
+    }
+
+    private void NextMinMaxPage()
+    {
+        if (_mmPageIndex < _mmMaxPageIndex)
+            _mmPageIndex++;
+    }
+
+    private void StartMmCreate()
+    {
+        _success = null;
+        _error = null;
+        _mmEditing = new MinMaxSetting
+        {
+            WarehouseId = _mmWarehouseId != 0 ? _mmWarehouseId : 0,
+            ItemId = _mmItemId != 0 ? _mmItemId : 0,
+            LocationId = 0,
+            Min = 0,
+            Max = 0
+        };
+        SyncMmLocationsForEditing();
+    }
+
+    private async Task StartMmEdit(int id)
+    {
+        _success = null;
+        _error = null;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var entity = await db.MinMaxSettings.FirstOrDefaultAsync(x => x.Id == id);
+        if (entity is null)
+            return;
+
+        _mmEditing = new MinMaxSetting
+        {
+            Id = entity.Id,
+            WarehouseId = entity.WarehouseId,
+            ItemId = entity.ItemId,
+            LocationId = entity.LocationId,
+            Min = entity.Min,
+            Max = entity.Max,
+            IsActive = entity.IsActive,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt
+        };
+        SyncMmLocationsForEditing();
+    }
+
+    private void SyncMmLocationsForEditing()
+    {
+        if (_mmEditing is null || _mmEditing.WarehouseId == 0)
+        {
+            _mmLocationsForEditing = [];
+            return;
+        }
+
+        _mmLocationsForEditing = _mmAllLocations
+            .Where(l => l.WarehouseId == _mmEditing.WarehouseId)
+            .OrderBy(l => l.Code)
+            .ToList();
+    }
+
+    private void OnMmEditingWarehouseChanged()
+    {
+        if (_mmEditing is null)
+            return;
+
+        _mmEditing.LocationId = 0;
+        SyncMmLocationsForEditing();
+    }
+
+    private void CancelMmEdit()
+    {
+        _mmEditing = null;
+        _mmLocationsForEditing = [];
+    }
+
+    private async Task SaveMinMaxAsync()
+    {
+        if (_mmEditing is null)
+            return;
+
+        _success = null;
+        _error = null;
+        _focusId = null;
+
+        var issue = MinMaxSaveValidation.Validate(
+            _mmEditing.WarehouseId,
+            _mmEditing.ItemId,
+            _mmEditing.LocationId,
+            _mmEditing.Min,
+            _mmEditing.Max);
+        if (issue is not null)
+        {
+            ShowError(issue.Value.Message, issue.Value.FocusId);
+            return;
+        }
+
+        _mmIsSaving = true;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            if (_mmEditing.Id == 0)
+            {
+                _mmEditing.CreatedAt = DateTimeOffset.UtcNow;
+                db.MinMaxSettings.Add(_mmEditing);
+            }
+            else
+            {
+                _mmEditing.UpdatedAt = DateTimeOffset.UtcNow;
+                db.MinMaxSettings.Update(_mmEditing);
+            }
+
+            await db.SaveChangesAsync();
+            _success = "Saved successfully.";
+            CancelMmEdit();
+            await ReloadMinMaxAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError(DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.");
+        }
+        finally
+        {
+            _mmIsSaving = false;
+        }
+    }
+
+    private async Task ToggleMinMaxActiveAsync(int id)
+    {
+        _success = null;
+        _error = null;
+        _focusId = null;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var entity = await db.MinMaxSettings.FirstOrDefaultAsync(x => x.Id == id);
+        if (entity is null)
+            return;
+
+        entity.IsActive = !entity.IsActive;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        try
+        {
+            await db.SaveChangesAsync();
+            _success = "Saved successfully.";
+            await ReloadMinMaxAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError(DbErrorTranslator.TryGetUserFriendlyMessage(ex, out var msg) ? msg : "Unexpected error. Please try again.");
+        }
+    }
+
+    private void ShowError(string message, string? focusId = null)
+    {
+        _error = message;
+        _success = null;
+        _focusId = focusId;
+    }
+
+    private Task OnModalClosed()
+    {
+        _success = null;
+        _error = null;
+        _focusId = null;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private record MinMaxRow(
+        int Id,
+        int WarehouseId,
+        string WarehouseCode,
+        int ItemId,
+        string ItemSku,
+        string ItemArticleNumber,
+        int LocationId,
+        string LocationCode,
+        int Min,
+        int Max,
+        bool IsActive);
+}

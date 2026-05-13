@@ -66,6 +66,8 @@ public sealed class Item : EntityBase
     public Product? Product { get; set; }
 
     public string Sku { get; set; } = "";
+    /// <summary>Supplier / catalog article number (Artikelnummer); distinct from internal SKU.</summary>
+    public string ArticleNumber { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public string Unit { get; set; } = "";
 
@@ -73,15 +75,8 @@ public sealed class Item : EntityBase
     public decimal PackageQuantity { get; set; } = 1m;
     public decimal Price { get; set; }
 
-    public List<ItemBarcode> Barcodes { get; set; } = [];
-}
-
-public sealed class ItemBarcode : EntityBase
-{
-    public int ItemId { get; set; }
-    public Item? Item { get; set; }
-
-    public string Code { get; set; } = "";
+    /// <summary>Scanner / wedge codes, one per line (newline-separated). Unique across all items (enforced in app on save).</summary>
+    public string Barcodes { get; set; } = "";
 }
 
 public sealed class MinMaxSetting : EntityBase
@@ -92,7 +87,7 @@ public sealed class MinMaxSetting : EntityBase
     public int ItemId { get; set; }
     public Item? Item { get; set; }
 
-    public int? LocationId { get; set; }
+    public int LocationId { get; set; }
     public Location? Location { get; set; }
 
     public int Min { get; set; }
@@ -111,4 +106,29 @@ public sealed class StockBalance : EntityBase
     public Item? Item { get; set; }
 
     public decimal QuantityOnHand { get; set; }
+}
+
+/// <summary>Immutable stock movement line (PDA / API). Quantity is always positive; direction is IN or OUT.</summary>
+public sealed class StockMovement
+{
+    public long Id { get; set; }
+
+    public int WarehouseId { get; set; }
+    public Warehouse? Warehouse { get; set; }
+
+    public int LocationId { get; set; }
+    public Location? Location { get; set; }
+
+    public int ItemId { get; set; }
+    public Item? Item { get; set; }
+
+    public int UserId { get; set; }
+    public AppUser? User { get; set; }
+
+    public decimal Quantity { get; set; }
+
+    /// <summary>IN or OUT (stored uppercase).</summary>
+    public string Direction { get; set; } = "";
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

@@ -1,23 +1,39 @@
-<nav class="tabs" role="tablist" aria-label="Admin sections">
+<nav class="tabs tabs-admin" role="tablist" aria-label="Admin sections">
     <NavLink href="/users" role="tab" aria-selected="@IsActive("/users")" Match="NavLinkMatch.All">Users</NavLink>
     <NavLink href="/warehouses" role="tab" aria-selected="@IsActive("/warehouses")">Warehouses</NavLink>
     <NavLink href="/locations" role="tab" aria-selected="@IsActive("/locations")">Locations</NavLink>
+    <NavLink href="/suppliers" role="tab" aria-selected="@IsActive("/suppliers")">Suppliers</NavLink>
     <NavLink href="/products" role="tab" aria-selected="@IsActive("/products")">Products</NavLink>
     <NavLink href="/items" role="tab" aria-selected="@IsActive("/items")">Items (SKU)</NavLink>
-    <NavLink href="/stock" role="tab" aria-selected="@IsActive("/stock")">Stock</NavLink>
+    <NavLink href="/minmax" role="tab" aria-selected="@IsActive("/minmax")">Min / Max</NavLink>
+    <NavLink href="/stock" role="tab" aria-selected="@IsStockActive()">Stock Control</NavLink>
 </nav>
 
 @code {
     [Inject] private NavigationManager Nav { get; set; } = default!;
 
+    private static string NormalizePath(string rel)
+    {
+        if (string.IsNullOrWhiteSpace(rel))
+            return "/";
+        rel = rel.Trim();
+        if (!rel.StartsWith('/'))
+            rel = "/" + rel;
+        var i = rel.IndexOf('?', StringComparison.Ordinal);
+        if (i >= 0)
+            rel = rel[..i];
+        return rel.TrimEnd('/') is "" ? "/" : rel.TrimEnd('/');
+    }
+
     private bool IsActive(string href)
     {
-        var rel = Nav.ToBaseRelativePath(Nav.Uri);
-        if (string.IsNullOrWhiteSpace(rel))
-            rel = "/";
-        if (!rel.StartsWith("/"))
-            rel = "/" + rel;
-        return string.Equals(rel.TrimEnd('/'), href.TrimEnd('/'), StringComparison.OrdinalIgnoreCase);
+        var rel = NormalizePath(Nav.ToBaseRelativePath(Nav.Uri));
+        return string.Equals(rel, href.TrimEnd('/'), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsStockActive()
+    {
+        var rel = NormalizePath(Nav.ToBaseRelativePath(Nav.Uri));
+        return rel is "/" or "/stock";
     }
 }
-

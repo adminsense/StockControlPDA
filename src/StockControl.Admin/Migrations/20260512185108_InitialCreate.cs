@@ -70,7 +70,7 @@ namespace StockControl.Admin.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     SupplierId = table.Column<int>(type: "int", nullable: false),
                     Code = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
@@ -118,11 +118,13 @@ namespace StockControl.Admin.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProductId = table.Column<int>(type: "int", nullable: false),
                     Sku = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
-                    DisplayName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ArticleNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    DisplayName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Unit = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     PackagingType = table.Column<int>(type: "int", nullable: false),
                     PackageQuantity = table.Column<decimal>(type: "decimal(18,3)", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Barcodes = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
@@ -139,29 +141,6 @@ namespace StockControl.Admin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "item_barcodes",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ItemId = table.Column<int>(type: "int", nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_item_barcodes", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_item_barcodes_items_ItemId",
-                        column: x => x.ItemId,
-                        principalTable: "items",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "minmax_settings",
                 columns: table => new
                 {
@@ -169,7 +148,7 @@ namespace StockControl.Admin.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     WarehouseId = table.Column<int>(type: "int", nullable: false),
                     ItemId = table.Column<int>(type: "int", nullable: false),
-                    LocationId = table.Column<int>(type: "int", nullable: true),
+                    LocationId = table.Column<int>(type: "int", nullable: false),
                     Min = table.Column<int>(type: "int", nullable: false),
                     Max = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
@@ -237,17 +216,6 @@ namespace StockControl.Admin.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_item_barcodes_Code",
-                table: "item_barcodes",
-                column: "Code",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_item_barcodes_ItemId",
-                table: "item_barcodes",
-                column: "ItemId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_items_ProductId",
                 table: "items",
                 column: "ProductId");
@@ -275,18 +243,10 @@ namespace StockControl.Admin.Migrations
                 column: "LocationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_minmax_settings_WarehouseId_ItemId",
-                table: "minmax_settings",
-                columns: new[] { "WarehouseId", "ItemId" },
-                unique: true,
-                filter: "[LocationId] IS NULL");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_minmax_settings_WarehouseId_ItemId_LocationId",
                 table: "minmax_settings",
                 columns: new[] { "WarehouseId", "ItemId", "LocationId" },
-                unique: true,
-                filter: "[LocationId] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_products_Code",
@@ -337,9 +297,6 @@ namespace StockControl.Admin.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "item_barcodes");
-
             migrationBuilder.DropTable(
                 name: "minmax_settings");
 

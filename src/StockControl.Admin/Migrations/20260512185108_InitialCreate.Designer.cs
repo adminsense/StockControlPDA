@@ -12,7 +12,7 @@ using StockControl.Admin.Data;
 namespace StockControl.Admin.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260512161649_InitialCreate")]
+    [Migration("20260512185108_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -68,13 +68,22 @@ namespace StockControl.Admin.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ArticleNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Barcodes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -112,41 +121,6 @@ namespace StockControl.Admin.Migrations
                         .IsUnique();
 
                     b.ToTable("items", (string)null);
-                });
-
-            modelBuilder.Entity("StockControl.Admin.Data.ItemBarcode", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ItemId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.HasIndex("ItemId");
-
-                    b.ToTable("item_barcodes", (string)null);
                 });
 
             modelBuilder.Entity("StockControl.Admin.Data.Location", b =>
@@ -203,7 +177,7 @@ namespace StockControl.Admin.Migrations
                     b.Property<int>("ItemId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("LocationId")
+                    b.Property<int>("LocationId")
                         .HasColumnType("int");
 
                     b.Property<int>("Max")
@@ -224,13 +198,8 @@ namespace StockControl.Admin.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.HasIndex("WarehouseId", "ItemId")
-                        .IsUnique()
-                        .HasFilter("[LocationId] IS NULL");
-
                     b.HasIndex("WarehouseId", "ItemId", "LocationId")
-                        .IsUnique()
-                        .HasFilter("[LocationId] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("minmax_settings", (string)null);
                 });
@@ -256,8 +225,8 @@ namespace StockControl.Admin.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("int");
@@ -397,17 +366,6 @@ namespace StockControl.Admin.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("StockControl.Admin.Data.ItemBarcode", b =>
-                {
-                    b.HasOne("StockControl.Admin.Data.Item", "Item")
-                        .WithMany("Barcodes")
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Item");
-                });
-
             modelBuilder.Entity("StockControl.Admin.Data.Location", b =>
                 {
                     b.HasOne("StockControl.Admin.Data.Warehouse", "Warehouse")
@@ -430,7 +388,8 @@ namespace StockControl.Admin.Migrations
                     b.HasOne("StockControl.Admin.Data.Location", "Location")
                         .WithMany()
                         .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("StockControl.Admin.Data.Warehouse", "Warehouse")
                         .WithMany()
@@ -481,11 +440,6 @@ namespace StockControl.Admin.Migrations
                     b.Navigation("Location");
 
                     b.Navigation("Warehouse");
-                });
-
-            modelBuilder.Entity("StockControl.Admin.Data.Item", b =>
-                {
-                    b.Navigation("Barcodes");
                 });
 
             modelBuilder.Entity("StockControl.Admin.Data.Product", b =>

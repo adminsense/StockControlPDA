@@ -156,9 +156,66 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 
 ---
 
+## 10. Local testing (developer notebook — Admin + PDA without a handset)
+
+This is the **recommended way** to validate end‑to‑end behaviour before a physical PDA exists: run **Admin** on your Windows notebook (database + HTTP API + Blazor UI), then run the **MAUI app** on an **Android emulator** or on a **USB‑connected / same‑Wi‑Fi Android phone**.
+
+### What you need
+
+- **Windows** with a **.NET SDK** compatible with the solution (see each `.csproj` `TargetFramework` / SDK).
+- **SQL Server** reachable from that machine (same meaning as `ConnectionStrings:connStockControlPDA` in Admin).
+- **Android SDK + emulator** (Android Studio) *or* a physical **Android** device with USB debugging / same Wi‑Fi as the notebook.
+
+### 1) Database connection
+
+1. Edit `src/StockControl.Admin/appsettings.json` and set `ConnectionStrings:connStockControlPDA` to your **server + catalog** (replace the sample value with your instance).
+2. Start **Admin** once: on startup it runs **`MigrateAsync`**, so the schema is created or updated automatically (see [README-admin-stock](README-admin-stock.md) § *Database (EF Core)* for manual `dotnet ef` commands if you prefer).
+
+### 2) (Optional) demo / volume data
+
+- For a **large optional dataset**, you can run `src/StockControl.Admin/Database/seed.sql` in **SQL Server Management Studio** **after** migrations — it targets an empty-ish database and inserts warehouses/locations/items and more (see the header comments in that file).
+- For a **minimal smoke test**, you can skip the seed and instead create **warehouses**, **locations**, **items** (and optionally **Min / Max** / opening balances) entirely from the **Admin** browser UI.
+
+### 3) Run Admin so the phone/emulator can call the HTTP API
+
+From the **repository root**:
+
+```powershell
+dotnet run --project src/StockControl.Admin/StockControl.Admin.csproj --launch-profile http-pda
+```
+
+- This uses `Properties/launchSettings.json` profile **`http-pda`**: Kestrel listens on **`http://0.0.0.0:5264`** (all interfaces), which is what the PDA’s embedded `appsettings.json` expects for the **Android emulator** (`10.0.2.2` → host).
+- Open **`http://localhost:5264`** in the **notebook browser** for the Blazor Admin UI (master data, stock, etc.) while the same process serves the REST endpoints.
+
+### 4) Point the MAUI app at your notebook
+
+The PDA reads **`Api:BaseUrl`** from the embedded `src/StockControl.PDA/appsettings.json` (shipped with the app).
+
+| Where you run the PDA | Set `Api:BaseUrl` to |
+|------------------------|----------------------|
+| **Android Emulator** on the same machine as Admin | `http://10.0.2.2:5264` — Android’s alias for the host loopback (default in repo). |
+| **Physical phone** on the **same Wi‑Fi** as the notebook | `http://<NOTEBOOK_LAN_IP>:5264` — use the notebook’s IPv4 on the LAN (e.g. `ipconfig`). On Windows, allow **inbound TCP 5264** in **Windows Defender Firewall** for `dotnet.exe` / private network. |
+
+The Android app already sets **`android:usesCleartextTraffic="true"`** so **HTTP** dev URLs work.
+
+Rebuild/redeploy the PDA after changing `appsettings.json`.
+
+### 5) Run the PDA (Move stock)
+
+1. Open `src/StockControl.PDA/StockControl.PDA.csproj` in **Visual Studio** or **Rider** (or use `dotnet build` / deploy from the IDE you use for MAUI).
+2. Select an **Android emulator** or a **device**, then run (**F5**).
+3. On **Move stock**, tap **Sync**: it calls **`GET /api/stock/sync`**; if Admin is reachable you get counts and the catalog pickers can load from **`/api/pda/catalog/...`**. Register movements with **Inbound (+)** / **Outbound (−)** as usual.
+
+### 6) If you have no Android target at all
+
+You can still verify **Admin + API** from the notebook using the browser or tools like **Postman** (e.g. `GET http://localhost:5264/api/stock/sync`, `GET`/`POST` under `/api/pda/catalog/...` and `/api/stock/movements`). The **full Move stock screen** (pickers, Summary, stepper) is **Android‑only** in this repo.
+
+---
+
 ## Documentation
 
 - 🏠 [Main Documentation](../README.md) — Project overview
+- § **10** above — Local Admin + PDA integration for tests
 
 ---
 

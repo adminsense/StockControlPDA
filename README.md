@@ -84,6 +84,7 @@ Details: [README-operation-stock-pda](readme/README-operation-stock-pda.md) · A
 - 🏠 **Main documentation**: this file
 - 📋 **Admin documentation**: [README-admin-stock](readme/README-admin-stock.md)
 - 📋 **PDA documentation**: [README-operation-stock-pda](readme/README-operation-stock-pda.md)
+- 📋 **PDA+Admin Installation**: [README-StockControlInstall](readme/README-StockControlInstall.md)
 
 ---
 

@@ -35,7 +35,7 @@ This repository contains:
   - **Stock** (`/` and `/stock`): filters + pagination (10 rows/page); **Sync** checks whether `items` changed since the last baseline — if not, modal *“Everything is synchronized.”*; if yes, a **busy** overlay then reload (balances + Min/Max resolution)
   - **UI**: stronger contrast for inputs, placeholders, and dropdowns for warehouse lighting (`StockControl.Admin.Client` → `admin-theme.css`, `color-scheme: dark`)
 - **PDA (Android)**:
-  - MAUI app contains **`Platforms/Android` only** (iOS / Windows / Mac Catalyst folders removed)
+  - MAUI app contains **`Platforms/Android` only** 
   - Scan-first flow (keyboard wedge / Enter)
   - Fast stock movements (Inbound/Outbound)
   - Min/Max visibility during operations

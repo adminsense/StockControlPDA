@@ -64,8 +64,6 @@ Search → form → grid pattern shared by Users, Warehouses, Locations, Supplie
   <img src="./readme/images/mock_template.png" alt="PDA — stock movement mock" />
 </p>
 
-Details: [README-operation-stock-pda](readme/README-operation-stock-pda.md) · Admin UX: [README-admin-stock](readme/README-admin-stock.md)
-
 ## 🛠️ 5. Tech stack
 
 - **Admin**: Blazor Server + EF Core + SQL Server

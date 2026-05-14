@@ -61,17 +61,6 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 | 🔢 **Quantity** | Stepper **− / +** then **Inbound (+)** / **Outbound (−)**. |
 | 🔄 **Sync** \| **Reset flow** | Same row. **Sync** → `GET /api/stock/sync` (MVP: counts + connectivity); after success, **reload catalog pickers** from `/api/pda/catalog/...`. **Reset** clears selection + quantity (mock + MAUI). |
 
-### Implemented in MAUI today (`MainPage.xaml`)
-
-| Topic | Details |
-|--------|---------|
-| **UI** | Warehouse / location / item **pickers**, **Scan** field, **Summary**, quantity **− / +**, **Inbound (+)** / **Outbound (−)**, **Sync** \| **Reset flow** — same structure as the **Target** table above. |
-| **Sync** | `GET /api/stock/sync`; on success, **reloads** warehouses, locations (per warehouse), and items from **`/api/pda/catalog/...`**. |
-| **Summary** | `GET /api/pda/catalog/summary` for the selected triple. |
-| **Movements** | `POST /api/stock/movements` with selected **location code** + **item SKU**. |
-| **Rules & edge cases** | **Section 2** (Admin vs floor), **section 6** (validations, picker rules **A–E**). |
-| **Data contracts** | **Section 7** (read/write API surface). |
-
 ### Planned screens (not in this MVP build)
 
 | Screen | Role |

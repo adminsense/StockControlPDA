@@ -179,26 +179,6 @@ These are both **correct**; which you prefer depends on whether the item list is
 
 **When this fits best:** you rely on **first IN** to “open” the bin; you may skip entering opening qty in Admin entirely.
 
-#### Diagram (both paths)
-
-```mermaid
-flowchart TB
-  subgraph P1["Path 1 — Admin opening qty"]
-    A1["Admin: item + opening qty at location"]
-    A2["Row in stock_balances"]
-    A3["PDA: Sync / reload"]
-    A4["Operator: IN / OUT adjustments"]
-    A1 --> A2 --> A3 --> A4
-  end
-
-  subgraph P2["Path 2 — First IN on PDA"]
-    B1["No balance row yet"]
-    B2["PDA: first Inbound IN"]
-    B3["API creates / updates stock_balances"]
-    B4["Further IN / OUT as usual"]
-    B1 --> B2 --> B3 --> B4
-  end
-```
 
 | Path | Picker hint |
 |------|----------------|

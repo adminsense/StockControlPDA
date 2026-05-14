@@ -17,7 +17,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 | Topic | Value |
 |------|-------|
 | **Platform** | Android PDA |
-| **Workflow** | **Target (v2):** warehouse + location + item + summary + quantity → In/Out. **Today:** lean scan steps + In/Out + **Sync** \| **Reset**. |
+| **Workflow** | **Target (`docs/pda-move-stock.html`):** warehouse + location + item + summary + quantity → In/Out. **Today:** lean scan steps + In/Out + **Sync** \| **Reset**. |
 | **Scanner** | Keyboard wedge (text + Enter) |
 | **Connectivity** | Online (MVP) |
 | **MAUI targets** | **Android only** — `Platforms/Android` only (`net10.0-android`, min API 21). iOS / Windows / Mac Catalyst folders are not in this repo. |
@@ -52,29 +52,31 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 | Screen | Role |
 |--------|------|
 | **Login** | Authenticate operator (MVP / future). |
-| **Move stock** | **Target (v2):** pickers, scan, **Summary** (on hand / min–max), quantity, In/Out, **Sync** \| **Reset** — see **§5**. **Today:** scan steps + context line + In/Out + **Sync** \| **Reset**. |
+| **Move stock** | **Target:** same as mock [`pda-move-stock.html`](../docs/pda-move-stock.html) — pickers, scan, **Summary**, quantity, In/Out, **Sync** \| **Reset** (**§5**). **Today:** scan steps + context line + In/Out + **Sync** \| **Reset**. |
 | **Min/Max alerts** *(planned)* | List below min / above max with filters. |
 | **Quick lookup** *(planned)* | Balance by item/location. |
 
 ---
 
-## 🎨 5. Move stock — **design guide**
+## 🎨 5. Move stock — UI mock (`pda-move-stock.html`)
+
+**Template:** interactive HTML [`docs/pda-move-stock.html`](../docs/pda-move-stock.html) — open in a browser; this is the **layout and behaviour reference** for the PDA **Move stock** screen. Refresh the screenshot below when the HTML changes.
 
 <p align="center">
-  <img src="./images/mock_pda_v2.png" alt="PDA — Move stock design guide (v2)" width="420" />
+  <img src="./images/pda-move-stock.png" alt="PDA — Move stock (mock screenshot)" width="420" />
 </p>
 
-| Area (v2 mock) | Intended behaviour |
+| Area (mock) | Intended behaviour |
 |----------------|-------------------|
 | 🏭 **Warehouse** / 📍 **Location** / 🏷️ **Item** | Pickers; lists filtered per rules in **§7** when implemented. **Scan** (Enter) still sets location or item when the code matches. |
 | ⌨️ **Scan or type code** | Keyboard wedge + **Enter** resolves a **location code** or **item** (SKU / barcode / article number per API rules). |
 | 📊 **Summary** | Shows resolved **warehouse**, **location**, **item**, **on hand**, **min/max**, status pill — requires API lookups (not in the current lean `MainPage`). |
 | 🔢 **Quantity** | Stepper **− / +** then **Inbound (+)** / **Outbound (−)**. |
-| 🔄 **Sync** \| **Reset flow** | Same row. **Sync** → `GET /api/stock/sync` (MVP: counts + connectivity); later reload cached masters. **Reset** clears selection + quantity (mock) / scan flow (current app). |
+| 🔄 **Sync** \| **Reset flow** | Same row. **Sync** → `GET /api/stock/sync` (MVP: counts + connectivity); later reload cached masters for pickers. **Reset** clears selection + quantity in the HTML mock; in the app today it clears the scan step flow. |
 
-**Current MAUI app (`MainPage.xaml`):** still the **lean** step flow (instruction, `StepLabel`, single `ScanEntry`, `ContextLabel`, In/Out, **Sync** \| **Reset**). Refactor toward the v2 layout and APIs in a later iteration.
+**Current MAUI app (`MainPage.xaml`):** still the **lean** step flow (instruction, `StepLabel`, single `ScanEntry`, `ContextLabel`, In/Out, **Sync** \| **Reset**). Implement the fields and **Summary** to match this mock and the rules in **§2**, **§6–§8**.
 
-### Legacy step flow (today’s app — until v2 UI lands)
+### Current app step flow (until the mock layout is implemented)
 
 | Step | You scan / type | Then |
 |------|-----------------|------|
@@ -108,7 +110,7 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 
 ### 📋 Item dropdown (warehouse + location) — which items to list?
 
-**Status:** **not decided in code** (HTML mock uses a flat demo list). When the PDA UI matches **§5 (v2)**, pick **one** rule (or a documented hybrid) and expose it via API + UI.
+**Status:** **not decided in code** (the HTML mock uses a flat demo list). When the PDA UI matches **§5** (`pda-move-stock.html`), pick **one** rule (or a documented hybrid) and expose it via API + UI.
 
 | # | Rule | Meaning |
 |---|------|--------|
@@ -139,7 +141,7 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 | **Manual Sync** | **Sync** next to **Reset** explicitly refreshes (MVP: `GET /api/stock/sync` counts); later full catalog cache. **Not** the same as Admin **Stock Control → Sync**. |
 | **Background refresh** | Optional; mind battery and server load. |
 
-**PDA Sync (MVP, implemented):** **Move stock** has **Sync** next to **Reset flow** (same row). It calls **`GET /api/stock/sync`** and shows warehouse / active location / active item **counts**. **Later:** reload cached masters for v2 pickers.
+**PDA Sync (MVP, implemented):** **Move stock** has **Sync** next to **Reset flow** (same row). It calls **`GET /api/stock/sync`** and shows warehouse / active location / active item **counts**. **Later:** reload cached masters for the pickers in **§5**.
 
 **New location, no stock yet:** **§2** and **§6** — balances follow first **IN** or Admin opening stock.
 

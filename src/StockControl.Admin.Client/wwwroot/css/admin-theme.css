@@ -84,6 +84,27 @@ body {
   flex-wrap: nowrap;
 }
 
+/* Avoid ugly per-letter breaks on header labels (list-wrap applies overflow-wrap:anywhere to th) */
+.list-table-wrap .admin-grid-table th.th-sort-wrap,
+.list-table-wrap .admin-grid-table th.admin-grid-th-actions {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.list-table-wrap .admin-grid-table th.th-sort-wrap .th-sort-label {
+  white-space: nowrap;
+}
+
+.stock-table-scroll .admin-grid-table th.th-sort-wrap,
+.stock-table-scroll .admin-grid-table th.admin-grid-th-actions {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.stock-table-scroll .admin-grid-table th.th-sort-wrap .th-sort-label {
+  white-space: nowrap;
+}
+
 .list-table-wrap .admin-grid-th-actions,
 .list-table-wrap .admin-grid-td-actions {
   text-align: right;
@@ -214,29 +235,27 @@ label {
 }
 
 .admin-search-field {
-  position: relative;
   display: block;
   width: 100%;
   max-width: 560px;
 }
 
-.admin-search-field__input {
-  padding-right: 2.65rem !important;
-}
-
-.admin-search-field__icon {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: rgba(148, 163, 184, 0.95);
-  font-size: 1.05rem;
-  line-height: 1;
+.admin-search-hint {
+  margin-top: 8px;
+  margin-bottom: 0;
+  max-width: 560px;
 }
 
 tr.admin-grid-row-clickable {
   cursor: pointer;
+}
+
+tr.admin-grid-row-inactive {
+  cursor: not-allowed;
+}
+
+tr.admin-grid-row-inactive > td:not(.admin-grid-td-actions) {
+  opacity: 0.82;
 }
 
 tr.admin-grid-row-clickable:hover td {
@@ -310,6 +329,11 @@ input:focus, select:focus, textarea:focus {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
   margin-top: 10px;
+}
+
+/* Full-width cell inside a 2-column .row (forms) */
+.row > .admin-form-span-2 {
+  grid-column: 1 / -1;
 }
 
 .actions {
@@ -743,17 +767,45 @@ th {
 
 /* --- Column widths (colgroup %, sums 100) --- */
 
-/* Items (SKU) */
-.list-table-wrap .admin-items-table col.admin-it-col-sku { width: 7%; }
-.list-table-wrap .admin-items-table col.admin-it-col-art { width: 7%; }
-.list-table-wrap .admin-items-table col.admin-it-col-product { width: 7%; }
-.list-table-wrap .admin-items-table col.admin-it-col-name { width: 30%; }
-.list-table-wrap .admin-items-table col.admin-it-col-unit { width: 5%; }
-.list-table-wrap .admin-items-table col.admin-it-col-pkg { width: 8%; }
-.list-table-wrap .admin-items-table col.admin-it-col-pkgqty { width: 6%; }
-.list-table-wrap .admin-items-table col.admin-it-col-price { width: 6%; }
-.list-table-wrap .admin-items-table col.admin-it-col-status { width: 7%; }
-.list-table-wrap .admin-items-table col.admin-it-col-actions { width: 17%; }
+/* Items (SKU) — slightly wider code/product/unit cols so headers fit on one line */
+.list-table-wrap .admin-items-table col.admin-it-col-sku { width: 8%; }
+.list-table-wrap .admin-items-table col.admin-it-col-art { width: 8%; }
+.list-table-wrap .admin-items-table col.admin-it-col-product { width: 11%; }
+.list-table-wrap .admin-items-table col.admin-it-col-name { width: 23%; }
+.list-table-wrap .admin-items-table col.admin-it-col-unit { width: 7%; }
+.list-table-wrap .admin-items-table col.admin-it-col-pkg { width: 9%; }
+.list-table-wrap .admin-items-table col.admin-it-col-pkgqty { width: 7%; }
+.list-table-wrap .admin-items-table col.admin-it-col-price { width: 7%; }
+.list-table-wrap .admin-items-table col.admin-it-col-status { width: 8%; }
+.list-table-wrap .admin-items-table col.admin-it-col-actions { width: 12%; }
+
+/* Compact sort controls on dense Items grid */
+.list-table-wrap .admin-items-table .th-sort-row {
+  gap: 3px;
+}
+
+.list-table-wrap .admin-items-table .th-sort-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+}
+
+.list-table-wrap .admin-items-table .th-sort-btn {
+  min-width: 22px;
+  min-height: 22px;
+  padding: 1px 4px;
+  border-radius: 6px;
+}
+
+.list-table-wrap .admin-items-table .th-sort-glyph {
+  font-size: 0.62rem;
+}
+
+/* Items form: short wide barcode editor */
+textarea.item-form-barcodes {
+  min-height: 3.25rem;
+  max-height: 5.5rem;
+  resize: vertical;
+}
 
 .list-table-wrap .admin-items-table td.admin-it-td-num,
 .list-table-wrap .admin-items-table td.col-num {

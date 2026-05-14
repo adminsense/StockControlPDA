@@ -58,7 +58,7 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 
 ---
 
-## 🎨 5. Move stock — **design guide (v2)** *(implementation target)*
+## 🎨 5. Move stock — **design guide**
 
 **Source of truth for the next PDA UI:** interactive HTML [`docs/pda-move-stock-v2.html`](../docs/pda-move-stock-v2.html) and screenshot **`readme/images/mock_pda_v2.png`** (also shown below). The legacy `mock_template.png` wireframe is **not** used anymore.
 

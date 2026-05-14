@@ -17,7 +17,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 | Topic | Value |
 |------|-------|
 | **Platform** | Android PDA |
-| **Workflow** | **Move stock** follows the mock [`pda-move-stock.html`](../docs/pda-move-stock.html): pickers, scan, Summary, quantity, In/Out, **Sync** \| **Reset** — see **section 4**. |
+| **Workflow** | **Move stock** follows the mock [`pda-move-stock.html`](../docs/pda-move-stock.html): pickers, scan, Summary, quantity, In/Out, **Sync** \| **Reset** (see **section 4**) |
 | **Scanner** | Keyboard wedge (text + Enter) |
 | **Connectivity** | Online (MVP) |
 | **MAUI targets** | **Android only** — `Platforms/Android` only (`net10.0-android`, min API 21). iOS / Windows / Mac Catalyst folders are not in this repo. |

@@ -185,13 +185,6 @@ These are both **correct**; which you prefer depends on whether the item list is
 | **Path 1** | Rules **A** / **B** align well: the item already appears because **`stock_balances`** has a row. |
 | **Path 2** | Rule **C** (full catalog) or **hybrid E** helps until a balance exists; first **IN** then enables balance‑driven lists if you switch to **A** / **B** later. |
 
-## ✋ 8. PDA UX notes
-
-- **Sync**: operator taps **Sync** after Admin changes masters (or periodically). Calls `GET /api/stock/sync`; on success the app **reloads catalog pickers** from `/api/pda/catalog/...` (MVP).
-- **Predictable focus**: keep wedge input on **Scan** when possible; **Enter** resolves the code into the pickers (**section 4**).
-- **Immediate feedback**: beep/visual on recognized location and item; clear error on unknown codes.
-- **Minimal taps**: ideally only tap quantity and the (+/−) button.
-
 ---
 
 ## 🧪 9. Local testing (developer notebook — Admin + PDA without a handset)

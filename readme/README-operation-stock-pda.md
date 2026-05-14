@@ -21,7 +21,6 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 | **Scanner** | Keyboard wedge (text + Enter) |
 | **Connectivity** | Online (MVP) |
 | **MAUI targets** | **Android only** — `Platforms/Android` only (`net10.0-android`, min API 21). iOS / Windows / Mac Catalyst folders are not in this repo. |
-| **Local install** | **[StockControlInstall.md](StockControlInstall.md)** — run Admin + PDA from a notebook (no physical PDA). |
 
 ## ✅ 1. Goals (MVP)
 

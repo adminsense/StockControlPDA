@@ -49,12 +49,6 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 
 ## 🎨 4. Move stock — UI mock & MAUI behaviour (`pda-move-stock.html`)
 
-This section is the **single place** for mock layout, current **MAUI** behaviour, and pointers to scan rules (**section 5**), validations & picker strategy (**section 6**), and API (**section 7**). The **step-by-step scan contract** is not repeated here — see **section 5**.
-
-### Target (mock — layout reference)
-
-**Template:** interactive HTML [`docs/pda-move-stock.html`](../docs/pda-move-stock.html) — open in a browser; this is the **layout and behaviour reference** for **Move stock**. Refresh the screenshot below when the HTML changes.
-
 <p align="center">
   <img src="./images/pda-move-stock.png" alt="PDA — Move stock (mock screenshot)" width="420" />
 </p>

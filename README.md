@@ -35,10 +35,10 @@ This repository contains:
   - **Stock** (`/` and `/stock`): filters + pagination (10 rows/page); **Sync** checks whether `items` changed since the last baseline — if not, modal *“Everything is synchronized.”*; if yes, a **busy** overlay then reload (balances + Min/Max resolution)
   - **UI**: stronger contrast for inputs, placeholders, and dropdowns for warehouse lighting (`StockControl.Admin.Client` → `admin-theme.css`, `color-scheme: dark`)
 - **PDA (Android)**:
-  - MAUI app contains **`Platforms/Android` only** 
-  - Scan-first flow (keyboard wedge / Enter)
-  - Fast stock movements (Inbound/Outbound)
-  - Min/Max visibility during operations
+  - MAUI app contains **`Platforms/Android` only** (iOS / Windows / Mac Catalyst folders removed)
+  - **UI mock:** `docs/pda-move-stock.html` + `readme/images/pda-move-stock.png` — see [README-operation-stock-pda](readme/README-operation-stock-pda.md) §5
+  - Scan-first flow (keyboard wedge / Enter); **Sync** \| **Reset** on **Move stock**; `GET /api/stock/sync` (MVP: server counts)
+  - Fast stock movements (Inbound/Outbound); **Move stock** UI should converge to the HTML mock (pickers + Summary)
 
 ## 🧪 4. UI reference
 
@@ -58,11 +58,15 @@ Search → form → grid pattern shared by Users, Warehouses, Locations, Supplie
   <img src="./readme/images/forms_screen.png" alt="Admin — standard forms (search, form, list)" />
 </p>
 
-### 4.3 PDA — operation (Android)
+### 4.3 PDA — Move stock (mock)
+
+Template: [`docs/pda-move-stock.html`](docs/pda-move-stock.html) — screenshot should match the HTML when updated.
 
 <p align="center">
-  <img src="./readme/images/mock_template.png" alt="PDA — stock movement mock" />
+  <img src="./readme/images/pda-move-stock.png" alt="PDA — Move stock (mock screenshot)" />
 </p>
+
+Details: [README-operation-stock-pda](readme/README-operation-stock-pda.md) · Admin UX: [README-admin-stock](readme/README-admin-stock.md)
 
 ## 🛠️ 5. Tech stack
 

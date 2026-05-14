@@ -4,4 +4,7 @@
     <Project Path="src/StockControl.Admin/StockControl.Admin.csproj" />
     <Project Path="src/StockControl.PDA/StockControl.PDA.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/StockControl.Admin.Tests/StockControl.Admin.Tests.csproj" />
+  </Folder>
 </Solution>

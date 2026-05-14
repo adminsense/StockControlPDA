@@ -1,11 +1,17 @@
 :root {
-  /* Match approved mock palette */
+  /* Product UI palette — higher contrast for warehouse / brightly lit environments */
   --bg: #0c111b;
   --panel: #141c2a;
-  --panel2: rgba(0, 0, 0, 0.25);
-  --line: rgba(255, 255, 255, 0.1);
-  --text: #eef2ff;
-  --muted: #94a3b8;
+  --panel2: #1a2332;
+  --line: rgba(255, 255, 255, 0.16);
+  --text: #f8fafc;
+  --muted: #b6c4d8;
+  --field-bg: #1e293b;
+  --field-border: rgba(255, 255, 255, 0.28);
+  --field-text: #f8fafc;
+  --option-bg: #0f172a;
+  --option-text: #f1f5f9;
+  --placeholder: #cbd5e1;
   --blue: #3b82f6;
   --green: #22c55e;
   --red: #ef4444;
@@ -20,6 +26,7 @@ html, body {
   font-family: var(--font);
   background: linear-gradient(165deg, #0a0f18 0%, var(--bg) 45%);
   color: var(--text);
+  color-scheme: dark;
 }
 
 body {
@@ -29,9 +36,58 @@ body {
   padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
+/* Single content width for all Admin pages (forms + lists) */
 .shell {
-  max-width: 520px;
+  max-width: min(1320px, calc(100vw - 24px));
   margin: 0 auto;
+  min-width: 0;
+}
+
+/* List grids: fill panel width, wrap long text, avoid horizontal scrollbar */
+.list-table-wrap,
+.stock-table-scroll {
+  overflow-x: hidden;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+
+.list-table-wrap > table,
+.stock-table-scroll > table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.list-table-wrap th,
+.list-table-wrap td,
+.stock-table-scroll .stock-table th,
+.stock-table-scroll .stock-table td {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+
+.list-table-wrap .th-sort-wrap--numeric,
+.stock-table-scroll .th-sort-wrap--numeric {
+  white-space: nowrap;
+}
+
+.stock-table-scroll .stock-table td.stock-td-num {
+  white-space: nowrap;
+}
+
+/* Sort headers stay on one line inside planned grids */
+.list-table-wrap .admin-grid-table .th-sort-row,
+.stock-table-scroll .admin-grid-table .th-sort-row {
+  flex-wrap: nowrap;
+}
+
+.list-table-wrap .admin-grid-th-actions,
+.list-table-wrap .admin-grid-td-actions {
+  text-align: right;
+  vertical-align: middle;
 }
 
 header {
@@ -76,6 +132,11 @@ nav.tabs {
   margin-bottom: 12px;
 }
 
+/* Admin: 4 tabs per row (8 links: master data + catalog + Min/Max + Stock) */
+nav.tabs.tabs-admin {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 nav.tabs button,
 nav.tabs a {
   border: 1px solid var(--line);
@@ -100,6 +161,33 @@ nav.tabs a[aria-selected="true"] {
   color: var(--text);
 }
 
+nav.tabs button:hover,
+nav.tabs a:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text);
+}
+
+nav.tabs button[aria-selected="true"]:hover,
+nav.tabs a[aria-selected="true"]:hover {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.55);
+}
+
+nav.tabs button:focus-visible,
+nav.tabs a:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.65);
+  outline-offset: 2px;
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: var(--text);
+}
+
+nav.tabs button:focus:not(:focus-visible),
+nav.tabs a:focus:not(:focus-visible) {
+  outline: none;
+}
+
 section.panel {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -113,35 +201,101 @@ section.panel h2 {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--muted);
+  color: #c5d0e0;
   font-weight: 800;
 }
 
 label {
   display: block;
-  font-size: 0.7rem;
-  color: var(--muted);
+  font-size: 0.72rem;
+  color: #d8e2ef;
   margin-bottom: 6px;
   font-weight: 700;
 }
 
+.admin-search-field {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 560px;
+}
+
+.admin-search-field__input {
+  padding-right: 2.65rem !important;
+}
+
+.admin-search-field__icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: rgba(148, 163, 184, 0.95);
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+tr.admin-grid-row-clickable {
+  cursor: pointer;
+}
+
+tr.admin-grid-row-clickable:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+tr.admin-grid-row-clickable--selected td {
+  background: rgba(59, 130, 246, 0.14);
+}
+
 input[type="text"],
 input[type="number"],
+input[type="search"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
 select,
 textarea {
   width: 100%;
   padding: 12px 12px;
   border-radius: 12px;
-  border: 1px solid var(--line);
-  background: var(--panel2);
-  color: var(--text);
+  border: 1px solid var(--field-border);
+  background-color: var(--field-bg);
+  color: var(--field-text);
   font-size: 0.95rem;
   outline: none;
+  color-scheme: dark;
+  accent-color: var(--blue);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+select option {
+  background-color: var(--option-bg);
+  color: var(--option-text);
+  font-weight: 600;
+}
+
+select option:checked {
+  background-color: #1d4ed8;
+  color: #ffffff;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  background-color: #151d2e;
+  color: #cbd5e1;
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: rgba(59, 130, 246, 0.6);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: rgba(96, 165, 250, 0.85);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.28);
 }
 
 .row {
@@ -196,11 +350,70 @@ input:focus, select:focus, textarea:focus {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* App-wide: hover + keyboard focus on action buttons */
+.btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btn.primary:hover:not(:disabled) {
+  border-color: rgba(96, 165, 250, 0.72);
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.52), rgba(59, 130, 246, 0.22));
+}
+
+.btn.success:hover:not(:disabled) {
+  border-color: rgba(74, 222, 128, 0.72);
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.52), rgba(34, 197, 94, 0.22));
+}
+
+.btn.danger:hover:not(:disabled) {
+  border-color: rgba(252, 165, 165, 0.55);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.5), rgba(239, 68, 68, 0.22));
+}
+
+.btn.ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.btn:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.78);
+  outline-offset: 2px;
+}
+
+.btn.success:focus-visible {
+  outline-color: rgba(74, 222, 128, 0.85);
+}
+
+.btn.danger:focus-visible {
+  outline-color: rgba(252, 165, 165, 0.85);
+}
+
+.btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .hint {
   margin-top: 10px;
-  font-size: 0.72rem;
-  color: var(--muted);
+  font-size: 0.74rem;
+  color: #c5d0e0;
   line-height: 1.45;
+}
+
+.hint-anchor a {
+  color: #93c5fd;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.hint-anchor a:hover {
+  color: #bfdbfe;
 }
 
 /* Modal (feedback) */
@@ -252,6 +465,20 @@ input:focus, select:focus, textarea:focus {
   cursor: pointer;
 }
 
+.sc-modal-x:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.sc-modal-x:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.78);
+  outline-offset: 2px;
+}
+
+.sc-modal-x:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .sc-modal-body {
   padding: 14px;
   color: var(--text);
@@ -263,6 +490,36 @@ input:focus, select:focus, textarea:focus {
   padding: 0 14px 14px;
   display: flex;
   justify-content: flex-end;
+}
+
+.sc-modal--busy {
+  pointer-events: none;
+}
+
+.sc-modal-body--busy {
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.sc-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: rgba(96, 165, 250, 0.95);
+  animation: sc-spin 0.75s linear infinite;
+}
+
+@keyframes sc-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sc-busy-text {
+  margin: 0;
+  color: #d1dae6;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 table {
@@ -279,11 +536,81 @@ th, td {
 }
 
 th {
-  color: var(--muted);
+  color: #c5d0e0;
   font-weight: 800;
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* Sortable grid headers (all Admin list tables) */
+.th-sort-wrap {
+  vertical-align: middle;
+}
+
+.th-sort-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.th-sort-label {
+  font: inherit;
+  color: inherit;
+}
+
+.th-sort-btn {
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 3px 7px;
+  font-size: 0.72rem;
+  line-height: 1;
+  font-weight: 900;
+  cursor: pointer;
+  min-width: 30px;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.th-sort-btn:hover {
+  background: rgba(59, 130, 246, 0.22);
+  border-color: rgba(96, 165, 250, 0.55);
+  color: #fff;
+}
+
+.th-sort-btn--on {
+  border-color: rgba(96, 165, 250, 0.75);
+  background: rgba(59, 130, 246, 0.28);
+  color: #f0f9ff;
+}
+
+.th-sort-btn--idle .th-sort-glyph {
+  opacity: 0.45;
+}
+
+.th-sort-btn:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.85);
+  outline-offset: 2px;
+}
+
+.th-sort-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.th-sort-glyph {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.th-sort-wrap--numeric .th-sort-row {
+  width: 100%;
+  justify-content: flex-end;
 }
 
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; }
@@ -293,8 +620,8 @@ th {
   padding: 4px 8px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+  color: #d1dae6;
   font-size: 0.65rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -315,6 +642,7 @@ th {
 
 .mini-actions {
   display: flex;
+  flex-wrap: nowrap;
   gap: 8px;
   justify-content: flex-end;
 }
@@ -334,7 +662,161 @@ th {
 .mini-actions .edit { border-color: rgba(59,130,246,0.45); background: rgba(59,130,246,0.16); }
 .mini-actions .del { border-color: rgba(239,68,68,0.45); background: rgba(239,68,68,0.14); }
 
-/* Make default ASP.NET alerts blend with the mock */
+.mini-actions button:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.mini-actions .edit:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(96, 165, 250, 0.78);
+}
+
+.mini-actions .del:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(252, 165, 165, 0.58);
+}
+
+.mini-actions button:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.78);
+  outline-offset: 2px;
+}
+
+.mini-actions .del:focus-visible {
+  outline-color: rgba(252, 165, 165, 0.85);
+}
+
+.mini-actions button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.mini-actions button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.mini-actions-row {
+  flex-wrap: nowrap;
+}
+
+/* ActiveToggle: layout/cores vão inline no .razor; aqui só anulamos o “botão de grelha” (Bootstrap + .mini-actions button). */
+.mini-actions button.admin-active-toggle-btn {
+  min-height: unset !important;
+  padding: 0 !important;
+  font-weight: normal !important;
+  white-space: normal !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 0 !important;
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
+
+.mini-actions button.edit--icon {
+  min-height: unset;
+  font-weight: unset;
+  white-space: normal;
+}
+
+.mini-actions button.admin-active-toggle-btn:hover:not(:disabled),
+.mini-actions button.admin-active-toggle-btn:focus {
+  background: transparent !important;
+}
+
+.mini-actions button.admin-active-toggle-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.mini-actions button.admin-active-toggle-btn:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.85);
+  outline-offset: 2px;
+  border-radius: 16px;
+}
+
+.mini-actions button.admin-active-toggle-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* --- Column widths (colgroup %, sums 100) --- */
+
+/* Items (SKU) */
+.list-table-wrap .admin-items-table col.admin-it-col-sku { width: 7%; }
+.list-table-wrap .admin-items-table col.admin-it-col-art { width: 7%; }
+.list-table-wrap .admin-items-table col.admin-it-col-product { width: 7%; }
+.list-table-wrap .admin-items-table col.admin-it-col-name { width: 30%; }
+.list-table-wrap .admin-items-table col.admin-it-col-unit { width: 5%; }
+.list-table-wrap .admin-items-table col.admin-it-col-pkg { width: 8%; }
+.list-table-wrap .admin-items-table col.admin-it-col-pkgqty { width: 6%; }
+.list-table-wrap .admin-items-table col.admin-it-col-price { width: 6%; }
+.list-table-wrap .admin-items-table col.admin-it-col-status { width: 7%; }
+.list-table-wrap .admin-items-table col.admin-it-col-actions { width: 17%; }
+
+.list-table-wrap .admin-items-table td.admin-it-td-num,
+.list-table-wrap .admin-items-table td.col-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Products */
+.list-table-wrap .admin-products-table col.admin-pr-col-code { width: 11%; }
+.list-table-wrap .admin-products-table col.admin-pr-col-name { width: 50%; }
+.list-table-wrap .admin-products-table col.admin-pr-col-supplier { width: 12%; }
+.list-table-wrap .admin-products-table col.admin-pr-col-status { width: 11%; }
+.list-table-wrap .admin-products-table col.admin-pr-col-actions { width: 16%; }
+
+/* Users */
+.list-table-wrap .admin-users-table col.admin-us-col-user { width: 18%; }
+.list-table-wrap .admin-users-table col.admin-us-col-name { width: 54%; }
+.list-table-wrap .admin-users-table col.admin-us-col-status { width: 12%; }
+.list-table-wrap .admin-users-table col.admin-us-col-actions { width: 16%; }
+
+/* Warehouses + Suppliers (same layout) */
+.list-table-wrap .admin-master-table col.admin-ms-col-code { width: 12%; }
+.list-table-wrap .admin-master-table col.admin-ms-col-name { width: 52%; }
+.list-table-wrap .admin-master-table col.admin-ms-col-status { width: 12%; }
+.list-table-wrap .admin-master-table col.admin-ms-col-actions { width: 24%; }
+
+/* Locations */
+.list-table-wrap .admin-locations-table col.admin-lc-col-wh { width: 10%; }
+.list-table-wrap .admin-locations-table col.admin-lc-col-code { width: 10%; }
+.list-table-wrap .admin-locations-table col.admin-lc-col-desc { width: 44%; }
+.list-table-wrap .admin-locations-table col.admin-lc-col-status { width: 12%; }
+.list-table-wrap .admin-locations-table col.admin-lc-col-actions { width: 24%; }
+
+/* Min / Max */
+.list-table-wrap .admin-mm-table col.admin-mm-col-wh { width: 10%; }
+.list-table-wrap .admin-mm-table col.admin-mm-col-loc { width: 11%; }
+.list-table-wrap .admin-mm-table col.admin-mm-col-sku { width: 15%; }
+.list-table-wrap .admin-mm-table col.admin-mm-col-art { width: 10%; }
+.list-table-wrap .admin-mm-table col.admin-mm-col-num { width: 8%; }
+.list-table-wrap .admin-mm-table col.admin-mm-col-status { width: 10%; }
+.list-table-wrap .admin-mm-table col.admin-mm-col-actions { width: 28%; }
+
+.list-table-wrap .admin-mm-table td.admin-mm-td-num {
+  text-align: right;
+}
+
+.list-table-wrap .admin-mm-table td.col-num {
+  white-space: nowrap;
+}
+
+/* Stock */
+.stock-table-scroll .admin-stock-table col.admin-st-col-wh { width: 7%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-loc { width: 7%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-product { width: 8%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-sku { width: 8%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-art { width: 7%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-name { width: 26%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-qty { width: 7%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-min { width: 6%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-max { width: 6%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-status { width: 8%; }
+
+/* Make default ASP.NET alerts blend with the app shell */
 .alert {
   border-radius: 12px;
   border: 1px solid var(--line);
@@ -346,3 +828,20 @@ th {
 
 .alert-success { border-color: rgba(34, 197, 94, 0.35); }
 .alert-danger { border-color: rgba(239, 68, 68, 0.35); }
+
+@media (prefers-contrast: more) {
+  :root {
+    --field-border: rgba(255, 255, 255, 0.45);
+    --line: rgba(255, 255, 255, 0.28);
+  }
+
+  select option {
+    background-color: #000000;
+    color: #ffffff;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #f1f5f9;
+  }
+}

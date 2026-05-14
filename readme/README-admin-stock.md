@@ -11,8 +11,40 @@
 Blazor Server **desktop Admin** used to register master data and view stock balances. The Admin UI is **English** (labels + validation messages).
 
 <p align="center">
-  <img src="../readme/images/mock_admin_template.png" alt="Stock Control — Admin (current desktop UI)" width="920" />
+  <img src="./images/mock_admin_template.png" alt="Stock Control — Admin tabs (desktop)" width="920" />
 </p>
+
+---
+
+### 📸 Standard master screens (search → form → grid)
+
+<p align="center">
+  <img src="./images/forms_screen.png" alt="Admin — standard forms layout" width="920" />
+</p>
+
+| Piece | Behaviour |
+|-------|-----------|
+| 🔎 **Search** | Live filter while typing; **hint** under the field lists which columns participate (varies per tab). No decorative search icon — filtering is instant on keystroke. |
+| 📝 **Form** | Always visible: empty = **Save** (new row); row selected from grid = **Update** (same fields). **Cancel** clears the form and returns to **Save**. |
+| 📊 **Grid** | **Click a row** (active rows only) to load that record into the form. **Inactive** rows: row style + **Edit** disabled — turn **ON** first, then edit. |
+| ↕️ **Sort** | Sortable headers (**↓ / ↑**): first click = descending, second = ascending; active column highlighted. **Items** grid uses tighter header typography so labels stay on one line. |
+| 🔘 **Active toggle** | **ON** = active in DB; **OFF** = inactive. Inactive records stay in the list but cannot be opened for edit until active again. |
+| 💾 **Save / Update** | Single primary action; label switches automatically (`Id == 0` → Save, else Update). |
+
+**Stock** tab: search uses the same **SearchField** pattern; **Warehouse** / **Location** are dropdown filters (not part of the text search hint).
+
+### 🔎 Search hints (live filter)
+
+| Tab | Text search matches |
+|-----|---------------------|
+| 👤 **Users** | Username, name |
+| 🏭 **Warehouses** | Code, name |
+| 📍 **Locations** | Warehouse code, location code, description |
+| 🏢 **Suppliers** | Code, name |
+| 📦 **Products** | Code, name |
+| 🏷️ **Items** | SKU, article number, product code, display name, barcodes |
+| ⚖️ **Min / Max** | Warehouse code, location code, SKU, article number |
+| 📦 **Stock** | SKU, article number, product code, display name — *plus* **Warehouse** / **Location** dropdowns |
 
 ---
 
@@ -60,7 +92,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 - **CRUD**: create/edit + deactivate/activate (no hard delete in the UI).
 - **Validations**: user-friendly messages in English; `maxlength` enforced in inputs.
 - **Feedback**: messages are shown as a **modal** (theme colors). When it is a validation error, closing the modal focuses the field that needs correction.
-- **List sorting**: each grid column header (except **Actions**) has a single-arrow control (**↓** = newest first / descending, **↑** = ascending). Lists load with **newest first** (by row id). Click a column to sort it descending first; click again to toggle to ascending. The active column is highlighted.
+- **List sorting**: sortable headers (except **Actions**); first click = **↓** descending (default load is newest-by-`Id`); second click = **↑** ascending; active column highlighted — same behaviour as in the **Standard master screens** table above.
 
 ### Stock page — Sync
 

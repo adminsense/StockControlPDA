@@ -42,19 +42,29 @@ This repository contains:
 
 ## 🧪 4. UI reference
 
-Screenshots: Admin file name is legacy (`mock_admin_template.png`) but the image should match the **current** desktop UI when updated in-repo.
+Screenshots should match the **current** UI when updated in-repo.
 
-### 4.1 Admin (desktop)
-
-<p align="center">
-  <img src="./readme/images/mock_admin_template.png" alt="Stock Control — Admin (current desktop UI)" />
-</p>
-
-### 4.2 PDA (Android)
+### 4.1 Admin — tabs overview
 
 <p align="center">
-  <img src="./readme/images/mock_template.png" alt="PDA reference screenshot" />
+  <img src="./readme/images/mock_admin_template.png" alt="Stock Control — Admin tabs (desktop)" />
 </p>
+
+### 4.2 Admin — standard master forms
+
+Search → form → grid pattern shared by Users, Warehouses, Locations, Suppliers, Products, Items, and Min / Max.
+
+<p align="center">
+  <img src="./readme/images/forms_screen.png" alt="Admin — standard forms (search, form, list)" />
+</p>
+
+### 4.3 PDA — operation (Android)
+
+<p align="center">
+  <img src="./readme/images/mock_template.png" alt="PDA — stock movement mock" />
+</p>
+
+Details: [README-operation-stock-pda](readme/README-operation-stock-pda.md) · Admin UX: [README-admin-stock](readme/README-admin-stock.md)
 
 ## 🛠️ 5. Tech stack
 

@@ -36,21 +36,50 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 
 ## 🧭 3. Screens (compact)
 
-- **Login**
-- **Move stock** (main screen)
-  - “Scan/Input” field (always focused)
-  - Shows the current step and what was recognized (location/item)
-  - Quantity (large numeric)
-  - Big buttons: **Inbound (+)** and **Outbound (−)**
-  - Short confirmation (optional) and/or “undo last” (optional)
-- **Min/Max alerts**
-  - List of items below min / above max
-  - Quick filters: warehouse / location / item
-- **Quick lookup**
-  - Balance by item/location
-  - Scan-based search (item or location)
+| Screen | Role |
+|--------|------|
+| **Login** | Authenticate operator (MVP / future). |
+| **Move stock** | Main flow: scan → quantity → **Inbound (+)** / **Outbound (−)**. |
+| **Min/Max alerts** *(planned)* | List below min / above max with filters. |
+| **Quick lookup** *(planned)* | Balance by item/location. |
 
-## 🔁 4. Scan-first flow
+---
+
+## 🎛️ 4. Main screen — mock & real app (what each part does)
+
+The mock (`mock_template.png`) follows the same idea as **`MainPage.xaml`** (“Move stock”): one scan field, clear steps, two big actions, reset.
+
+| Area | In the app | What it does |
+|------|------------|----------------|
+| 📄 **Instruction line** | Top label | Short reminder: scan **location → item → quantity**, then tap **Inbound** or **Outbound**; **Reset** starts over. |
+| 🧭 **Step** | `Step: …` label | Shows where you are: *scan location* → *scan item* → *enter quantity* (scanner wedge + **Enter** advances the step). |
+| ⌨️ **Scan / type** | Single `Entry` | **Always** where codes go: location code (≤ 12), then item **SKU** or any **barcode line** from Admin, then quantity. Scanner types here + Enter = same as keyboard. |
+| 📋 **Context** | Line under the entry | Echo of what was recognised (e.g. location name/code, item SKU) so the operator sees the system “locked” the right master data. |
+| ➕ **Inbound (+)** | Green button | Confirms **stock IN** for current location + item + quantity → creates an **IN** movement (increases on-hand). |
+| ➖ **Outbound (−)** | Red button | Confirms **stock OUT** → **OUT** movement (decreases on-hand). |
+| 🔄 **Reset flow** | Bottom button | Clears **location, item, quantity** and returns to *scan location* — use after a mistake or when starting another bin. |
+
+### Flow in one glance
+
+| Step | You scan / type | Then |
+|------|-----------------|------|
+| 1️⃣ | **Location** code | Enter → step asks for item |
+| 2️⃣ | **Item** (SKU or barcode) | Enter → step asks for quantity |
+| 3️⃣ | **Quantity** (number) | Enter → tap **Inbound (+)** or **Outbound (−)** |
+
+> **Tip:** if something is wrong, **Reset flow** before scanning again — faster than correcting a half-finished movement.
+
+### Mock vs. app (labels)
+
+| If the mock shows… | In `MainPage.xaml` it is… |
+|--------------------|---------------------------|
+| Big **+** / “add” area | **Inbound (+)** — green |
+| Big **−** / “remove” area | **Outbound (−)** — red |
+| Single scan line | **`ScanEntry`** — placeholder *“Scan or type code”* |
+| Step / phase text | **`StepLabel`** — *Step: scan location* → *item* → *quantity* |
+| Context / subtitle under the field | **`ContextLabel`** — shows resolved location or item |
+
+## 🔁 5. Scan-first flow
 
 1. **Scan location**
    - Validate size (≤ 12) and existence/active status.
@@ -62,7 +91,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
    - Inbound (+) writes `stock_movements(IN)`; Outbound (−) writes `stock_movements(OUT)`.
    - Update `stock_balances` (or receive updated balance from the API).
 
-## ✅ 5. Rules & validations (MVP)
+## ✅ 6. Rules & validations (MVP)
 
 - **Location**: code ≤ 12; must exist and be active.
 - **Item**: scanned or typed code must match an active item (typically **SKU** or a **barcode** from `items.Barcodes`; **article number** is maintained in Admin for catalog alignment, not necessarily what the scanner sends).
@@ -72,7 +101,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
   - Option B: allow negative and flag in reports
 - **Audit**: every movement records `user_id`, timestamp, location, and item.
 
-## 🔌 6. Data consumed/sent (API)
+## 🔌 7. Data consumed/sent (API)
 
 - **Read**
   - `warehouses`, `locations`, `items` (including `Barcodes`), `minmax_settings` (or equivalent API surface for min/max)
@@ -80,7 +109,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 - **Write**
   - `stock_movements` (immutable lines)
 
-## ✋ 7. PDA UX notes
+## ✋ 8. PDA UX notes
 
 - **Predictable focus**: after each Enter, advance the step and keep focus on the scan field.
 - **Immediate feedback**: beep/visual on recognized location and item; clear error on unknown codes.

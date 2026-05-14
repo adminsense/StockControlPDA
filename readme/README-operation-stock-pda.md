@@ -47,7 +47,7 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 - Scanner can send **Enter** at the end of each scan.
 - **Location codes** are **up to 12 characters**.
 
-## 🎨 4. Move stock — UI mock & MAUI behaviour (`pda-move-stock.html`)
+## 🎨 4. Move stock — UI mock & MAUI behaviour
 
 <p align="center">
   <img src="./images/pda-move-stock.png" alt="PDA — Move stock (mock screenshot)" width="420" />

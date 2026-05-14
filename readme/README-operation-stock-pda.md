@@ -17,7 +17,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 | Topic | Value |
 |------|-------|
 | **Platform** | Android PDA |
-| **Workflow** | **Target (`docs/pda-move-stock.html`):** warehouse + location + item + summary + quantity → In/Out. **Today:** lean scan steps + In/Out + **Sync** \| **Reset**. |
+| **Workflow** | **Move stock** follows the mock [`pda-move-stock.html`](../docs/pda-move-stock.html): pickers, scan, Summary, quantity, In/Out, **Sync** \| **Reset** — see **section 4**. |
 | **Scanner** | Keyboard wedge (text + Enter) |
 | **Connectivity** | Online (MVP) |
 | **MAUI targets** | **Android only** — `Platforms/Android` only (`net10.0-android`, min API 21). iOS / Windows / Mac Catalyst folders are not in this repo. |
@@ -47,20 +47,13 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 - Scanner can send **Enter** at the end of each scan.
 - **Location codes** are **up to 12 characters**.
 
-## 🧭 4. Screens (compact)
+## 🎨 4. Move stock — UI mock & MAUI behaviour (`pda-move-stock.html`)
 
-| Screen | Role |
-|--------|------|
-| **Login** | Authenticate operator (MVP / future). |
-| **Move stock** | **Target:** same as mock [`pda-move-stock.html`](../docs/pda-move-stock.html) — pickers, scan, **Summary**, quantity, In/Out, **Sync** \| **Reset** (**§5**). **Today:** scan steps + context line + In/Out + **Sync** \| **Reset**. |
-| **Min/Max alerts** *(planned)* | List below min / above max with filters. |
-| **Quick lookup** *(planned)* | Balance by item/location. |
+This section is the **single place** for mock layout, current **MAUI** behaviour, and pointers to scan rules (**section 5**), validations & picker strategy (**section 6**), and API (**section 7**). The **step-by-step scan contract** is not repeated here — see **section 5**.
 
----
+### Target (mock — layout reference)
 
-## 🎨 5. Move stock — UI mock (`pda-move-stock.html`)
-
-**Template:** interactive HTML [`docs/pda-move-stock.html`](../docs/pda-move-stock.html) — open in a browser; this is the **layout and behaviour reference** for the PDA **Move stock** screen. Refresh the screenshot below when the HTML changes.
+**Template:** interactive HTML [`docs/pda-move-stock.html`](../docs/pda-move-stock.html) — open in a browser; this is the **layout and behaviour reference** for **Move stock**. Refresh the screenshot below when the HTML changes.
 
 <p align="center">
   <img src="./images/pda-move-stock.png" alt="PDA — Move stock (mock screenshot)" width="420" />
@@ -68,25 +61,32 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 
 | Area (mock) | Intended behaviour |
 |----------------|-------------------|
-| 🏭 **Warehouse** / 📍 **Location** / 🏷️ **Item** | Pickers; lists filtered per rules in **§7** when implemented. **Scan** (Enter) still sets location or item when the code matches. |
-| ⌨️ **Scan or type code** | Keyboard wedge + **Enter** resolves a **location code** or **item** (SKU / barcode / article number per API rules). |
-| 📊 **Summary** | Shows resolved **warehouse**, **location**, **item**, **on hand**, **min/max**, status pill — requires API lookups (not in the current lean `MainPage`). |
+| 🏭 **Warehouse** / 📍 **Location** / 🏷️ **Item** | **Pickers.** How the **item** list is filtered is a **product/API choice** (rules **A–E**, **section 6**). **Scan** (Enter) should still set location or item when the code matches. |
+| ⌨️ **Scan or type code** | Keyboard wedge + **Enter** resolves a **location code** or **item** (SKU / barcode / article number per API rules — **section 5**). |
+| 📊 **Summary** | **Warehouse**, **location**, **item**, **on hand**, **min/max**, status pill — server lookups (`/api/pda/catalog/summary`). |
 | 🔢 **Quantity** | Stepper **− / +** then **Inbound (+)** / **Outbound (−)**. |
-| 🔄 **Sync** \| **Reset flow** | Same row. **Sync** → `GET /api/stock/sync` (MVP: counts + connectivity); later reload cached masters for pickers. **Reset** clears selection + quantity in the HTML mock; in the app today it clears the scan step flow. |
+| 🔄 **Sync** \| **Reset flow** | Same row. **Sync** → `GET /api/stock/sync` (MVP: counts + connectivity); after success, **reload catalog pickers** from `/api/pda/catalog/...`. **Reset** clears selection + quantity (mock + MAUI). |
 
-**Current MAUI app (`MainPage.xaml`):** still the **lean** step flow (instruction, `StepLabel`, single `ScanEntry`, `ContextLabel`, In/Out, **Sync** \| **Reset**). Implement the fields and **Summary** to match this mock and the rules in **§2**, **§6–§8**.
+### Implemented in MAUI today (`MainPage.xaml`)
 
-### Current app step flow (until the mock layout is implemented)
+| Topic | Details |
+|--------|---------|
+| **UI** | Warehouse / location / item **pickers**, **Scan** field, **Summary**, quantity **− / +**, **Inbound (+)** / **Outbound (−)**, **Sync** \| **Reset flow** — same structure as the **Target** table above. |
+| **Sync** | `GET /api/stock/sync`; on success, **reloads** warehouses, locations (per warehouse), and items from **`/api/pda/catalog/...`**. |
+| **Summary** | `GET /api/pda/catalog/summary` for the selected triple. |
+| **Movements** | `POST /api/stock/movements` with selected **location code** + **item SKU**. |
+| **Rules & edge cases** | **Section 2** (Admin vs floor), **section 6** (validations, picker rules **A–E**). |
+| **Data contracts** | **Section 7** (read/write API surface). |
 
-| Step | You scan / type | Then |
-|------|-----------------|------|
-| 1️⃣ | **Location** code | Enter → step asks for item |
-| 2️⃣ | **Item** (SKU or barcode) | Enter → step asks for quantity |
-| 3️⃣ | **Quantity** (number) | Enter → tap **Inbound (+)** or **Outbound (−)** |
+### Planned screens (not in this MVP build)
 
-> **Tip:** if something is wrong, **Reset flow** before scanning again.
+| Screen | Role |
+|--------|------|
+| **Login** | Authenticate operator (future). |
+| **Min/Max alerts** | List below min / above max with filters (planned). |
+| **Quick lookup** | Balance by item/location (planned). |
 
-## 🔁 6. Scan-first flow
+## 🔁 5. Scan-first flow
 
 1. **Scan location**
    - Validate size (≤ 12) and existence/active status.
@@ -98,7 +98,9 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
    - Inbound (+) writes `stock_movements(IN)`; Outbound (−) writes `stock_movements(OUT)`.
    - Update `stock_balances` (or receive updated balance from the API).
 
-## ✅ 7. Rules & validations (MVP)
+> **Tip:** if the wrong location/item is selected, use **Reset flow** on **Move stock** before scanning again.
+
+## ✅ 6. Rules & validations (MVP)
 
 - **Location**: code ≤ 12; must exist and be active.
 - **Item**: scanned or typed code must match an active item (typically **SKU** or a **barcode** from `items.Barcodes`; **article number** is maintained in Admin for catalog alignment, not necessarily what the scanner sends).
@@ -110,7 +112,10 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 
 ### 📋 Item dropdown (warehouse + location) — which items to list?
 
-**Status:** **not decided in code** (the HTML mock uses a flat demo list). When the PDA UI matches **§5** (`pda-move-stock.html`), pick **one** rule (or a documented hybrid) and expose it via API + UI.
+| Topic | Details |
+|--------|---------|
+| **Picker list (MVP)** | **`GET /api/pda/catalog/items`** returns **all active items** → **rule C** in the table below. Warehouse + location on the PDA only define **where** the movement posts. |
+| **Still open (product)** | Narrow or replace the list with **A**, **B**, **D**, or **E** via a dedicated API (e.g. `items-for-location`); do not fork conflicting rules only in the client. |
 
 | # | Rule | Meaning |
 |---|------|--------|
@@ -122,7 +127,7 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 
 **Implementation:** one explicit endpoint or query (e.g. items-for-location) should implement the chosen row(s) above; avoid duplicating conflicting logic in the app only.
 
-## 🔌 8. Data consumed/sent (API)
+## 🔌 7. Data consumed/sent (API)
 
 - **Read**
   - `GET /api/stock/sync` — PDA **Sync** (MVP: returns counts of warehouses, active locations, active items; future: drive full catalog cache).
@@ -133,7 +138,15 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 
 ### 🔄 Staying in sync with Admin (new locations, empty bins)
 
-**Issue:** warehouses, **locations**, items, and **balances** change in **Admin**. The PDA must not keep an indefinitely stale list. Catalog vs physical stock is also covered in **§2**.
+#### The issue
+
+| Topic | Details |
+|--------|---------|
+| **What changes in Admin** | **Warehouses**, **locations**, **items**, and **balances** evolve over time. |
+| **Risk on the PDA** | Stale pickers or wrong assumptions about what is in a bin. |
+| **Related concept** | Catalog vs physical stock — see **section 2** of this document. |
+
+#### Ways to keep the PDA fresh
 
 | Approach | Role |
 |----------|------|
@@ -141,22 +154,84 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 | **Manual Sync** | **Sync** next to **Reset** explicitly refreshes (MVP: `GET /api/stock/sync` counts); later full catalog cache. **Not** the same as Admin **Stock Control → Sync**. |
 | **Background refresh** | Optional; mind battery and server load. |
 
-**PDA Sync (MVP, implemented):** **Move stock** has **Sync** next to **Reset flow** (same row). It calls **`GET /api/stock/sync`** and shows warehouse / active location / active item **counts**. **Later:** reload cached masters for the pickers in **§5**.
+#### What **Sync** does today (MVP)
 
-**New location, no stock yet:** **§2** and **§6** — balances follow first **IN** or Admin opening stock.
+| Topic | Details |
+|--------|---------|
+| **Where** | **Move stock** — **Sync** and **Reset flow** on the same row. |
+| **HTTP** | **`GET /api/stock/sync`** |
+| **Response (today)** | Counts: warehouses, active locations, active items. |
+| **Roadmap** | Reload cached masters for the pickers (see **section 4** mock). |
 
-**Flow you described** (Admin: items + initial qty e.g. 1 at that location → PDA refreshes → operator counts / adjusts with movements) is **valid**, especially if the item picker uses rules like **A/B** (list driven by `stock_balances`). If the API creates balances on first **IN**, you can instead skip Admin qty and let the **first putaway** on the PDA open the bin.
+#### New location, still empty
 
-## ✋ 9. PDA UX notes
+| Topic | Details |
+|--------|---------|
+| **Meaning** | The **location** exists in Admin. **No** `stock_balances` row until something posts stock. |
+| **Ways a balance appears** | First **IN** on the PDA **or** opening quantity entered in **Admin**. |
+| **Cross‑refs** | **Section 2** (Admin vs floor) and **section 5** (scan / confirm flow). |
 
-- **Sync**: operator taps **Sync** after Admin changes masters (or periodically); today it confirms server reachability + counts; later it should refresh local catalog lists.
-- **Predictable focus**: after each Enter, advance the step and keep focus on the scan field.
+#### Two valid ways to run day‑to‑day
+
+These are both **correct**; which you prefer depends on whether the item list is driven by **`stock_balances`** (rules **A** / **B** in **section 6**) or by full catalog (**C**), etc.
+
+##### Path 1 — Admin sets opening quantity, PDA adjusts
+
+| Step | Who / what |
+|------|------------|
+| **1** | **Admin** registers the **item** (and related master data). |
+| **2** | **Admin** posts an **opening quantity** at that **warehouse + location** (e.g. **1**). A row exists in **`stock_balances`**. |
+| **3** | Operator uses **Sync** / reload on the **PDA** so lists and summaries reflect the server. |
+| **4** | Operator **counts** or **adjusts** using **Inbound (+)** / **Outbound (−)** movements. |
+
+**When this fits best:** item picker rules **A** or **B**, because the dropdown is naturally driven by **`stock_balances`**.
+
+##### Path 2 — First putaway on the PDA (no Admin qty first)
+
+| Step | Who / what |
+|------|------------|
+| **1** | **Location** and **item** exist in Admin. **No** balance row yet for that triple. |
+| **2** | First **Inbound (+)** on the **PDA** creates **`stock_balances`** (if the API behaves that way — see product rules). |
+| **3** | Later movements adjust the same bin. |
+
+**When this fits best:** you rely on **first IN** to “open” the bin; you may skip entering opening qty in Admin entirely.
+
+#### Diagram (both paths)
+
+```mermaid
+flowchart TB
+  subgraph P1["Path 1 — Admin opening qty"]
+    A1["Admin: item + opening qty at location"]
+    A2["Row in stock_balances"]
+    A3["PDA: Sync / reload"]
+    A4["Operator: IN / OUT adjustments"]
+    A1 --> A2 --> A3 --> A4
+  end
+
+  subgraph P2["Path 2 — First IN on PDA"]
+    B1["No balance row yet"]
+    B2["PDA: first Inbound IN"]
+    B3["API creates / updates stock_balances"]
+    B4["Further IN / OUT as usual"]
+    B1 --> B2 --> B3 --> B4
+  end
+```
+
+| Path | Picker hint |
+|------|----------------|
+| **Path 1** | Rules **A** / **B** align well: the item already appears because **`stock_balances`** has a row. |
+| **Path 2** | Rule **C** (full catalog) or **hybrid E** helps until a balance exists; first **IN** then enables balance‑driven lists if you switch to **A** / **B** later. |
+
+## ✋ 8. PDA UX notes
+
+- **Sync**: operator taps **Sync** after Admin changes masters (or periodically). Calls `GET /api/stock/sync`; on success the app **reloads catalog pickers** from `/api/pda/catalog/...` (MVP).
+- **Predictable focus**: keep wedge input on **Scan** when possible; **Enter** resolves the code into the pickers (**section 4**).
 - **Immediate feedback**: beep/visual on recognized location and item; clear error on unknown codes.
 - **Minimal taps**: ideally only tap quantity and the (+/−) button.
 
 ---
 
-## 🧪 10. Local testing (developer notebook — Admin + PDA without a handset)
+## 🧪 9. Local testing (developer notebook — Admin + PDA without a handset)
 
 | Topic | Details |
 |--------|---------|
@@ -247,6 +322,7 @@ dotnet run --project src/StockControl.Admin/StockControl.Admin.csproj --launch-p
 ## Documentation
 
 - 🏠 [Main Documentation](../README.md) — Project overview
+- **Section 9** below — Local Admin + PDA integration for tests
 
 ---
 

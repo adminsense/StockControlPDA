@@ -247,7 +247,6 @@ dotnet run --project src/StockControl.Admin/StockControl.Admin.csproj --launch-p
 ## Documentation
 
 - 🏠 [Main Documentation](../README.md) — Project overview
-- § **10** above — Local Admin + PDA integration for tests
 
 ---
 

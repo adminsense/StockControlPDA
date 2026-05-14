@@ -9,48 +9,32 @@
 
 <section class="panel">
     <h2>Warehouses</h2>
-    <label for="wh-search">Search</label>
-    <input id="wh-search" type="text" placeholder="code or name" @bind="_search" @bind:after="ResetPaging" />
-    <div class="actions">
-        <button class="btn primary" type="button" @onclick="StartCreate">+ New</button>
-        <button class="btn ghost" type="button" @onclick="ReloadAsync">Sync</button>
-    </div>
+    <SearchField ForId="wh-search" Label="Search" Placeholder="code or name" Value="@_search" ValueChanged="OnSearchChanged"
+                 Hint="Search matches warehouse code and name." />
 </section>
 
-@if (_editing is not null)
-{
-    <section class="panel">
-        <h2>@(_editing.Id == 0 ? "New warehouse" : "Edit warehouse")</h2>
-        <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
-            <div class="row">
-                <div>
-                    <label for="wh-code">Code *</label>
-                    <input id="wh-code" type="text" maxlength="20" @bind="_editing.Code"
-                           @onblur='() => ValidateMaxLength("Code", _editing.Code, 20)' required />
-                </div>
-                <div>
-                    <label for="wh-name">Name *</label>
-                    <input id="wh-name" type="text" maxlength="50" @bind="_editing.Name"
-                           @onblur='() => ValidateMaxLength("Name", _editing.Name, 50)' required />
-                </div>
+<section class="panel">
+    <h2>@(_editing.Id == 0 ? "New warehouse" : "Edit warehouse")</h2>
+    <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+        <div class="row">
+            <div>
+                <label for="wh-code">Code *</label>
+                <input id="wh-code" type="text" maxlength="20" @bind="_editing.Code"
+                       @onblur='() => ValidateMaxLength("Code", _editing.Code, 20)' required />
             </div>
-            <div class="row">
-                <div>
-                    <label for="wh-status">Status</label>
-                    <select id="wh-status" @bind="_editing.IsActive">
-                        <option value="@true">Active</option>
-                        <option value="@false">Inactive</option>
-                    </select>
-                </div>
+            <div>
+                <label for="wh-name">Name *</label>
+                <input id="wh-name" type="text" maxlength="50" @bind="_editing.Name"
+                       @onblur='() => ValidateMaxLength("Name", _editing.Name, 50)' required />
             </div>
+        </div>
 
-            <div class="actions">
-                <button class="btn success" type="submit" disabled="@_isSaving">Save</button>
-                <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
-            </div>
-        </form>
-    </section>
-}
+        <div class="actions">
+            <button class="btn success" type="submit" disabled="@_isSaving">@(_editing.Id == 0 ? "Save" : "Update")</button>
+            <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
+        </div>
+    </form>
+</section>
 
 <section class="panel">
     <h2>List</h2>
@@ -73,14 +57,16 @@
             <tbody>
                 @foreach (var w in PagedWarehouses)
                 {
-                    <tr @key="w.Id">
+                    <tr @key="w.Id"
+                        class="@RowClass(w.Id, w.IsActive)"
+                        @onclick="@(() => OnWarehouseRowClick(w))">
                         <td class="mono">@w.Code</td>
                         <td>@w.Name</td>
                         <td><span class="tag @(w.IsActive ? "ok" : "off")">@(w.IsActive ? "Active" : "Inactive")</span></td>
-                        <td class="admin-grid-td-actions">
-                            <div class="mini-actions">
-                                <button class="edit" type="button" @onclick="@(() => StartEdit(w))">Edit</button>
-                                <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(w))">@(w.IsActive ? "Deactivate" : "Activate")</button>
+                        <td class="admin-grid-td-actions" @onclick:stopPropagation="true">
+                            <div class="mini-actions mini-actions-row">
+                                <EditIconButton Title="Edit warehouse" OnClick="@(() => StartEdit(w))" Disabled="@(!w.IsActive)" />
+                                <ActiveToggle IsActive="w.IsActive" OnToggle="@(() => ToggleActiveAsync(w))" />
                             </div>
                         </td>
                     </tr>
@@ -101,7 +87,8 @@
     private string _search = "";
     private string _status = "";
     private bool _isSaving;
-    private Warehouse? _editing;
+    private Warehouse _editing = new();
+    private int? _selectedRowId;
     private List<Warehouse> _warehouses = [];
     private string? _success;
     private string? _error;
@@ -110,9 +97,32 @@
     private string? _sortKey;
     private bool _sortDesc;
 
+    private string RowClass(int id, bool isActive)
+    {
+        var cls = isActive ? "admin-grid-row-clickable" : "admin-grid-row-inactive";
+        if (_selectedRowId == id)
+            cls += " admin-grid-row-clickable--selected";
+        return cls;
+    }
+
+    private void OnWarehouseRowClick(Warehouse w)
+    {
+        if (!w.IsActive)
+            return;
+        StartEdit(w);
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await ReloadAsync();
+        ResetFormToNew();
+    }
+
+    private Task OnSearchChanged(string v)
+    {
+        _search = v;
+        ResetPaging();
+        return Task.CompletedTask;
     }
 
     private IEnumerable<Warehouse> FilteredWarehouses
@@ -186,17 +196,21 @@
             _pageIndex++;
     }
 
-    private void StartCreate()
+    private void ResetFormToNew()
     {
-        _success = null;
         _error = null;
+        _selectedRowId = null;
         _editing = new Warehouse();
     }
 
     private void StartEdit(Warehouse w)
     {
+        if (!w.IsActive)
+            return;
+
         _success = null;
         _error = null;
+        _selectedRowId = w.Id;
         _editing = new Warehouse
         {
             Id = w.Id,
@@ -208,13 +222,15 @@
         };
     }
 
-    private void CancelEdit() => _editing = null;
+    private void CancelEdit()
+    {
+        _success = null;
+        _error = null;
+        ResetFormToNew();
+    }
 
     private async Task SaveAsync()
     {
-        if (_editing is null)
-            return;
-
         _success = null;
         _error = null;
         _editing.Code = (_editing.Code ?? "").Trim().ToUpperInvariant();
@@ -244,9 +260,9 @@
             }
 
             await db.SaveChangesAsync();
-            _editing = null;
             _success = "Saved successfully.";
             await ReloadAsync();
+            ResetFormToNew();
         }
         catch (Exception ex)
         {
@@ -279,7 +295,6 @@
         try
         {
             await db.SaveChangesAsync();
-            _success = "Saved successfully.";
             await ReloadAsync();
         }
         catch (Exception ex)
@@ -288,4 +303,3 @@
         }
     }
 }
-

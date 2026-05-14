@@ -9,73 +9,47 @@
 
 <section class="panel">
     <h2>Locations</h2>
-    <div class="row">
-        <div>
-            <label for="loc-warehouse">Warehouse</label>
-            <select id="loc-warehouse" @bind="_warehouseIdFilter" @bind:after="ResetPaging">
-                <option value="0">All</option>
-                @foreach (var w in _warehouses)
-                {
-                    <option value="@w.Id">@w.Code - @w.Name</option>
-                }
-            </select>
-        </div>
-        <div>
-            <label for="loc-search">Search</label>
-            <input id="loc-search" type="text" placeholder="code" @bind="_search" @bind:after="ResetPaging" />
-        </div>
-    </div>
-    <div class="actions">
-        <button class="btn primary" type="button" @onclick="StartCreate">+ New</button>
-        <button class="btn ghost" type="button" @onclick="ReloadAsync">Sync</button>
-    </div>
-    <p class="hint">Location code: <strong>up to 12 characters</strong>. On PDA: keep focus and Enter confirms.</p>
+    <SearchField ForId="loc-search" Label="Search" Placeholder="warehouse, code, or description" Value="@_search" ValueChanged="OnSearchChanged"
+                 Hint="Search matches warehouse code, location code, and description." />
 </section>
 
-@if (_editing is not null)
-{
-    <section class="panel">
-        <h2>@(_editing.Id == 0 ? "New location" : "Edit location")</h2>
-        <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
-            <div class="row">
-                <div>
-                    <label for="loc-code">Code (≤12) *</label>
-                    <input id="loc-code" type="text" maxlength="12" @bind="_editing.Code"
-                           @onblur='() => ValidateMaxLength("Code", _editing.Code, 12)' required />
-                </div>
-                <div>
-                    <label for="loc-desc">Description</label>
-                    <input id="loc-desc" type="text" maxlength="50" @bind="_editing.Description"
-                           @onblur='() => ValidateMaxLength("Description", _editing.Description, 50)' />
-                </div>
+<section class="panel">
+    <h2>@(_editing.Id == 0 ? "New location" : "Edit location")</h2>
+    <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+        <div class="row">
+            <div>
+                <label for="loc-code">Code (≤12) *</label>
+                <input id="loc-code" type="text" maxlength="12" @bind="_editing.Code"
+                       @onblur='() => ValidateMaxLength("Code", _editing.Code, 12)' required />
             </div>
-            <div class="row">
-                <div>
-                    <label for="loc-edit-warehouse">Warehouse *</label>
-                    <select id="loc-edit-warehouse" @bind="_editing.WarehouseId" required>
-                        <option value="0">-- Select warehouse --</option>
-                        @foreach (var w in _warehouses)
-                        {
-                            <option value="@w.Id">@w.Code - @w.Name</option>
-                        }
-                    </select>
-                </div>
-                <div>
-                    <label for="loc-status">Status</label>
-                    <select id="loc-status" @bind="_editing.IsActive">
-                        <option value="@true">Active</option>
-                        <option value="@false">Inactive</option>
-                    </select>
-                </div>
+            <div>
+                <label for="loc-desc">Description</label>
+                <input id="loc-desc" type="text" maxlength="50" @bind="_editing.Description"
+                       @onblur='() => ValidateMaxLength("Description", _editing.Description, 50)' />
             </div>
+        </div>
+        <div class="row">
+            <div>
+                <label for="loc-edit-warehouse">Warehouse *</label>
+                <select id="loc-edit-warehouse" @bind="_editing.WarehouseId" required>
+                    <option value="0">-- Select warehouse --</option>
+                    @foreach (var w in _warehouses)
+                    {
+                        <option value="@w.Id">@w.Code - @w.Name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <p class="hint" style="margin-top:1.35rem;margin-bottom:0">Location code: <strong>up to 12 characters</strong>. On PDA: keep focus and Enter confirms.</p>
+            </div>
+        </div>
 
-            <div class="actions">
-                <button class="btn success" type="submit" disabled="@_isSaving">Save</button>
-                <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
-            </div>
-        </form>
-    </section>
-}
+        <div class="actions">
+            <button class="btn success" type="submit" disabled="@_isSaving">@(_editing.Id == 0 ? "Save" : "Update")</button>
+            <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
+        </div>
+    </form>
+</section>
 
 <section class="panel">
     <h2>List</h2>
@@ -100,15 +74,17 @@
             <tbody>
                 @foreach (var l in PagedLocations)
                 {
-                    <tr @key="l.Id">
+                    <tr @key="l.Id"
+                        class="@RowClass(l.Id, l.IsActive)"
+                        @onclick="@(() => OnLocationRowClick(l))">
                         <td class="mono">@l.WarehouseCode</td>
                         <td class="mono">@l.Code</td>
                         <td>@l.Description</td>
                         <td><span class="tag @(l.IsActive ? "ok" : "off")">@(l.IsActive ? "Active" : "Inactive")</span></td>
-                        <td class="admin-grid-td-actions">
-                            <div class="mini-actions">
-                                <button class="edit" type="button" @onclick="@(() => StartEdit(l))">Edit</button>
-                                <button class="del" type="button" @onclick="@(() => ToggleActiveAsync(l))">@(l.IsActive ? "Deactivate" : "Activate")</button>
+                        <td class="admin-grid-td-actions" @onclick:stopPropagation="true">
+                            <div class="mini-actions mini-actions-row">
+                                <EditIconButton Title="Edit location" OnClick="@(() => StartEdit(l))" Disabled="@(!l.IsActive)" />
+                                <ActiveToggle IsActive="l.IsActive" OnToggle="@(() => ToggleActiveAsync(l))" />
                             </div>
                         </td>
                     </tr>
@@ -128,9 +104,9 @@
 @code {
     private string _search = "";
     private string _status = "";
-    private int _warehouseIdFilter;
     private bool _isSaving;
-    private Location? _editing;
+    private Location _editing = new();
+    private int? _selectedRowId;
     private List<Warehouse> _warehouses = [];
     private List<LocationRow> _locations = [];
     private string? _success;
@@ -140,15 +116,38 @@
     private string? _sortKey;
     private bool _sortDesc;
 
+    private string RowClass(int id, bool isActive)
+    {
+        var cls = isActive ? "admin-grid-row-clickable" : "admin-grid-row-inactive";
+        if (_selectedRowId == id)
+            cls += " admin-grid-row-clickable--selected";
+        return cls;
+    }
+
+    private void OnLocationRowClick(LocationRow l)
+    {
+        if (!l.IsActive)
+            return;
+        StartEdit(l);
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await ReloadAsync();
+        ResetFormToNew();
+    }
+
+    private Task OnSearchChanged(string v)
+    {
+        _search = v;
+        ResetPaging();
+        return Task.CompletedTask;
     }
 
     private IEnumerable<LocationRow> FilteredLocations
         => _locations.Where(l =>
-            (_warehouseIdFilter == 0 || l.WarehouseId == _warehouseIdFilter)
-            && (string.IsNullOrWhiteSpace(_search) ||
+            (string.IsNullOrWhiteSpace(_search) ||
+                l.WarehouseCode.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
                 l.Code.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
                 (l.Description ?? "").Contains(_search, StringComparison.OrdinalIgnoreCase))
             && (_status switch
@@ -245,20 +244,21 @@
             _pageIndex++;
     }
 
-    private void StartCreate()
+    private void ResetFormToNew()
     {
-        _success = null;
         _error = null;
-        _editing = new Location
-        {
-            WarehouseId = _warehouseIdFilter != 0 ? _warehouseIdFilter : 0
-        };
+        _selectedRowId = null;
+        _editing = new Location { WarehouseId = 0 };
     }
 
     private void StartEdit(LocationRow row)
     {
+        if (!row.IsActive)
+            return;
+
         _success = null;
         _error = null;
+        _selectedRowId = row.Id;
         _editing = new Location
         {
             Id = row.Id,
@@ -271,13 +271,15 @@
         };
     }
 
-    private void CancelEdit() => _editing = null;
+    private void CancelEdit()
+    {
+        _success = null;
+        _error = null;
+        ResetFormToNew();
+    }
 
     private async Task SaveAsync()
     {
-        if (_editing is null)
-            return;
-
         _success = null;
         _error = null;
         _editing.Code = (_editing.Code ?? "").Trim().ToUpperInvariant();
@@ -307,9 +309,9 @@
             }
 
             await db.SaveChangesAsync();
-            _editing = null;
             _success = "Saved successfully.";
             await ReloadAsync();
+            ResetFormToNew();
         }
         catch (Exception ex)
         {
@@ -342,7 +344,6 @@
         try
         {
             await db.SaveChangesAsync();
-            _success = "Saved successfully.";
             await ReloadAsync();
         }
         catch (Exception ex)
@@ -361,4 +362,3 @@
         DateTimeOffset CreatedAt,
         DateTimeOffset? UpdatedAt);
 }
-

@@ -9,89 +9,62 @@
 
 <section class="panel">
     <h2>Min / Max</h2>
-    <div class="row">
-        <div>
-            <label for="mm-warehouse">Warehouse</label>
-            <select id="mm-warehouse" @bind="_mmWarehouseId" @bind:after="OnMmWarehouseChanged">
-                <option value="0">All</option>
-                @foreach (var w in _mmWarehouses)
-                {
-                    <option value="@w.Id">@w.Code - @w.Name</option>
-                }
-            </select>
-        </div>
-        <div>
-            <label for="mm-item">Item (SKU)</label>
-            <select id="mm-item" @bind="_mmItemId" @bind:after="ResetMinMaxPaging">
-                <option value="0">All</option>
-                @foreach (var i in _mmItems)
-                {
-                    <option value="@i.Id">@i.Sku@if (!string.IsNullOrWhiteSpace(i.ArticleNumber)) { <text> · @i.ArticleNumber</text> } — @i.DisplayName</option>
-                }
-            </select>
-        </div>
-    </div>
-    <div class="actions">
-        <button class="btn primary" type="button" @onclick="StartMmCreate">+ New</button>
-        <button class="btn ghost" type="button" @onclick="ReloadMinMaxAsync">Sync</button>
-    </div>
+    <SearchField ForId="mm-search" Label="Search" Placeholder="warehouse, location, SKU, or article no." Value="@_search" ValueChanged="OnSearchChanged"
+                 Hint="Search matches warehouse code, location code, SKU, and article number." />
     <p class="hint">Set Min/Max per <strong>warehouse + item + location</strong> (location is required).</p>
 </section>
 
-@if (_mmEditing is not null)
-{
-    <section class="panel">
-        <h2>@(_mmEditing.Id == 0 ? "New min/max" : "Edit min/max")</h2>
-        <form @onsubmit="SaveMinMaxAsync" @onsubmit:preventDefault="true">
-            <div class="row">
-                <div>
-                    <label for="mm-edit-warehouse">Warehouse *</label>
-                    <select id="mm-edit-warehouse" @bind="_mmEditing.WarehouseId" @bind:after="OnMmEditingWarehouseChanged" required>
-                        <option value="0">-- Select --</option>
-                        @foreach (var w in _mmWarehouses)
-                        {
-                            <option value="@w.Id">@w.Code - @w.Name</option>
-                        }
-                    </select>
-                </div>
-                <div>
-                    <label for="mm-edit-item">Item (SKU) *</label>
-                    <select id="mm-edit-item" @bind="_mmEditing.ItemId" required>
-                        <option value="0">-- Select --</option>
-                        @foreach (var i in _mmItems)
-                        {
-                            <option value="@i.Id">@i.Sku@if (!string.IsNullOrWhiteSpace(i.ArticleNumber)) { <text> · @i.ArticleNumber</text> } — @i.DisplayName</option>
-                        }
-                    </select>
-                </div>
+<section class="panel">
+    <h2>@(_mmEditing.Id == 0 ? "New min/max" : "Edit min/max")</h2>
+    <form @onsubmit="SaveMinMaxAsync" @onsubmit:preventDefault="true">
+        <div class="row">
+            <div>
+                <label for="mm-edit-warehouse">Warehouse *</label>
+                <select id="mm-edit-warehouse" @bind="_mmEditing.WarehouseId" @bind:after="OnMmEditingWarehouseChanged" required>
+                    <option value="0">-- Select --</option>
+                    @foreach (var w in _mmWarehouses)
+                    {
+                        <option value="@w.Id">@w.Code - @w.Name</option>
+                    }
+                </select>
             </div>
-            <div class="row3">
-                <div>
-                    <label for="mm-min">Min *</label>
-                    <input id="mm-min" type="number" min="0" @bind="_mmEditing.Min" required />
-                </div>
-                <div>
-                    <label for="mm-max">Max *</label>
-                    <input id="mm-max" type="number" min="0" @bind="_mmEditing.Max" required />
-                </div>
-                <div>
-                    <label for="mm-loc">Location *</label>
-                    <select id="mm-loc" @bind="_mmEditing.LocationId" required>
-                        <option value="0">-- Select --</option>
-                        @foreach (var l in _mmLocationsForEditing)
-                        {
-                            <option value="@l.Id">@l.Code</option>
-                        }
-                    </select>
-                </div>
+            <div>
+                <label for="mm-edit-item">Item (SKU) *</label>
+                <select id="mm-edit-item" @bind="_mmEditing.ItemId" required>
+                    <option value="0">-- Select --</option>
+                    @foreach (var i in _mmItems)
+                    {
+                        <option value="@i.Id">@i.Sku@if (!string.IsNullOrWhiteSpace(i.ArticleNumber)) { <text> · @i.ArticleNumber</text> } — @i.DisplayName</option>
+                    }
+                </select>
             </div>
-            <div class="actions">
-                <button class="btn success" type="submit" disabled="@_mmIsSaving">Save</button>
-                <button class="btn danger" type="button" @onclick="CancelMmEdit">Cancel</button>
+        </div>
+        <div class="row3">
+            <div>
+                <label for="mm-min">Min *</label>
+                <input id="mm-min" type="number" min="0" @bind="_mmEditing.Min" required />
             </div>
-        </form>
-    </section>
-}
+            <div>
+                <label for="mm-max">Max *</label>
+                <input id="mm-max" type="number" min="0" @bind="_mmEditing.Max" required />
+            </div>
+            <div>
+                <label for="mm-loc">Location *</label>
+                <select id="mm-loc" @bind="_mmEditing.LocationId" required>
+                    <option value="0">-- Select --</option>
+                    @foreach (var l in _mmLocationsForEditing)
+                    {
+                        <option value="@l.Id">@l.Code</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="actions">
+            <button class="btn success" type="submit" disabled="@_mmIsSaving">@(_mmEditing.Id == 0 ? "Save" : "Update")</button>
+            <button class="btn danger" type="button" @onclick="CancelMmEdit">Cancel</button>
+        </div>
+    </form>
+</section>
 
 <section class="panel">
     <h2>Current settings</h2>
@@ -104,6 +77,7 @@
                 <col class="admin-mm-col-art" />
                 <col class="admin-mm-col-num" />
                 <col class="admin-mm-col-num" />
+                <col class="admin-mm-col-status" />
                 <col class="admin-mm-col-actions" />
             </colgroup>
             <thead>
@@ -114,24 +88,27 @@
                     <SortableHeaderCell Label="Art. no." SortKey="articleno" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="Min" SortKey="min" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
                     <SortableHeaderCell Label="Max" SortKey="max" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
+                    <SortableHeaderCell Label="Status" SortKey="status" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <th class="admin-grid-th-actions" scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var m in PagedMinMax)
                 {
-                    <tr @key="m.Id">
+                    <tr @key="m.Id"
+                        class="@MmRowClass(m.Id, m.IsActive)"
+                        @onclick="@(() => SelectMmRowAsync(m))">
                         <td class="mono">@m.WarehouseCode</td>
                         <td class="mono">@m.LocationCode</td>
                         <td class="mono">@m.ItemSku</td>
                         <td class="mono">@(string.IsNullOrWhiteSpace(m.ItemArticleNumber) ? "—" : m.ItemArticleNumber)</td>
                         <td class="col-num admin-mm-td-num">@m.Min</td>
                         <td class="col-num admin-mm-td-num">@m.Max</td>
-                        <td class="admin-grid-td-actions">
+                        <td><span class="tag @(m.IsActive ? "ok" : "off")">@(m.IsActive ? "Active" : "Inactive")</span></td>
+                        <td class="admin-grid-td-actions" @onclick:stopPropagation="true">
                             <div class="mini-actions mini-actions-row">
-                                <button class="edit" type="button" @onclick="@(() => StartMmEdit(m.Id))">Edit</button>
-                                <button class="del" type="button" disabled="@(!m.IsActive)" @onclick="@(() => ToggleMinMaxActiveAsync(m.Id))">Deactivate</button>
-                                <button class="edit" type="button" disabled="@(m.IsActive)" @onclick="@(() => ToggleMinMaxActiveAsync(m.Id))">Activate</button>
+                                <EditIconButton Title="Edit min/max" OnClick="@(() => StartMmEdit(m.Id))" Disabled="@(!m.IsActive)" />
+                                <ActiveToggle IsActive="m.IsActive" OnToggle="@(() => ToggleMinMaxActiveAsync(m.Id))" />
                             </div>
                         </td>
                     </tr>
@@ -149,10 +126,17 @@
 </section>
 
 @code {
-    private int _mmWarehouseId;
-    private int _mmItemId;
+    private string _search = "";
     private bool _mmIsSaving;
-    private MinMaxSetting? _mmEditing;
+    private MinMaxSetting _mmEditing = new()
+    {
+        WarehouseId = 0,
+        ItemId = 0,
+        LocationId = 0,
+        Min = 0,
+        Max = 0
+    };
+    private int? _selectedMmId;
     private List<Warehouse> _mmWarehouses = [];
     private List<Item> _mmItems = [];
     private List<Location> _mmAllLocations = [];
@@ -167,15 +151,34 @@
     private string? _sortKey;
     private bool _sortDesc;
 
+    private string MmRowClass(int id, bool isActive)
+    {
+        var cls = isActive ? "admin-grid-row-clickable" : "admin-grid-row-inactive";
+        if (_selectedMmId == id)
+            cls += " admin-grid-row-clickable--selected";
+        return cls;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await ReloadMinMaxAsync();
+        ResetMmFormToNew();
+    }
+
+    private Task OnSearchChanged(string v)
+    {
+        _search = v;
+        ResetMinMaxPaging();
+        return Task.CompletedTask;
     }
 
     private IEnumerable<MinMaxRow> FilteredMinMax
         => _mmRows.Where(m =>
-            (_mmWarehouseId == 0 || m.WarehouseId == _mmWarehouseId)
-            && (_mmItemId == 0 || m.ItemId == _mmItemId));
+            string.IsNullOrWhiteSpace(_search)
+            || m.WarehouseCode.Contains(_search, StringComparison.OrdinalIgnoreCase)
+            || m.LocationCode.Contains(_search, StringComparison.OrdinalIgnoreCase)
+            || m.ItemSku.Contains(_search, StringComparison.OrdinalIgnoreCase)
+            || (!string.IsNullOrWhiteSpace(m.ItemArticleNumber) && m.ItemArticleNumber.Contains(_search, StringComparison.OrdinalIgnoreCase)));
 
     private int _mmTotalRows => OrderedFilteredMinMax.Count();
     private int _mmMaxPageIndex => Math.Max(0, (_mmTotalRows - 1) / PageSize);
@@ -200,6 +203,7 @@
                 "articleno" => _sortDesc ? q.OrderByDescending(m => m.ItemArticleNumber) : q.OrderBy(m => m.ItemArticleNumber),
                 "min" => _sortDesc ? q.OrderByDescending(m => m.Min) : q.OrderBy(m => m.Min),
                 "max" => _sortDesc ? q.OrderByDescending(m => m.Max) : q.OrderBy(m => m.Max),
+                "status" => _sortDesc ? q.OrderByDescending(m => m.IsActive) : q.OrderBy(m => m.IsActive),
                 _ => q.OrderByDescending(m => m.Id)
             };
         }
@@ -256,12 +260,6 @@
             .ToList();
     }
 
-    private void OnMmWarehouseChanged()
-    {
-        ResetMinMaxPaging();
-        _mmItemId = 0;
-    }
-
     private void PrevMinMaxPage()
     {
         if (_mmPageIndex > 0)
@@ -274,14 +272,15 @@
             _mmPageIndex++;
     }
 
-    private void StartMmCreate()
+    private void ResetMmFormToNew()
     {
-        _success = null;
         _error = null;
+        _focusId = null;
+        _selectedMmId = null;
         _mmEditing = new MinMaxSetting
         {
-            WarehouseId = _mmWarehouseId != 0 ? _mmWarehouseId : 0,
-            ItemId = _mmItemId != 0 ? _mmItemId : 0,
+            WarehouseId = 0,
+            ItemId = 0,
             LocationId = 0,
             Min = 0,
             Max = 0
@@ -289,15 +288,33 @@
         SyncMmLocationsForEditing();
     }
 
+    private async Task SelectMmRowAsync(MinMaxRow m)
+    {
+        if (!m.IsActive)
+            return;
+        await StartMmEdit(m.Id);
+    }
+
     private async Task StartMmEdit(int id)
     {
         _success = null;
         _error = null;
+        _focusId = null;
         await using var db = await DbFactory.CreateDbContextAsync();
         var entity = await db.MinMaxSettings.FirstOrDefaultAsync(x => x.Id == id);
         if (entity is null)
+        {
+            _selectedMmId = null;
             return;
+        }
 
+        if (!entity.IsActive)
+        {
+            _selectedMmId = null;
+            return;
+        }
+
+        _selectedMmId = id;
         _mmEditing = new MinMaxSetting
         {
             Id = entity.Id,
@@ -315,7 +332,7 @@
 
     private void SyncMmLocationsForEditing()
     {
-        if (_mmEditing is null || _mmEditing.WarehouseId == 0)
+        if (_mmEditing.WarehouseId == 0)
         {
             _mmLocationsForEditing = [];
             return;
@@ -329,24 +346,18 @@
 
     private void OnMmEditingWarehouseChanged()
     {
-        if (_mmEditing is null)
-            return;
-
         _mmEditing.LocationId = 0;
         SyncMmLocationsForEditing();
     }
 
     private void CancelMmEdit()
     {
-        _mmEditing = null;
-        _mmLocationsForEditing = [];
+        _success = null;
+        ResetMmFormToNew();
     }
 
     private async Task SaveMinMaxAsync()
     {
-        if (_mmEditing is null)
-            return;
-
         _success = null;
         _error = null;
         _focusId = null;
@@ -380,8 +391,8 @@
 
             await db.SaveChangesAsync();
             _success = "Saved successfully.";
-            CancelMmEdit();
             await ReloadMinMaxAsync();
+            ResetMmFormToNew();
         }
         catch (Exception ex)
         {
@@ -409,7 +420,6 @@
         try
         {
             await db.SaveChangesAsync();
-            _success = "Saved successfully.";
             await ReloadMinMaxAsync();
         }
         catch (Exception ex)

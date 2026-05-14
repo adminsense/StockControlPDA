@@ -16,7 +16,7 @@
         <div class="sc-modal sc-modal--busy" role="dialog" aria-modal="true">
             <div class="sc-modal-body sc-modal-body--busy">
                 <div class="sc-spinner" aria-hidden="true"></div>
-                <p class="sc-busy-text">Synchronizing with the item catalog…</p>
+                <p class="sc-busy-text">Synchronizing stock from PDA…</p>
             </div>
         </div>
     </div>
@@ -48,8 +48,8 @@
     </div>
     <div class="row">
         <div>
-            <label for="stock-search">Search</label>
-            <input id="stock-search" type="text" placeholder="sku, article no., product, or name" @bind="_search" />
+            <SearchField ForId="stock-search" Label="Search" Placeholder="sku, article no., product, or name" Value="@_search" ValueChanged="OnStockSearchChanged"
+                         Hint="Search matches SKU, article number, product code, and display name." />
         </div>
         <div>
             <label for="stock-only-belowmin">Filter</label>
@@ -63,7 +63,10 @@
     <div class="actions">
         <button id="stock-sync-btn" class="btn ghost" type="button" @onclick="OnSyncClickedAsync">Sync</button>
     </div>
-    <p class="hint">This screen shows current on-hand quantities per <strong>warehouse + location</strong> and compares to Min/Max when available.</p>
+    <p class="hint">
+        <strong>Sync</strong> only reacts to <strong>PDA stock activity</strong> (movements and on-hand balances). Master data is maintained here in Admin without this button.
+        This list shows quantities per <strong>warehouse + location</strong> and compares to Min/Max when available.
+    </p>
 </section>
 
 <section class="panel">
@@ -144,7 +147,7 @@
     private string? _success;
     private string? _error;
     private bool _syncBusy;
-    private DateTimeOffset _itemsActivityBaseline;
+    private DateTimeOffset _pdaStockBaseline;
 
     private int _warehouseId;
     private int _locationId;
@@ -164,7 +167,7 @@
     {
         await LoadStockGridAsync();
         await using var db = await DbFactory.CreateDbContextAsync();
-        _itemsActivityBaseline = await GetLatestItemActivityUtcAsync(db);
+        _pdaStockBaseline = await PdaStockSyncMarker.GetLatestActivityUtcAsync(db);
     }
 
     private Task OnFeedbackClosed()
@@ -175,12 +178,11 @@
         return Task.CompletedTask;
     }
 
-    private static async Task<DateTimeOffset> GetLatestItemActivityUtcAsync(AppDbContext db)
+    private Task OnStockSearchChanged(string v)
     {
-        if (!await db.Items.AsNoTracking().AnyAsync())
-            return DateTimeOffset.MinValue;
-
-        return await db.Items.AsNoTracking().MaxAsync(i => i.UpdatedAt ?? i.CreatedAt);
+        _search = v;
+        _pageIndex = 0;
+        return Task.CompletedTask;
     }
 
     private async Task OnSyncClickedAsync()
@@ -198,11 +200,11 @@
         _error = null;
 
         await using var db = await DbFactory.CreateDbContextAsync();
-        var marker = await GetLatestItemActivityUtcAsync(db);
+        var marker = await PdaStockSyncMarker.GetLatestActivityUtcAsync(db);
 
-        if (marker <= _itemsActivityBaseline)
+        if (marker <= _pdaStockBaseline)
         {
-            _success = "Everything is synchronized.";
+            _success = "PDA stock is already up to date.";
             StateHasChanged();
             return;
         }
@@ -215,8 +217,8 @@
             await Task.Delay(350);
             await LoadStockGridAsync();
             await using var db2 = await DbFactory.CreateDbContextAsync();
-            _itemsActivityBaseline = await GetLatestItemActivityUtcAsync(db2);
-            _success = "Synchronization completed.";
+            _pdaStockBaseline = await PdaStockSyncMarker.GetLatestActivityUtcAsync(db2);
+            _success = "Stock list reloaded from PDA activity.";
         }
         finally
         {

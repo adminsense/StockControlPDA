@@ -19,7 +19,30 @@ public static class StockMovementApiExtensions
         app.MapPost("/api/stock/movements", HandlePostAsync)
             .WithName("PostStockMovement")
             .DisableAntiforgery();
+        app.MapGet("/api/stock/sync", HandleGetSyncAsync)
+            .WithName("GetStockCatalogSync")
+            .DisableAntiforgery();
         return app;
+    }
+
+    private static async Task<IResult> HandleGetSyncAsync(
+        [FromServices] IDbContextFactory<AppDbContext> dbFactory,
+        CancellationToken cancellationToken)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+
+        var warehouseCount = await db.Warehouses.AsNoTracking().CountAsync(cancellationToken);
+        var locationCount = await db.Locations.AsNoTracking().CountAsync(l => l.IsActive, cancellationToken);
+        var itemCount = await db.Items.AsNoTracking().CountAsync(i => i.IsActive, cancellationToken);
+
+        return Results.Ok(new
+        {
+            ok = true,
+            warehouseCount,
+            locationCount,
+            itemCount,
+            syncedAt = DateTimeOffset.UtcNow
+        });
     }
 
     private static async Task<IResult> HandlePostAsync(

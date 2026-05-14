@@ -9,101 +9,85 @@
 
 <section class="panel">
     <h2>Items (SKU)</h2>
-    <label for="item-search">Search</label>
-    <input id="item-search" type="text" placeholder="sku, article no., product, name, or barcode" @bind="_search" @bind:after="ResetItemsPaging" />
-    <div class="actions">
-        <button class="btn primary" type="button" @onclick="StartCreate">+ New</button>
-        <button class="btn ghost" type="button" @onclick="ReloadAsync">Sync</button>
-    </div>
+    <SearchField ForId="item-search" Label="Search" Placeholder="sku, article no., product, name, or barcode" Value="@_search" ValueChanged="OnSearchChanged"
+                 Hint="Search matches SKU, article number, product code, display name, and barcodes." />
 </section>
 
-@if (_editing is not null)
-{
-    <section class="panel">
-        <h2>@(_editing.Id == 0 ? "New item" : "Edit item")</h2>
-        <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
-            <div class="row">
-                <div>
-                    <label for="item-sku">SKU *</label>
-                    <input id="item-sku" type="text" maxlength="40" @bind="_editing.Sku"
-                           @onblur='() => ValidateMaxLength("SKU", _editing.Sku, 40)' required />
-                </div>
-                <div>
-                    <label for="item-article">Article number</label>
-                    <input id="item-article" type="text" maxlength="50" @bind="_editing.ArticleNumber"
-                           @onblur='() => ValidateMaxLength("Article number", _editing.ArticleNumber, 50)' />
-                    <p class="hint" style="margin-top:6px;margin-bottom:0">Supplier / catalog article code (Artikelnummer). Distinct from internal SKU.</p>
-                </div>
-                <div>
-                    <label for="item-unit">Quantity unit *</label>
-                    <input id="item-unit" type="text" maxlength="10" @bind="_editing.Unit"
-                           @onblur='() => ValidateMaxLength("Quantity unit", _editing.Unit, 10)' required />
-                    <p class="hint" style="margin-top:6px;margin-bottom:0">Short code used with on-hand quantities (e.g. <span class="mono">ST</span>, <span class="mono">KG</span>, <span class="mono">M2</span>).</p>
-                </div>
+<section class="panel">
+    <h2>@(_editing.Id == 0 ? "New item" : "Edit item")</h2>
+    <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+        <div class="row">
+            <div>
+                <label for="item-sku">SKU *</label>
+                <input id="item-sku" type="text" maxlength="40" @bind="_editing.Sku"
+                       @onblur='() => ValidateMaxLength("SKU", _editing.Sku, 40)' required />
             </div>
-            <div class="row">
-                <div>
-                    <label for="item-name">Display name *</label>
-                    <input id="item-name" type="text" maxlength="100" @bind="_editing.DisplayName"
-                           @onblur='() => ValidateMaxLength("Display name", _editing.DisplayName, 100)' required />
-                </div>
-                <div>
-                    <label for="item-status">Status</label>
-                    <select id="item-status" @bind="_editing.IsActive">
-                        <option value="@true">Active</option>
-                        <option value="@false">Inactive</option>
-                    </select>
-                </div>
+            <div>
+                <label for="item-article">Article number</label>
+                <input id="item-article" type="text" maxlength="50" @bind="_editing.ArticleNumber"
+                       @onblur='() => ValidateMaxLength("Article number", _editing.ArticleNumber, 50)' />
+                <p class="hint" style="margin-top:6px;margin-bottom:0">Supplier / catalog article code (Artikelnummer). Distinct from internal SKU.</p>
             </div>
-            <div class="row">
-                <div>
-                    <label for="item-product">Product *</label>
-                    <select id="item-product" @bind="_editing.ProductId" required>
-                        <option value="0">-- Select --</option>
-                        @foreach (var p in _productOptions)
-                        {
-                            <option value="@p.Id">@p.Code — @p.Name</option>
-                        }
-                    </select>
-                </div>
+        </div>
+        <div class="row">
+            <div>
+                <label for="item-unit">Quantity unit *</label>
+                <input id="item-unit" type="text" maxlength="10" @bind="_editing.Unit"
+                       @onblur='() => ValidateMaxLength("Quantity unit", _editing.Unit, 10)' required />
+                <p class="hint" style="margin-top:6px;margin-bottom:0">Short code used with on-hand quantities (e.g. <span class="mono">ST</span>, <span class="mono">KG</span>, <span class="mono">M2</span>).</p>
             </div>
-            <div class="row">
-                <div>
-                    <label for="item-packaging">Packaging *</label>
-                    <select id="item-packaging" value="@((int)_editing.PackagingType)" @onchange="OnPackagingSelectChanged">
-                        @foreach (var pt in Enum.GetValues<PackagingType>())
-                        {
-                            <option value="@((int)pt)">@PackagingLabel(pt)</option>
-                        }
-                    </select>
-                    <p class="hint" style="margin-top:6px;margin-bottom:0">How the item is counted when receiving or selling (each, box of N, pallet…). Not the same as quantity unit.</p>
-                </div>
-                <div>
-                    <label for="item-pkgqty">Package quantity *</label>
-                    <input id="item-pkgqty" type="number" step="0.001" min="0.001" @bind="_editing.PackageQuantity" />
-                </div>
-                <div>
-                    <label for="item-price">Price *</label>
-                    <input id="item-price" type="number" step="0.01" min="0" @bind="_editing.Price" />
-                </div>
+            <div>
+                <label for="item-name">Display name *</label>
+                <input id="item-name" type="text" maxlength="100" @bind="_editing.DisplayName"
+                       @onblur='() => ValidateMaxLength("Display name", _editing.DisplayName, 100)' required />
             </div>
-            <div class="row">
-                <div>
-                    <label for="item-barcodes">Barcodes (one per line)</label>
-                    <textarea id="item-barcodes" rows="4" @bind="_barcodesText" placeholder="Ex.: 8712345678901"></textarea>
-                    <p class="hint">One code per line; stored on the item. Each code must be unique across all items (scanner / wedge).</p>
-                </div>
+        </div>
+        <div class="row">
+            <div>
+                <label for="item-product">Product *</label>
+                <select id="item-product" @bind="_editing.ProductId" required>
+                    <option value="0">-- Select --</option>
+                    @foreach (var p in _productOptions)
+                    {
+                        <option value="@p.Id">@p.Code — @p.Name</option>
+                    }
+                </select>
             </div>
+            <div>
+                <label for="item-price">Price *</label>
+                <input id="item-price" type="number" step="0.01" min="0" @bind="_editing.Price" />
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <label for="item-packaging">Packaging *</label>
+                <select id="item-packaging" value="@((int)_editing.PackagingType)" @onchange="OnPackagingSelectChanged">
+                    @foreach (var pt in Enum.GetValues<PackagingType>())
+                    {
+                        <option value="@((int)pt)">@PackagingLabel(pt)</option>
+                    }
+                </select>
+                <p class="hint" style="margin-top:6px;margin-bottom:0">How the item is counted when receiving or selling (each, box of N, pallet…). Not the same as quantity unit.</p>
+            </div>
+            <div>
+                <label for="item-pkgqty">Package quantity *</label>
+                <input id="item-pkgqty" type="number" step="0.001" min="0.001" @bind="_editing.PackageQuantity" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="admin-form-span-2">
+                <label for="item-barcodes">Barcodes (one per line)</label>
+                <textarea id="item-barcodes" class="item-form-barcodes" rows="2" @bind="_barcodesText" placeholder="Ex.: 8712345678901"></textarea>
+                <p class="hint" style="margin-bottom:0">One code per line; stored on the item. Each code must be unique across all items (scanner / wedge).</p>
+            </div>
+        </div>
 
-            <p class="hint hint-anchor">Min/Max stock targets: use the dedicated <a href="/minmax"><strong>Min / Max</strong></a> page.</p>
-
-            <div class="actions">
-                <button class="btn success" type="submit" disabled="@_isSaving">Save</button>
-                <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
-            </div>
-        </form>
-    </section>
-}
+        <div class="actions">
+            <button class="btn success" type="submit" disabled="@_isSaving">@(_editing.Id == 0 ? "Save" : "Update")</button>
+            <button class="btn danger" type="button" @onclick="CancelEdit">Cancel</button>
+        </div>
+    </form>
+</section>
 
 <section class="panel">
     <h2>List</h2>
@@ -127,8 +111,8 @@
                     <SortableHeaderCell Label="Art. no." SortKey="articleno" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="Product" SortKey="product" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="Name" SortKey="name" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
-                    <SortableHeaderCell Label="Qty unit" SortKey="unit" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
-                    <SortableHeaderCell Label="Packaging" SortKey="packaging" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Unit" SortKey="unit" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Pack." SortKey="packaging" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="Pkg qty" SortKey="pkgqty" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
                     <SortableHeaderCell Label="Price" SortKey="price" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
                     <SortableHeaderCell Label="Status" SortKey="status" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
@@ -138,7 +122,9 @@
             <tbody>
                 @foreach (var i in PagedItems)
                 {
-                    <tr @key="i.Id">
+                    <tr @key="i.Id"
+                        class="@RowClass(i.Id, i.IsActive)"
+                        @onclick="@(() => SelectItemRowAsync(i))">
                         <td class="mono">@i.Sku</td>
                         <td class="mono">@(string.IsNullOrWhiteSpace(i.ArticleNumber) ? "—" : i.ArticleNumber)</td>
                         <td class="mono">@i.ProductCode</td>
@@ -148,11 +134,10 @@
                         <td class="col-num admin-it-td-num">@i.PackageQuantity.ToString("0.###")</td>
                         <td class="col-num admin-it-td-num">@i.Price.ToString("0.00")</td>
                         <td><span class="tag @(i.IsActive ? "ok" : "off")">@(i.IsActive ? "Active" : "Inactive")</span></td>
-                        <td class="admin-grid-td-actions">
+                        <td class="admin-grid-td-actions" @onclick:stopPropagation="true">
                             <div class="mini-actions mini-actions-row">
-                                <button class="edit" type="button" @onclick="@(() => StartEdit(i.Id))">Edit</button>
-                                <button class="del" type="button" disabled="@(!i.IsActive)" @onclick="@(() => ToggleActiveAsync(i.Id))">Deactivate</button>
-                                <button class="edit" type="button" disabled="@(i.IsActive)" @onclick="@(() => ToggleActiveAsync(i.Id))">Activate</button>
+                                <EditIconButton Title="Edit item" OnClick="@(() => StartEdit(i.Id))" Disabled="@(!i.IsActive)" />
+                                <ActiveToggle IsActive="i.IsActive" OnToggle="@(() => ToggleActiveAsync(i.Id))" />
                             </div>
                         </td>
                     </tr>
@@ -173,7 +158,14 @@
     private string _search = "";
     private string _status = "";
     private bool _isSaving;
-    private Item? _editing;
+    private Item _editing = new()
+    {
+        PackagingType = PackagingType.Unit,
+        PackageQuantity = 1m,
+        Price = 0m,
+        Barcodes = ""
+    };
+    private int? _selectedRowId;
     private string _barcodesText = "";
     private List<ItemRow> _items = [];
     private List<Product> _productOptions = [];
@@ -185,9 +177,25 @@
     private string? _sortKey;
     private bool _sortDesc;
 
+    private string RowClass(int id, bool isActive)
+    {
+        var cls = isActive ? "admin-grid-row-clickable" : "admin-grid-row-inactive";
+        if (_selectedRowId == id)
+            cls += " admin-grid-row-clickable--selected";
+        return cls;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await ReloadAsync();
+        ResetFormToNew();
+    }
+
+    private Task OnSearchChanged(string v)
+    {
+        _search = v;
+        ResetItemsPaging();
+        return Task.CompletedTask;
     }
 
     private IEnumerable<ItemRow> FilteredItems
@@ -290,10 +298,10 @@
             _itemsPageIndex++;
     }
 
-    private void StartCreate()
+    private void ResetFormToNew()
     {
-        _success = null;
         _error = null;
+        _selectedRowId = null;
         _editing = new Item
         {
             PackagingType = PackagingType.Unit,
@@ -304,6 +312,13 @@
         _barcodesText = "";
     }
 
+    private async Task SelectItemRowAsync(ItemRow row)
+    {
+        if (!row.IsActive)
+            return;
+        await StartEdit(row.Id);
+    }
+
     private async Task StartEdit(int itemId)
     {
         _success = null;
@@ -311,8 +326,18 @@
         await using var db = await DbFactory.CreateDbContextAsync();
         var entity = await db.Items.FirstOrDefaultAsync(x => x.Id == itemId);
         if (entity is null)
+        {
+            _selectedRowId = null;
             return;
+        }
 
+        if (!entity.IsActive)
+        {
+            _selectedRowId = null;
+            return;
+        }
+
+        _selectedRowId = itemId;
         _editing = new Item
         {
             Id = entity.Id,
@@ -334,15 +359,13 @@
 
     private void CancelEdit()
     {
-        _editing = null;
-        _barcodesText = "";
+        _success = null;
+        _error = null;
+        ResetFormToNew();
     }
 
     private async Task SaveAsync()
     {
-        if (_editing is null)
-            return;
-
         _success = null;
         _error = null;
         _editing.Sku = (_editing.Sku ?? "").Trim().ToUpperInvariant();
@@ -407,9 +430,9 @@
             }
 
             await db.SaveChangesAsync();
-            CancelEdit();
             _success = "Saved successfully.";
             await ReloadAsync();
+            ResetFormToNew();
         }
         catch (Exception ex)
         {
@@ -450,7 +473,6 @@
         try
         {
             await db.SaveChangesAsync();
-            _success = "Saved successfully.";
             await ReloadAsync();
         }
         catch (Exception ex)
@@ -461,8 +483,6 @@
 
     private void OnPackagingSelectChanged(ChangeEventArgs e)
     {
-        if (_editing is null)
-            return;
         if (int.TryParse(e.Value?.ToString(), out var v) && Enum.IsDefined(typeof(PackagingType), v))
         {
             _editing.PackagingType = (PackagingType)v;
@@ -495,4 +515,3 @@
         bool IsActive,
         string? BarcodesCsv);
 }
-

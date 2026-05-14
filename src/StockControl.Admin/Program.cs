@@ -40,6 +40,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.MapStockMovementApi();
+app.MapPdaCatalogApi();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

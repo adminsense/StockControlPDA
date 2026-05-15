@@ -3,36 +3,43 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Stock Control — Admin</title>
+  <title>Stock Control — Admin (mock)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <style>
-    /* Same palette as PDA static reference */
     :root {
       --bg: #0c111b;
       --panel: #141c2a;
-      --panel2: rgba(0, 0, 0, 0.25);
-      --line: rgba(255, 255, 255, 0.1);
-      --text: #eef2ff;
-      --muted: #94a3b8;
+      --panel2: #1a2332;
+      --line: rgba(255, 255, 255, 0.16);
+      --text: #f8fafc;
+      --muted: #b6c4d8;
+      --field-bg: #1e293b;
+      --field-border: rgba(255, 255, 255, 0.28);
+      --field-text: #f8fafc;
+      --placeholder: #cbd5e1;
       --blue: #3b82f6;
       --green: #22c55e;
       --red: #ef4444;
-      --amber: #f59e0b;
       --radius: 14px;
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
+    html, body {
       font-family: var(--font);
       background: linear-gradient(165deg, #0a0f18 0%, var(--bg) 45%);
       color: var(--text);
+      color-scheme: dark;
+    }
+    body {
+      margin: 0;
       min-height: 100dvh;
       padding: 12px;
       padding-bottom: max(16px, env(safe-area-inset-bottom));
     }
     .shell {
-      max-width: 520px;
+      max-width: min(1320px, calc(100vw - 24px));
       margin: 0 auto;
+      min-width: 0;
     }
     header {
       display: flex;
@@ -53,21 +60,9 @@
       color: var(--muted);
       line-height: 1.35;
     }
-    .pill {
-      flex-shrink: 0;
-      font-size: 0.65rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: rgba(59, 130, 246, 0.15);
-      color: #bfdbfe;
-    }
     nav.tabs {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: repeat(4, 1fr);
       gap: 6px;
       margin-bottom: 12px;
     }
@@ -99,49 +94,42 @@
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: var(--muted);
+      color: #c5d0e0;
       font-weight: 800;
     }
     label {
       display: block;
-      font-size: 0.7rem;
-      color: var(--muted);
+      font-size: 0.72rem;
+      color: #d8e2ef;
       margin-bottom: 6px;
       font-weight: 700;
     }
+    .admin-search-field { display: block; width: 100%; max-width: 560px; }
+    .admin-search-hint { margin-top: 8px; margin-bottom: 0; max-width: 560px; }
     input[type="text"],
     input[type="number"],
-    select {
+    input[type="search"],
+    select,
+    textarea {
       width: 100%;
-      padding: 12px 12px;
+      padding: 12px;
       border-radius: 12px;
-      border: 1px solid var(--line);
-      background: var(--panel2);
-      color: var(--text);
+      border: 1px solid var(--field-border);
+      background-color: var(--field-bg);
+      color: var(--field-text);
       font-size: 0.95rem;
       outline: none;
     }
-    input:focus, select:focus {
-      border-color: rgba(59, 130, 246, 0.6);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    input::placeholder, textarea::placeholder { color: var(--placeholder); opacity: 1; }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(96, 165, 250, 0.85);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.28);
     }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .row3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .row > .admin-form-span-2 { grid-column: 1 / -1; }
+    .actions { display: flex; gap: 10px; margin-top: 12px; }
+    .actions.between { justify-content: space-between; align-items: center; }
     .btn {
       flex: 1;
       min-height: 48px;
@@ -153,10 +141,6 @@
       color: #fff;
       background: rgba(255, 255, 255, 0.06);
     }
-    .btn.primary {
-      background: linear-gradient(180deg, rgba(59, 130, 246, 0.35), rgba(59, 130, 246, 0.12));
-      border-color: rgba(59, 130, 246, 0.45);
-    }
     .btn.success {
       background: linear-gradient(180deg, rgba(34, 197, 94, 0.35), rgba(34, 197, 94, 0.12));
       border-color: rgba(34, 197, 94, 0.45);
@@ -165,96 +149,136 @@
       background: linear-gradient(180deg, rgba(239, 68, 68, 0.35), rgba(239, 68, 68, 0.12));
       border-color: rgba(239, 68, 68, 0.45);
     }
-    .btn.ghost {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.05);
+    .btn.ghost { color: var(--text); background: rgba(255, 255, 255, 0.05); flex: 0 0 auto; min-width: 120px; }
+    .btn.primary {
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.35), rgba(59, 130, 246, 0.12));
+      border-color: rgba(59, 130, 246, 0.45);
     }
     .hint {
       margin-top: 10px;
-      font-size: 0.72rem;
-      color: var(--muted);
+      font-size: 0.74rem;
+      color: #c5d0e0;
       line-height: 1.45;
+    }
+    .hint.tight { margin-top: 6px; margin-bottom: 0; }
+    .list-table-wrap, .stock-table-scroll {
+      overflow-x: hidden;
+      min-width: 0;
+      max-width: 100%;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.8rem;
+      table-layout: fixed;
     }
     th, td {
       padding: 10px 8px;
       text-align: left;
       border-bottom: 1px solid var(--line);
-      vertical-align: top;
+      vertical-align: middle;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
     th {
-      color: var(--muted);
+      color: #c5d0e0;
       font-weight: 800;
       font-size: 0.65rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
+    .th-sort-row { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+    .th-sort-btn {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 3px 7px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      cursor: pointer;
+      min-width: 30px;
+      min-height: 30px;
+    }
+    .th-sort-btn--on {
+      border-color: rgba(96, 165, 250, 0.75);
+      background: rgba(59, 130, 246, 0.28);
+    }
+    .admin-grid-th-actions, .admin-grid-td-actions { text-align: right; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; }
     .tag {
       display: inline-block;
       padding: 4px 8px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--muted);
       font-size: 0.65rem;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
-    .tag.ok {
-      background: rgba(34, 197, 94, 0.15);
-      color: #bbf7d0;
-      border-color: rgba(34, 197, 94, 0.35);
-    }
-    .tag.off {
-      background: rgba(239, 68, 68, 0.15);
-      color: #fecaca;
-      border-color: rgba(239, 68, 68, 0.35);
-    }
-    .mini-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-    .mini-actions button {
-      min-height: 40px;
-      padding: 0 10px;
+    .tag.ok { background: rgba(34, 197, 94, 0.15); color: #bbf7d0; border-color: rgba(34, 197, 94, 0.35); }
+    .tag.off { background: rgba(239, 68, 68, 0.15); color: #fecaca; border-color: rgba(239, 68, 68, 0.35); }
+    .mini-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: nowrap; }
+    .mini-actions > button.edit {
+      width: 40px; min-width: 40px; min-height: 40px; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
       border-radius: 10px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
-      font-weight: 800;
+      border: 1px solid rgba(59, 130, 246, 0.45);
+      background: rgba(59, 130, 246, 0.16);
+      color: #bfdbfe;
       cursor: pointer;
-      white-space: nowrap;
     }
-    .mini-actions .edit { border-color: rgba(59,130,246,0.45); background: rgba(59,130,246,0.16); }
-    .mini-actions .del { border-color: rgba(239,68,68,0.45); background: rgba(239,68,68,0.14); }
+    .mini-actions > button.edit:disabled { opacity: 0.42; cursor: not-allowed; }
+    .mini-actions > button.pager {
+      min-height: 40px; padding: 0 10px; border-radius: 10px;
+      border: 1px solid rgba(59, 130, 246, 0.45);
+      background: rgba(59, 130, 246, 0.16);
+      color: var(--text); font-weight: 800; cursor: pointer;
+    }
+    .mini-actions > button.pager:disabled { opacity: 0.42; cursor: not-allowed; }
+    tr.admin-grid-row-clickable { cursor: pointer; }
+    tr.admin-grid-row-clickable--selected td { background: rgba(59, 130, 246, 0.14); }
+    tr.admin-grid-row-inactive > td:not(.admin-grid-td-actions) { opacity: 0.82; }
+    .col-num, .stock-td-num { text-align: right; white-space: nowrap; }
+    textarea.item-form-barcodes { min-height: 3.25rem; max-height: 5.5rem; resize: vertical; }
     .hidden { display: none !important; }
-    .toast {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: max(12px, env(safe-area-inset-bottom));
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: rgba(20, 28, 42, 0.95);
-      font-size: 0.85rem;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
-      transform: translateY(120%);
-      opacity: 0;
-      transition: transform 0.25s ease, opacity 0.2s ease;
-      z-index: 100;
-      pointer-events: none;
+    .sc-modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
+      display: none; place-items: center; padding: 16px; z-index: 9999;
     }
-    .toast.show { transform: translateY(0); opacity: 1; }
+    .sc-modal-backdrop.show { display: grid; }
+    .sc-modal {
+      width: min(520px, 100%);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.15)), var(--panel);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+    }
+    .sc-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid var(--line);
+    }
+    .sc-modal-title { font-weight: 900; text-transform: uppercase; font-size: 0.74rem; }
+    .sc-modal-title.success { color: #bbf7d0; }
+    .sc-modal-body { padding: 14px; font-size: 0.95rem; line-height: 1.35; }
+    .sc-modal-actions { padding: 0 14px 14px; display: flex; justify-content: flex-end; }
+    .toggle-rail {
+      position: relative; display: block; width: 58px; height: 28px; border-radius: 14px; overflow: hidden;
+    }
+    .toggle-rail.on {
+      background: linear-gradient(180deg, #4ade80 0%, #22c55e 44%, #16a34a 100%);
+    }
+    .toggle-rail.off {
+      background: linear-gradient(180deg, #d1d5db 0%, #c4cbd4 40%, #aeb6c2 100%);
+    }
+    .toggle-knob {
+      position: absolute; top: 3px; width: 22px; height: 22px; border-radius: 50%;
+      background: linear-gradient(180deg, #fff 0%, #f3f4f6 100%);
+      box-shadow: 0 1px 3px rgba(0,0,0,.28);
+    }
+    .toggle-rail.on .toggle-knob { left: 33px; }
+    .toggle-rail.off .toggle-knob { left: 3px; }
   </style>
 </head>
 <body>
@@ -266,552 +290,619 @@
       </div>
     </header>
 
-    <nav class="tabs" role="tablist" aria-label="Admin sections">
-      <button type="button" role="tab" id="tab-users" aria-selected="true" aria-controls="panel-users">Users</button>
-      <button type="button" role="tab" id="tab-wh" aria-selected="false" aria-controls="panel-wh">Warehouses</button>
-      <button type="button" role="tab" id="tab-loc" aria-selected="false" aria-controls="panel-loc">Locations</button>
-      <button type="button" role="tab" id="tab-prod" aria-selected="false" aria-controls="panel-prod">Products</button>
-      <button type="button" role="tab" id="tab-items" aria-selected="false" aria-controls="panel-items">Items (SKU)</button>
-      <button type="button" role="tab" id="tab-minmax" aria-selected="false" aria-controls="panel-minmax">Min/Max</button>
+    <nav class="tabs tabs-admin" role="tablist" aria-label="Admin sections">
+      <button type="button" role="tab" data-tab="users" aria-selected="true">Users</button>
+      <button type="button" role="tab" data-tab="warehouses">Warehouses</button>
+      <button type="button" role="tab" data-tab="locations">Locations</button>
+      <button type="button" role="tab" data-tab="suppliers">Suppliers</button>
+      <button type="button" role="tab" data-tab="products">Products</button>
+      <button type="button" role="tab" data-tab="items">Items (SKU)</button>
+      <button type="button" role="tab" data-tab="minmax">Min / Max</button>
+      <button type="button" role="tab" data-tab="stock">Stock Control</button>
     </nav>
 
     <!-- USERS -->
-    <div id="panel-users" role="tabpanel" aria-labelledby="tab-users">
+    <div id="panel-users" class="tab-panel" role="tabpanel">
       <section class="panel">
         <h2>Users</h2>
         <label for="user-search">Search</label>
-        <input id="user-search" type="text" placeholder="name or username" />
+        <div class="admin-search-field">
+          <input id="user-search" type="search" placeholder="name or username" autocomplete="off" />
+        </div>
+        <p class="hint admin-search-hint">Search matches username and name.</p>
+      </section>
+      <section class="panel">
+        <h2>New user</h2>
+        <div class="row">
+          <div>
+            <label for="user-username">Username *</label>
+            <input id="user-username" type="text" maxlength="50" placeholder="marco" />
+          </div>
+          <div>
+            <label for="user-name">Name *</label>
+            <input id="user-name" type="text" maxlength="50" placeholder="Marco" />
+          </div>
+        </div>
         <div class="actions">
-          <button class="btn primary" type="button" data-toast="New user">+ New</button>
-          <button class="btn ghost" type="button" data-toast="Sync">Sync</button>
+          <button class="btn success" type="button" data-modal="Saved successfully.">Save</button>
+          <button class="btn danger" type="button">Cancel</button>
         </div>
       </section>
-
       <section class="panel">
         <h2>List</h2>
-        <div style="overflow-x:auto">
-          <table>
+        <div class="list-table-wrap">
+          <table class="admin-users-table admin-grid-table">
             <thead>
               <tr>
-                <th>User</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th style="text-align:right">Actions</th>
+                <th><div class="th-sort-row"><span>User</span><button type="button" class="th-sort-btn th-sort-btn--on" title="Sort">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Name</span><button type="button" class="th-sort-btn" title="Sort">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Status</span><button type="button" class="th-sort-btn" title="Sort">↓</button></div></th>
+                <th class="admin-grid-th-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="mono">marco</td>
-                <td>Marco</td>
+              <tr class="admin-grid-row-clickable admin-grid-row-clickable--selected">
+                <td class="mono">marco</td><td>Marco</td>
                 <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit user marco">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate user marco">Deactivate</button>
-                  </div>
-                </td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button" title="Edit user"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn" aria-pressed="true"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
-              <tr>
-                <td class="mono">operador01</td>
-                <td>Operador 01</td>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">operador01</td><td>Operador 01</td>
                 <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit user operador01">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate user operador01">Deactivate</button>
-                  </div>
-                </td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button" title="Edit user"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn" aria-pressed="true"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
-              <tr>
-                <td class="mono">teste</td>
-                <td>Teste</td>
+              <tr class="admin-grid-row-inactive">
+                <td class="mono">teste</td><td>Teste</td>
                 <td><span class="tag off">Inactive</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit user teste">Edit</button>
-                    <button class="del" type="button" data-toast="Activate user teste">Activate</button>
-                  </div>
-                </td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button" disabled title="Edit user"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn" aria-pressed="false"><span class="toggle-rail off"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="actions between">
+          <div class="hint" style="margin:0">Showing <strong>1</strong>-<strong>3</strong> of <strong>3</strong></div>
+          <div class="mini-actions"><button class="pager" type="button" disabled>Prev</button><button class="pager" type="button" disabled>Next</button></div>
         </div>
         <p class="hint">Simple user registry (no roles). Suggestion: deactivate instead of deleting.</p>
       </section>
     </div>
 
     <!-- WAREHOUSES -->
-    <div id="panel-wh" class="hidden" role="tabpanel" aria-labelledby="tab-wh">
+    <div id="panel-warehouses" class="tab-panel hidden" role="tabpanel">
       <section class="panel">
         <h2>Warehouses</h2>
         <label for="wh-search">Search</label>
-        <input id="wh-search" type="text" placeholder="code or name" />
+        <div class="admin-search-field"><input id="wh-search" type="search" placeholder="code or name" autocomplete="off" /></div>
+        <p class="hint admin-search-hint">Search matches warehouse code and name.</p>
+      </section>
+      <section class="panel">
+        <h2>New warehouse</h2>
+        <div class="row">
+          <div><label for="wh-code">Code *</label><input id="wh-code" type="text" maxlength="20" placeholder="WH01" /></div>
+          <div><label for="wh-name">Name *</label><input id="wh-name" type="text" maxlength="50" placeholder="Main" /></div>
+        </div>
         <div class="actions">
-          <button class="btn primary" type="button" data-toast="New warehouse">+ New</button>
-          <button class="btn ghost" type="button" data-toast="Sync">Sync</button>
+          <button class="btn success" type="button" data-modal="Saved successfully.">Save</button>
+          <button class="btn danger" type="button">Cancel</button>
         </div>
       </section>
       <section class="panel">
         <h2>List</h2>
-        <div style="overflow-x:auto">
-          <table>
+        <div class="list-table-wrap">
+          <table class="admin-master-table admin-grid-table">
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th style="text-align:right">Actions</th>
+                <th><div class="th-sort-row"><span>Code</span><button type="button" class="th-sort-btn th-sort-btn--on">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Name</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Status</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th class="admin-grid-th-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="mono">WH01</td>
-                <td>Main</td>
-                <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit WH01">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate WH01">Deactivate</button>
-                  </div>
-                </td>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">WH01</td><td>Main</td><td><span class="tag ok">Active</span></td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
-              <tr>
-                <td class="mono">WH02</td>
-                <td>Branch</td>
-                <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit WH02">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate WH02">Deactivate</button>
-                  </div>
-                </td>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">WH02</td><td>Branch</td><td><span class="tag ok">Active</span></td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="actions between">
+          <div class="hint" style="margin:0">Showing <strong>1</strong>-<strong>2</strong> of <strong>2</strong></div>
+          <div class="mini-actions"><button class="pager" type="button" disabled>Prev</button><button class="pager" type="button" disabled>Next</button></div>
         </div>
       </section>
     </div>
 
     <!-- LOCATIONS -->
-    <div id="panel-loc" class="hidden" role="tabpanel" aria-labelledby="tab-loc">
+    <div id="panel-locations" class="tab-panel hidden" role="tabpanel">
       <section class="panel">
         <h2>Locations</h2>
-        <div class="row">
-          <div>
-            <label for="loc-warehouse">Warehouse</label>
-            <select id="loc-warehouse">
-              <option>WH01 - Main</option>
-              <option>WH02 - Branch</option>
-            </select>
-          </div>
-          <div>
-            <label for="loc-search">Search</label>
-            <input id="loc-search" type="text" placeholder="code" />
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn primary" type="button" data-toast="New location">+ New</button>
-          <button class="btn ghost" type="button" data-toast="Import/Scan">Read scanner</button>
-        </div>
-        <p class="hint">Location code: <strong>up to 12 characters</strong>. On PDA: keep focus and Enter confirms.</p>
+        <label for="loc-search">Search</label>
+        <div class="admin-search-field"><input id="loc-search" type="search" placeholder="warehouse, code, or description" autocomplete="off" /></div>
+        <p class="hint admin-search-hint">Search matches warehouse code, location code, and description.</p>
       </section>
-
       <section class="panel">
-        <h2>Scan (keyboard wedge)</h2>
-        <label for="loc-scan">Focus here and scan a location</label>
-        <input id="loc-scan" type="text" inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="e.g., A01-03-R2" maxlength="12" />
-        <p class="hint">Press <span class="mono">Enter</span> to capture the code and then save.</p>
+        <h2>New location</h2>
+        <div class="row">
+          <div><label for="loc-code">Code (≤12) *</label><input id="loc-code" type="text" maxlength="12" placeholder="A01-03-R2" /></div>
+          <div><label for="loc-desc">Description</label><input id="loc-desc" type="text" maxlength="50" placeholder="Aisle A / Shelf 3" /></div>
+        </div>
         <div class="row">
           <div>
-            <label for="loc-code">Code (≤12)</label>
-            <input id="loc-code" type="text" maxlength="12" placeholder="A01-03-R2" />
+            <label for="loc-edit-warehouse">Warehouse *</label>
+            <select id="loc-edit-warehouse"><option>-- Select warehouse --</option><option selected>WH01 - Main</option><option>WH02 - Branch</option></select>
           </div>
-          <div>
-            <label for="loc-desc">Description</label>
-            <input id="loc-desc" type="text" placeholder="Aisle A / Shelf 3" />
-          </div>
+          <div><p class="hint tight" style="margin-top:1.35rem">Location code: <strong>up to 12 characters</strong>. On PDA: keep focus and Enter confirms.</p></div>
         </div>
         <div class="actions">
-          <button class="btn success" type="button" data-toast="Location saved">Save</button>
-          <button class="btn danger" type="button" data-toast="Location removed">Delete</button>
+          <button class="btn success" type="button" data-modal="Saved successfully.">Save</button>
+          <button class="btn danger" type="button">Cancel</button>
         </div>
       </section>
-
       <section class="panel">
         <h2>List</h2>
-        <div style="overflow-x:auto">
-          <table>
+        <div class="list-table-wrap">
+          <table class="admin-locations-table admin-grid-table">
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th style="text-align:right">Actions</th>
+                <th><div class="th-sort-row"><span>Warehouse</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Code</span><button type="button" class="th-sort-btn th-sort-btn--on">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Description</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Status</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th class="admin-grid-th-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="mono">A01-03-R2</td>
-                <td>Aisle A / Rack 2</td>
-                <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit A01-03-R2">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate A01-03-R2">Deactivate</button>
-                  </div>
-                </td>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">WH01</td><td class="mono">A01-03-R2</td><td>Aisle A / Rack 2</td><td><span class="tag ok">Active</span></td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
-              <tr>
-                <td class="mono">B12-RK02</td>
-                <td>Aisle B / Rack 2</td>
-                <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit B12-RK02">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate B12-RK02">Deactivate</button>
-                  </div>
-                </td>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">WH01</td><td class="mono">B12-RK02</td><td>Aisle B / Rack 2</td><td><span class="tag ok">Active</span></td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="actions between">
+          <div class="hint" style="margin:0">Showing <strong>1</strong>-<strong>2</strong> of <strong>2</strong></div>
+          <div class="mini-actions"><button class="pager" disabled>Prev</button><button class="pager" disabled>Next</button></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SUPPLIERS -->
+    <div id="panel-suppliers" class="tab-panel hidden" role="tabpanel">
+      <section class="panel">
+        <h2>Suppliers</h2>
+        <label for="sup-search">Search</label>
+        <div class="admin-search-field"><input id="sup-search" type="search" placeholder="code or name" autocomplete="off" /></div>
+        <p class="hint admin-search-hint">Search matches supplier code and name.</p>
+      </section>
+      <section class="panel">
+        <h2>New supplier</h2>
+        <div class="row">
+          <div><label for="sup-code">Code *</label><input id="sup-code" type="text" maxlength="20" placeholder="SUP01" /></div>
+          <div><label for="sup-name">Name *</label><input id="sup-name" type="text" maxlength="100" placeholder="Acme Parts" /></div>
+        </div>
+        <div class="actions">
+          <button class="btn success" type="button" data-modal="Saved successfully.">Save</button>
+          <button class="btn danger" type="button">Cancel</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>List</h2>
+        <div class="list-table-wrap">
+          <table class="admin-master-table admin-grid-table">
+            <thead>
+              <tr>
+                <th><div class="th-sort-row"><span>Code</span><button type="button" class="th-sort-btn th-sort-btn--on">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Name</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Status</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th class="admin-grid-th-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">SUP01</td><td>Acme Parts</td><td><span class="tag ok">Active</span></td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="actions between">
+          <div class="hint" style="margin:0">Showing <strong>1</strong>-<strong>1</strong> of <strong>1</strong></div>
+          <div class="mini-actions"><button class="pager" disabled>Prev</button><button class="pager" disabled>Next</button></div>
         </div>
       </section>
     </div>
 
     <!-- PRODUCTS -->
-    <div id="panel-prod" class="hidden" role="tabpanel" aria-labelledby="tab-prod">
+    <div id="panel-products" class="tab-panel hidden" role="tabpanel">
       <section class="panel">
         <h2>Products</h2>
         <label for="prod-search">Search</label>
-        <input id="prod-search" type="text" placeholder="code or name" />
-        <div class="actions">
-          <button class="btn primary" type="button" data-toast="New product">+ New</button>
-          <button class="btn ghost" type="button" data-toast="Sync">Sync</button>
-        </div>
+        <div class="admin-search-field"><input id="prod-search" type="search" placeholder="code or name" autocomplete="off" /></div>
+        <p class="hint admin-search-hint">Search matches product code and name.</p>
       </section>
-
       <section class="panel">
-        <h2>Quick entry</h2>
+        <h2>New product</h2>
+        <div class="row">
+          <div><label for="prod-code">Code *</label><input id="prod-code" type="text" maxlength="40" placeholder="P-000123" /></div>
+          <div><label for="prod-name">Name *</label><input id="prod-name" type="text" maxlength="100" placeholder="Screw M6" /></div>
+        </div>
         <div class="row">
           <div>
-            <label for="prod-code">Code</label>
-            <input id="prod-code" type="text" placeholder="P-000123" />
-          </div>
-          <div>
-            <label for="prod-name">Name</label>
-            <input id="prod-name" type="text" placeholder="Screw M6" />
+            <label for="prod-supplier">Supplier *</label>
+            <select id="prod-supplier"><option>-- Select --</option><option selected>SUP01 — Acme Parts</option></select>
           </div>
         </div>
         <div class="actions">
-          <button class="btn success" type="button" data-toast="Product saved">Save</button>
-          <button class="btn danger" type="button" data-toast="Product removed">Delete</button>
+          <button class="btn success" type="button" data-modal="Saved successfully.">Save</button>
+          <button class="btn danger" type="button">Cancel</button>
         </div>
       </section>
-
       <section class="panel">
         <h2>List</h2>
-        <div style="overflow-x:auto">
-          <table>
+        <div class="list-table-wrap">
+          <table class="admin-products-table admin-grid-table">
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th style="text-align:right">Actions</th>
+                <th><div class="th-sort-row"><span>Code</span><button type="button" class="th-sort-btn th-sort-btn--on">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Name</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Supplier</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Status</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th class="admin-grid-th-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="mono">P-000123</td>
-                <td>Screw M6</td>
-                <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit P-000123">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate P-000123">Deactivate</button>
-                  </div>
-                </td>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">P-000123</td><td>Screw M6</td><td class="mono">SUP01</td><td><span class="tag ok">Active</span></td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
-              <tr>
-                <td class="mono">P-000456</td>
-                <td>Cable tie 200mm</td>
-                <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit P-000456">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate P-000456">Deactivate</button>
-                  </div>
-                </td>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">P-000456</td><td>Cable tie 200mm</td><td class="mono">SUP01</td><td><span class="tag ok">Active</span></td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="actions between">
+          <div class="hint" style="margin:0">Showing <strong>1</strong>-<strong>2</strong> of <strong>2</strong></div>
+          <div class="mini-actions"><button class="pager" disabled>Prev</button><button class="pager" disabled>Next</button></div>
         </div>
       </section>
     </div>
 
     <!-- ITEMS -->
-    <div id="panel-items" class="hidden" role="tabpanel" aria-labelledby="tab-items">
+    <div id="panel-items" class="tab-panel hidden" role="tabpanel">
       <section class="panel">
         <h2>Items (SKU)</h2>
         <label for="item-search">Search</label>
-        <input id="item-search" type="text" placeholder="sku, name, or barcode" />
-        <div class="actions">
-          <button class="btn primary" type="button" data-toast="New item">+ New</button>
-          <button class="btn ghost" type="button" data-toast="Read scanner">Read scanner</button>
-        </div>
+        <div class="admin-search-field"><input id="item-search" type="search" placeholder="sku, article no., product, name, or barcode" autocomplete="off" /></div>
+        <p class="hint admin-search-hint">Search matches SKU, article number, product code, display name, and barcodes.</p>
       </section>
-
       <section class="panel">
-        <h2>Quick entry (with scan)</h2>
-        <label for="item-scan">Focus here and scan EAN/QR/SKU</label>
-        <input id="item-scan" type="text" inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Ex.: 8712345678901" />
+        <h2>New item</h2>
         <div class="row">
+          <div><label for="item-sku">SKU *</label><input id="item-sku" type="text" maxlength="40" placeholder="SKU-0001" /></div>
           <div>
-            <label for="item-sku">SKU</label>
-            <input id="item-sku" type="text" placeholder="SKU-0001" />
-          </div>
-          <div>
-            <label for="item-unit">Unit</label>
-            <input id="item-unit" type="text" placeholder="UN" />
+            <label for="item-article">Article number</label>
+            <input id="item-article" type="text" maxlength="50" placeholder="ART-77821" />
+            <p class="hint tight">Supplier / catalog article code (Artikelnummer). Distinct from internal SKU.</p>
           </div>
         </div>
         <div class="row">
           <div>
-            <label for="item-name">Display name</label>
-            <input id="item-name" type="text" placeholder="Fasteners box M6" />
+            <label for="item-unit">Quantity unit *</label>
+            <input id="item-unit" type="text" maxlength="10" value="ST" />
+            <p class="hint tight">Short code used with on-hand quantities (e.g. <span class="mono">ST</span>, <span class="mono">KG</span>).</p>
           </div>
+          <div><label for="item-name">Display name *</label><input id="item-name" type="text" maxlength="100" placeholder="Fasteners M6" /></div>
+        </div>
+        <div class="row">
           <div>
-            <label for="item-barcode">Code (EAN/QR)</label>
-            <input id="item-barcode" type="text" placeholder="8712345678901" />
+            <label for="item-product">Product *</label>
+            <select id="item-product"><option>-- Select --</option><option selected>P-000123 — Screw M6</option></select>
+          </div>
+          <div><label for="item-price">Price *</label><input id="item-price" type="number" step="0.01" min="0" value="12.50" /></div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="item-packaging">Packaging *</label>
+            <select id="item-packaging"><option selected>Unit</option><option>Box</option><option>Case</option><option>Pallet</option><option>Bag</option><option>Kit</option></select>
+            <p class="hint tight">How the item is counted when receiving or selling (each, box of N, pallet…).</p>
+          </div>
+          <div><label for="item-pkgqty">Package quantity *</label><input id="item-pkgqty" type="number" step="0.001" min="0.001" value="1" /></div>
+        </div>
+        <div class="row">
+          <div class="admin-form-span-2">
+            <label for="item-barcodes">Barcodes (one per line)</label>
+            <textarea id="item-barcodes" class="item-form-barcodes" rows="2" placeholder="Ex.: 8712345678901">8712345678901</textarea>
+            <p class="hint tight">One code per line; stored on the item. Each code must be unique across all items.</p>
           </div>
         </div>
         <div class="actions">
-          <button class="btn success" type="button" data-toast="Item saved">Save</button>
-          <button class="btn danger" type="button" data-toast="Item removed">Delete</button>
+          <button class="btn success" type="button" data-modal="Saved successfully.">Save</button>
+          <button class="btn danger" type="button">Cancel</button>
         </div>
-        <p class="hint">Barcodes are stored on the item (`items.Barcodes`, one code per line). Each code must be unique across all items.</p>
       </section>
-
       <section class="panel">
         <h2>List</h2>
-        <div style="overflow-x:auto">
-          <table>
+        <div class="list-table-wrap">
+          <table class="admin-items-table admin-grid-table">
             <thead>
               <tr>
-                <th>SKU</th>
-                <th>Name</th>
-                <th>Unit</th>
-                <th>Status</th>
-                <th style="text-align:right">Actions</th>
+                <th><div class="th-sort-row"><span>SKU</span><button type="button" class="th-sort-btn th-sort-btn--on">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Art. no.</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Product</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Name</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Unit</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Pack.</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Pkg qty</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Price</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Status</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th class="admin-grid-th-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="mono">SKU-0001</td>
-                <td>Fasteners M6</td>
-                <td>UN</td>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">SKU-0001</td><td class="mono">ART-77821</td><td class="mono">P-000123</td>
+                <td>Fasteners M6</td><td>ST</td><td>Unit</td>
+                <td class="col-num">1</td><td class="col-num">12.50</td>
                 <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit SKU-0001">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate SKU-0001">Deactivate</button>
-                  </div>
-                </td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
-              <tr>
-                <td class="mono">SKU-0002</td>
-                <td>Cable tie 200mm</td>
-                <td>CX</td>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">SKU-0002</td><td class="mono">—</td><td class="mono">P-000456</td>
+                <td>Cable tie 200mm</td><td>ST</td><td>Box</td>
+                <td class="col-num">24</td><td class="col-num">4.99</td>
                 <td><span class="tag ok">Active</span></td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit SKU-0002">Edit</button>
-                    <button class="del" type="button" data-toast="Deactivate SKU-0002">Deactivate</button>
-                  </div>
-                </td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="actions between">
+          <div class="hint" style="margin:0">Showing <strong>1</strong>-<strong>2</strong> of <strong>2</strong></div>
+          <div class="mini-actions"><button class="pager" disabled>Prev</button><button class="pager" disabled>Next</button></div>
         </div>
       </section>
     </div>
 
     <!-- MIN/MAX -->
-    <div id="panel-minmax" class="hidden" role="tabpanel" aria-labelledby="tab-minmax">
+    <div id="panel-minmax" class="tab-panel hidden" role="tabpanel">
       <section class="panel">
-        <h2>Min / Max (simple)</h2>
+        <h2>Min / Max</h2>
+        <label for="mm-search">Search</label>
+        <div class="admin-search-field"><input id="mm-search" type="search" placeholder="warehouse, location, SKU, or article no." autocomplete="off" /></div>
+        <p class="hint admin-search-hint">Search matches warehouse code, location code, SKU, and article number.</p>
+        <p class="hint">Set Min/Max per <strong>warehouse + item + location</strong> (location is required).</p>
+      </section>
+      <section class="panel">
+        <h2>New min/max</h2>
         <div class="row">
           <div>
-            <label for="mm-warehouse">Warehouse</label>
-            <select id="mm-warehouse">
-              <option>WH01 - Main</option>
-              <option>WH02 - Branch</option>
-            </select>
+            <label for="mm-edit-warehouse">Warehouse *</label>
+            <select id="mm-edit-warehouse"><option>-- Select --</option><option selected>WH01 - Main</option></select>
           </div>
           <div>
-            <label for="mm-sku">Item (SKU)</label>
-            <input id="mm-sku" type="text" placeholder="SKU-0001" />
+            <label for="mm-edit-item">Item (SKU) *</label>
+            <select id="mm-edit-item"><option>-- Select --</option><option selected>SKU-0001 · ART-77821 — Fasteners M6</option></select>
           </div>
         </div>
         <div class="row3">
+          <div><label for="mm-min">Min *</label><input id="mm-min" type="number" min="0" value="10" /></div>
+          <div><label for="mm-max">Max *</label><input id="mm-max" type="number" min="0" value="200" /></div>
           <div>
-            <label for="mm-min">Min</label>
-            <input id="mm-min" type="number" min="0" value="10" />
-          </div>
-          <div>
-            <label for="mm-max">Max</label>
-            <input id="mm-max" type="number" min="0" value="200" />
-          </div>
-          <div>
-            <label for="mm-loc">Location (optional)</label>
-            <input id="mm-loc" type="text" maxlength="12" placeholder="A01-03-R2" />
+            <label for="mm-loc">Location *</label>
+            <select id="mm-loc"><option>-- Select --</option><option selected>A01-03-R2</option></select>
           </div>
         </div>
         <div class="actions">
-          <button class="btn success" type="button" data-toast="Min/Max saved">Save</button>
-          <button class="btn danger" type="button" data-toast="Min/Max removed">Delete</button>
+          <button class="btn success" type="button" data-modal="Saved successfully.">Save</button>
+          <button class="btn danger" type="button">Cancel</button>
         </div>
-        <p class="hint">You can set it by <strong>item + warehouse</strong> and override by <strong>item + location</strong>.</p>
       </section>
-
       <section class="panel">
         <h2>Current settings</h2>
-        <div style="overflow-x:auto">
-          <table>
+        <div class="list-table-wrap">
+          <table class="admin-mm-table admin-grid-table">
             <thead>
               <tr>
-                <th>Warehouse</th>
-                <th>Location</th>
-                <th>SKU</th>
-                <th>Min</th>
-                <th>Max</th>
-                <th style="text-align:right">Actions</th>
+                <th><div class="th-sort-row"><span>Warehouse</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Location</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>SKU</span><button type="button" class="th-sort-btn th-sort-btn--on">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Art. no.</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Min</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Max</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Status</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th class="admin-grid-th-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">WH01</td><td class="mono">A01-03-R2</td><td class="mono">SKU-0001</td><td class="mono">ART-77821</td>
+                <td class="col-num">10</td><td class="col-num">200</td><td><span class="tag ok">Active</span></td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
+              </tr>
+              <tr class="admin-grid-row-clickable">
+                <td class="mono">WH01</td><td class="mono">B12-RK02</td><td class="mono">SKU-0002</td><td class="mono">—</td>
+                <td class="col-num">40</td><td class="col-num">120</td><td><span class="tag ok">Active</span></td>
+                <td class="admin-grid-td-actions"><div class="mini-actions"><button class="edit" type="button"><i class="bi bi-pencil-square"></i></button><button type="button" class="toggle-btn"><span class="toggle-rail on"><span class="toggle-knob"></span></span></button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="actions between">
+          <div class="hint" style="margin:0">Showing <strong>1</strong>-<strong>2</strong> of <strong>2</strong></div>
+          <div class="mini-actions"><button class="pager" disabled>Prev</button><button class="pager" disabled>Next</button></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- STOCK -->
+    <div id="panel-stock" class="tab-panel hidden" role="tabpanel">
+      <section class="panel">
+        <h2>Stock</h2>
+        <div class="row">
+          <div>
+            <label for="stock-warehouse">Warehouse</label>
+            <select id="stock-warehouse"><option selected>All</option><option>WH01 - Main</option><option>WH02 - Branch</option></select>
+          </div>
+          <div>
+            <label for="stock-location">Location</label>
+            <select id="stock-location"><option selected>All</option><option>A01-03-R2</option><option>B12-RK02</option></select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="stock-search">Search</label>
+            <div class="admin-search-field"><input id="stock-search" type="search" placeholder="sku, article no., product, or name" autocomplete="off" /></div>
+            <p class="hint admin-search-hint">Search matches SKU, article number, product code, and display name.</p>
+          </div>
+          <div>
+            <label for="stock-filter">Filter</label>
+            <select id="stock-filter"><option selected>All</option><option>Below min</option><option>Above max</option></select>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="stock-sync-btn" class="btn ghost" type="button" data-modal="Stock list reloaded from PDA activity.">Sync</button>
+        </div>
+        <p class="hint">
+          <strong>Sync</strong> only reacts to <strong>PDA stock activity</strong> (movements and on-hand balances). Master data is maintained here in Admin without this button.
+          This list shows quantities per <strong>warehouse + location</strong> and compares to Min/Max when available.
+        </p>
+      </section>
+      <section class="panel">
+        <h2>List</h2>
+        <div class="stock-table-scroll">
+          <table class="stock-table admin-stock-table admin-grid-table">
+            <thead>
+              <tr>
+                <th><div class="th-sort-row"><span>Warehouse</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Location</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Product</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>SKU</span><button type="button" class="th-sort-btn th-sort-btn--on">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Art. no.</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Name</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>On hand</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Min</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Max</span><button type="button" class="th-sort-btn">↓</button></div></th>
+                <th><div class="th-sort-row"><span>Status</span><button type="button" class="th-sort-btn">↓</button></div></th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="mono">WH01</td>
-                <td class="mono">—</td>
-                <td class="mono">SKU-0001</td>
-                <td>10</td>
-                <td>200</td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit Min/Max SKU-0001">Edit</button>
-                    <button class="del" type="button" data-toast="Delete Min/Max SKU-0001">Delete</button>
-                  </div>
-                </td>
+                <td class="mono">WH01</td><td class="mono">A01-03-R2</td><td class="mono">P-000123</td>
+                <td class="mono">SKU-0001</td><td class="mono">ART-77821</td><td>Fasteners M6</td>
+                <td class="stock-td-num">48</td><td class="stock-td-num">10</td><td class="stock-td-num">200</td>
+                <td class="stock-td-num"><span class="tag ok">OK</span></td>
               </tr>
               <tr>
-                <td class="mono">WH01</td>
-                <td class="mono">A01-03-R2</td>
-                <td class="mono">SKU-0002</td>
-                <td>40</td>
-                <td>120</td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="edit" type="button" data-toast="Edit Min/Max SKU-0002">Edit</button>
-                    <button class="del" type="button" data-toast="Delete Min/Max SKU-0002">Delete</button>
-                  </div>
-                </td>
+                <td class="mono">WH01</td><td class="mono">B12-RK02</td><td class="mono">P-000456</td>
+                <td class="mono">SKU-0002</td><td class="mono">—</td><td>Cable tie 200mm</td>
+                <td class="stock-td-num">8</td><td class="stock-td-num">40</td><td class="stock-td-num">120</td>
+                <td class="stock-td-num"><span class="tag off">Below</span></td>
+              </tr>
+              <tr>
+                <td class="mono">WH01</td><td class="mono">A01-03-R2</td><td class="mono">P-000456</td>
+                <td class="mono">SKU-0002</td><td class="mono">—</td><td>Cable tie 200mm</td>
+                <td class="stock-td-num">250</td><td class="stock-td-num">—</td><td class="stock-td-num">—</td>
+                <td class="stock-td-num"><span class="tag ok">OK</span></td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="actions between">
+          <div class="hint" style="margin:0">Showing <strong>1</strong>-<strong>3</strong> of <strong>3</strong></div>
+          <div class="mini-actions"><button class="pager" disabled>Prev</button><button class="pager" disabled>Next</button></div>
         </div>
       </section>
     </div>
   </div>
 
-  <div class="toast" id="toast" role="status"></div>
+  <div class="sc-modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="sc-modal">
+      <div class="sc-modal-header">
+        <span class="sc-modal-title success" id="modal-title">Success</span>
+        <button type="button" class="btn ghost" style="min-height:34px;min-width:34px;flex:0" id="modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="sc-modal-body" id="modal-body"></div>
+      <div class="sc-modal-actions">
+        <button class="btn primary" type="button" id="modal-ok" style="flex:0;min-width:100px">OK</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     (function () {
-      var toastEl = document.getElementById("toast");
+      var tabs = document.querySelectorAll('nav.tabs button[data-tab]');
+      var panels = document.querySelectorAll('.tab-panel');
+      var backdrop = document.getElementById('modal-backdrop');
+      var modalBody = document.getElementById('modal-body');
 
-      function showToast(msg) {
-        toastEl.textContent = msg;
-        toastEl.classList.add("show");
-        clearTimeout(showToast._t);
-        showToast._t = setTimeout(function () {
-          toastEl.classList.remove("show");
-        }, 2400);
+      function selectTab(id) {
+        tabs.forEach(function (btn) {
+          var on = btn.getAttribute('data-tab') === id;
+          btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        panels.forEach(function (panel) {
+          panel.classList.toggle('hidden', panel.id !== 'panel-' + id);
+        });
       }
 
-      // Tabs
-      var tabs = [
-        { tab: "tab-users", panel: "panel-users" },
-        { tab: "tab-wh", panel: "panel-wh" },
-        { tab: "tab-loc", panel: "panel-loc" },
-        { tab: "tab-prod", panel: "panel-prod" },
-        { tab: "tab-items", panel: "panel-items" },
-        { tab: "tab-minmax", panel: "panel-minmax" }
-      ];
-
-      function select(whichTabId) {
-        for (var i = 0; i < tabs.length; i++) {
-          var t = tabs[i];
-          var tabEl = document.getElementById(t.tab);
-          var panelEl = document.getElementById(t.panel);
-          var on = t.tab === whichTabId;
-          tabEl.setAttribute("aria-selected", on ? "true" : "false");
-          panelEl.classList.toggle("hidden", !on);
-        }
-      }
-
-      tabs.forEach(function (t) {
-        document.getElementById(t.tab).addEventListener("click", function () {
-          select(t.tab);
+      tabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          selectTab(btn.getAttribute('data-tab'));
         });
       });
 
-      // Scan helpers (Enter commits)
-      var locScan = document.getElementById("loc-scan");
-      var locCode = document.getElementById("loc-code");
-      if (locScan && locCode) {
-        locScan.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            var code = (locScan.value || "").trim().toUpperCase();
-            locScan.value = "";
-            if (!code) return;
-            if (code.length > 12) {
-              showToast("Location code > 12 characters (shorten it)");
-              return;
-            }
-            locCode.value = code;
-            showToast("Location captured: " + code);
-          }
-        });
+      function showModal(msg) {
+        modalBody.textContent = msg;
+        backdrop.classList.add('show');
       }
 
-      var itemScan = document.getElementById("item-scan");
-      var itemBarcode = document.getElementById("item-barcode");
-      if (itemScan && itemBarcode) {
-        itemScan.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            var code = (itemScan.value || "").trim();
-            itemScan.value = "";
-            if (!code) return;
-            itemBarcode.value = code;
-            showToast("Code captured: " + code);
-          }
-        });
+      function hideModal() {
+        backdrop.classList.remove('show');
       }
 
-      // Generic toast buttons
-      var toastButtons = document.querySelectorAll("[data-toast]");
-      for (var j = 0; j < toastButtons.length; j++) {
-        toastButtons[j].addEventListener("click", function () {
-          showToast(this.getAttribute("data-toast") || "OK");
+      document.querySelectorAll('[data-modal]').forEach(function (el) {
+        el.addEventListener('click', function () {
+          showModal(el.getAttribute('data-modal') || 'OK');
         });
-      }
+      });
 
-      // Initial focus: quick ergonomics
-      var firstSearch = document.getElementById("user-search");
-      if (firstSearch) firstSearch.focus();
+      document.getElementById('modal-close').addEventListener('click', hideModal);
+      document.getElementById('modal-ok').addEventListener('click', hideModal);
+      backdrop.addEventListener('click', function (e) {
+        if (e.target === backdrop) hideModal();
+      });
+
+      document.querySelectorAll('.toggle-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var rail = btn.querySelector('.toggle-rail');
+          var on = rail.classList.toggle('on');
+          rail.classList.toggle('off', !on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      });
+
+      document.querySelectorAll('.admin-grid-row-clickable').forEach(function (row) {
+        row.addEventListener('click', function () {
+          document.querySelectorAll('.admin-grid-row-clickable--selected').forEach(function (r) {
+            r.classList.remove('admin-grid-row-clickable--selected');
+          });
+          row.classList.add('admin-grid-row-clickable--selected');
+        });
+      });
+
+      selectTab('users');
     })();
   </script>
 </body>
 </html>
-

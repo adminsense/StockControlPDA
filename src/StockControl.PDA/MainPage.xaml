@@ -1,0 +1,222 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="StockControl.PDA.MainPage"
+             Title="Move stock">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <Label FontSize="13"
+                   LineBreakMode="WordWrap"
+                   TextColor="{AppThemeBinding Light=#555555, Dark=#AAAAAA}"
+                   Text="Pick warehouse, location, and item — or scan a code and press Enter. Use − / + for quantity, then Inbound or Outbound." />
+
+            <Border Padding="14">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Warehouse &amp; item"
+                           FontAttributes="Bold"
+                           FontSize="15" />
+
+                    <Label Text="Warehouse"
+                           FontSize="12"
+                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                    <Picker x:Name="WarehousePicker"
+                            ItemDisplayBinding="{Binding PickerText}"
+                            SelectedIndexChanged="OnWarehousePickerChanged" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Location"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Picker x:Name="LocationPicker"
+                                    ItemDisplayBinding="{Binding PickerText}"
+                                    SelectedIndexChanged="OnLocationOrItemChanged" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Item"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Picker x:Name="ItemPicker"
+                                    ItemDisplayBinding="{Binding PickerText}"
+                                    SelectedIndexChanged="OnLocationOrItemChanged" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <VerticalStackLayout Margin="0,8,0,0" Spacing="4">
+                        <Label Text="Scan or type code"
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        <Entry x:Name="ScanEntry"
+                               Placeholder="Scan or type code"
+                               ReturnType="Done"
+                               Completed="OnScanCompleted" />
+                        <Label x:Name="ScanHintLabel"
+                               FontSize="12"
+                               IsVisible="False"
+                               TextColor="#CA8A04" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="14">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Summary"
+                           FontAttributes="Bold"
+                           FontSize="15" />
+                    <Grid ColumnDefinitions="Auto,*"
+                          ColumnSpacing="12"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                          RowSpacing="6">
+                        <Label Grid.Row="0"
+                               Grid.Column="0"
+                               FontSize="13"
+                               Text="Warehouse"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        <Label x:Name="SumWarehouse"
+                               Grid.Row="0"
+                               Grid.Column="1"
+                               FontAttributes="Bold"
+                               FontSize="14" />
+
+                        <Label Grid.Row="1"
+                               Grid.Column="0"
+                               FontSize="13"
+                               Text="Location"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        <Label x:Name="SumLocation"
+                               Grid.Row="1"
+                               Grid.Column="1"
+                               FontAttributes="Bold"
+                               FontSize="14" />
+
+                        <Label Grid.Row="2"
+                               Grid.Column="0"
+                               FontSize="13"
+                               Text="Item"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        <Label x:Name="SumItem"
+                               Grid.Row="2"
+                               Grid.Column="1"
+                               FontAttributes="Bold"
+                               FontSize="14" />
+
+                        <Label Grid.Row="3"
+                               Grid.Column="0"
+                               FontSize="13"
+                               Text="On hand"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        <Label x:Name="SumOnHand"
+                               Grid.Row="3"
+                               Grid.Column="1"
+                               FontAttributes="Bold"
+                               FontSize="14" />
+
+                        <Label Grid.Row="4"
+                               Grid.Column="0"
+                               FontSize="13"
+                               Text="Min / Max"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        <Label x:Name="SumMinMax"
+                               Grid.Row="4"
+                               Grid.Column="1"
+                               FontAttributes="Bold"
+                               FontSize="14" />
+                    </Grid>
+                    <ProgressBar x:Name="MinMaxProgress"
+                                 Margin="0,8,0,0"
+                                 HeightRequest="6"
+                                 IsVisible="False"
+                                 Progress="0" />
+                    <Border x:Name="StatusPillBorder"
+                            Margin="0,4,0,0"
+                            Padding="8,4"
+                            HorizontalOptions="Start">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="6" />
+                        </Border.StrokeShape>
+                        <Label x:Name="StatusPillLabel"
+                               FontAttributes="Bold"
+                               FontSize="12" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="14">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Quantity"
+                           FontAttributes="Bold"
+                           FontSize="15" />
+                    <HorizontalStackLayout Padding="0,8"
+                                           HorizontalOptions="Center"
+                                           Spacing="16">
+                        <Button Clicked="OnQtyMinusClicked"
+                                FontSize="22"
+                                HeightRequest="52"
+                                Text="−"
+                                WidthRequest="52"
+                                BackgroundColor="{AppThemeBinding Light=#E8E8E8, Dark=#243044}"
+                                TextColor="{AppThemeBinding Light=#222222, Dark=#E8EEF5}" />
+                        <Label x:Name="QtyLabel"
+                               FontAttributes="Bold"
+                               FontSize="28"
+                               HorizontalTextAlignment="Center"
+                               MinimumWidthRequest="48"
+                               Text="1"
+                               VerticalOptions="Center" />
+                        <Button Clicked="OnQtyPlusClicked"
+                                FontSize="22"
+                                HeightRequest="52"
+                                Text="+"
+                                WidthRequest="52"
+                                BackgroundColor="{AppThemeBinding Light=#E8E8E8, Dark=#243044}"
+                                TextColor="{AppThemeBinding Light=#222222, Dark=#E8EEF5}" />
+                    </HorizontalStackLayout>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Grid.Column="0"
+                                BackgroundColor="#8B1A1A"
+                                Clicked="OnOutboundClicked"
+                                SemanticProperties.Hint="Register outbound stock"
+                                Text="Outbound (−)"
+                                TextColor="White" />
+                        <Button Grid.Column="1"
+                                BackgroundColor="#1B6B3A"
+                                Clicked="OnInboundClicked"
+                                SemanticProperties.Hint="Register inbound stock"
+                                Text="Inbound (+)"
+                                TextColor="White" />
+                    </Grid>
+                    <Grid Margin="0,4,0,0" ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Grid.Column="0"
+                                BackgroundColor="{AppThemeBinding Light=#D9E8FF, Dark=#1E3A5F}"
+                                BorderColor="{AppThemeBinding Light=#3B82F6, Dark=#3B82F6}"
+                                BorderWidth="1"
+                                Clicked="OnSyncClicked"
+                                SemanticProperties.Hint="Refresh catalog snapshot from server"
+                                Text="Sync"
+                                TextColor="{AppThemeBinding Light=#1E3A5F, Dark=White}" />
+                        <Button Grid.Column="1"
+                                BackgroundColor="Transparent"
+                                BorderColor="{AppThemeBinding Light=#CCCCCC, Dark=#2D3A4A}"
+                                BorderWidth="1"
+                                Clicked="OnResetClicked"
+                                SemanticProperties.Hint="Clear selection and quantity"
+                                Text="Reset flow"
+                                TextColor="{AppThemeBinding Light=#666666, Dark=#8B9AAB}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

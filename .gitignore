@@ -363,8 +363,12 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # App settings (connection strings, API URLs, secrets)
+# Tracked files must be removed once: git rm --cached src/**/appsettings.json
+appsettings.json
+appsettings.*.json
 **/appsettings.json
 **/appsettings.*.json
+!**/appsettings.example.json
 
 # PDA release binaries (build with tools/publish-pda-apk.ps1)
 dist/

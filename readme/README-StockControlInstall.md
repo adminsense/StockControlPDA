@@ -54,7 +54,7 @@ Run **Stock Control Admin** on a Windows notebook together with the **MAUI PDA**
 <tbody>
 <tr><td width="520" align="left" valign="top"><strong>Config file</strong></td><td align="left" valign="top"><code>src/StockControl.Admin/appsettings.json</code></td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Setting</strong></td><td align="left" valign="top"><code>ConnectionStrings:connStockControlPDA</code></td></tr>
-<tr><td width="520" align="left" valign="top"><strong>Value</strong></td><td align="left" valign="top">Your SQL Server <strong>instance</strong> and <strong>catalog</strong> (database). Replace any sample placeholder.</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Value</strong></td><td align="left" valign="top">Azure SQL in repo: <strong><code>adminsensedb.uksouth.cloudapp.azure.com</code></strong>, database <strong><code>AllportStock</code></strong> (see <code>appsettings.json</code>).</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>First Admin start</strong></td><td align="left" valign="top">Startup runs EF <strong><code>MigrateAsync</code></strong>. Schema is created or updated automatically.</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Manual migrations (optional)</strong></td><td align="left" valign="top"><a href="README-admin-stock.md">README-admin-stock</a> → <strong>Database (EF Core)</strong> (<code>dotnet ef database update ...</code>).</td></tr>
 </tbody>
@@ -104,7 +104,8 @@ dotnet run --project src/StockControl.Admin/StockControl.Admin.csproj --launch-p
 </thead>
 <tbody>
 <tr><td width="520" align="left" valign="top"><strong>Config file</strong></td><td align="left" valign="top">Embedded <strong><code>src/StockControl.PDA/appsettings.json</code></strong>. Property: <strong><code>Api:BaseUrl</code></strong>.</td></tr>
-<tr><td width="520" align="left" valign="top"><strong>Android Emulator</strong></td><td align="left" valign="top">Set <strong><code>http://10.0.2.2:5264</code></strong>. This is the default in the repo.</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Production (store APK)</strong></td><td align="left" valign="top">Default in repo: <strong><code>https://allportstock.azurewebsites.net</code></strong> (<a href="https://allportstock.azurewebsites.net/">Admin</a>).</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Android Emulator (local Admin)</strong></td><td align="left" valign="top">Change <code>Api:BaseUrl</code> to <strong><code>http://10.0.2.2:5264</code></strong>, then rebuild the app.</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Why <code>10.0.2.2</code>?</strong></td><td align="left" valign="top">The emulator’s special alias to the <strong>host</strong> machine (your notebook) loopback.</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Physical phone (same Wi‑Fi)</strong></td><td align="left" valign="top">Set <strong><code>http://&lt;NOTEBOOK_LAN_IP&gt;:5264</code></strong>. Use the notebook’s <strong>IPv4</strong> on the LAN.</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Find the IPv4 (Windows)</strong></td><td align="left" valign="top">Run <strong><code>ipconfig</code></strong>. Use the <strong>Wi‑Fi</strong> adapter’s IPv4 address.</td></tr>

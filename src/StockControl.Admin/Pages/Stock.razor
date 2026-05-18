@@ -16,13 +16,13 @@
         <div class="sc-modal sc-modal--busy" role="dialog" aria-modal="true">
             <div class="sc-modal-body sc-modal-body--busy">
                 <div class="sc-spinner" aria-hidden="true"></div>
-                <p class="sc-busy-text">Synchronizing stock from PDA…</p>
+                <p class="sc-busy-text">Synchronizing stock from PDA?</p>
             </div>
         </div>
     </div>
 }
 
-<section class="panel">
+<section class="panel stock-filters">
     <h2>Stock</h2>
     <div class="row">
         <div>
@@ -48,25 +48,40 @@
     </div>
     <div class="row">
         <div>
-            <SearchField ForId="stock-search" Label="Search" Placeholder="sku, article no., product, or name" Value="@_search" ValueChanged="OnStockSearchChanged"
-                         Hint="Search matches SKU, article number, product code, and display name." />
+            <label for="stock-supplier">Supplier</label>
+            <select id="stock-supplier" @bind="_supplierId" @bind:after="OnSupplierChanged">
+                <option value="0">All suppliers</option>
+                @foreach (var s in _suppliers)
+                {
+                    <option value="@s.Id">@s.Code ? @s.Name</option>
+                }
+            </select>
         </div>
         <div>
-            <label for="stock-only-belowmin">Filter</label>
-            <select id="stock-only-belowmin" @bind="_filter">
+            <label for="stock-only-belowmin">Stock status</label>
+            <select id="stock-only-belowmin" @bind="_filter" @bind:after="OnStockStatusFilterChanged">
                 <option value="">All</option>
-                <option value="below">Below min</option>
+                <option value="below">Below min (reorder)</option>
                 <option value="above">Above max</option>
             </select>
         </div>
     </div>
-    <div class="actions">
-        <button id="stock-sync-btn" class="btn ghost" type="button" @onclick="OnSyncClickedAsync">Sync</button>
+    <div class="row">
+        <div class="admin-form-span-2">
+            <SearchField ForId="stock-search" Label="Search" Placeholder="sku, article no., product, or name" Value="@_search" ValueChanged="OnStockSearchChanged"
+                         Hint="Search matches SKU, article number, product code, and display name." />
+        </div>
     </div>
-    <p class="hint">
-        <strong>Sync</strong> only reacts to <strong>PDA stock activity</strong> (movements and on-hand balances). Master data is maintained here in Admin without this button.
-        This list shows quantities per <strong>warehouse + location</strong> and compares to Min/Max when available.
-    </p>
+    <div class="row">
+        <div class="admin-form-span-2">
+            <label for="stock-sync-btn">Sync</label>
+            <button id="stock-sync-btn" class="btn ghost stock-sync-btn" type="button" @onclick="OnSyncClickedAsync">Sync</button>
+            <p class="hint">
+                <strong>Sync</strong> only reacts to <strong>PDA stock activity</strong> (movements and on-hand balances). Master data is maintained here in Admin without this button.
+                This list shows quantities per <strong>warehouse + location</strong> and compares to Min/Max when available.
+            </p>
+        </div>
+    </div>
 </section>
 
 <section class="panel">
@@ -76,6 +91,7 @@
             <colgroup>
                 <col class="admin-st-col-wh" />
                 <col class="admin-st-col-loc" />
+                <col class="admin-st-col-supplier" />
                 <col class="admin-st-col-product" />
                 <col class="admin-st-col-sku" />
                 <col class="admin-st-col-art" />
@@ -83,12 +99,14 @@
                 <col class="admin-st-col-qty" />
                 <col class="admin-st-col-min" />
                 <col class="admin-st-col-max" />
+                <col class="admin-st-col-reorder" />
                 <col class="admin-st-col-status" />
             </colgroup>
             <thead>
                 <tr>
                     <SortableHeaderCell Label="Warehouse" SortKey="warehouse" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="Location" SortKey="location" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Supplier" SortKey="supplier" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="Product" SortKey="product" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="SKU" SortKey="sku" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="Art. no." SortKey="articleno" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
@@ -96,6 +114,7 @@
                     <SortableHeaderCell Label="On hand" SortKey="onhand" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
                     <SortableHeaderCell Label="Min" SortKey="min" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
                     <SortableHeaderCell Label="Max" SortKey="max" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
+                    <SortableHeaderCell Label="Reorder" SortKey="reorder" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
                     <SortableHeaderCell Label="Status" SortKey="status" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" AlignEnd="true" />
                 </tr>
             </thead>
@@ -105,13 +124,15 @@
                     <tr @key="r.Id">
                         <td class="mono">@r.WarehouseCode</td>
                         <td class="mono">@r.LocationCode</td>
+                        <td class="mono">@r.SupplierCode</td>
                         <td class="mono">@r.ProductCode</td>
                         <td class="mono">@r.Sku</td>
-                        <td class="mono">@(string.IsNullOrWhiteSpace(r.ArticleNumber) ? "—" : r.ArticleNumber)</td>
+                        <td class="mono">@(string.IsNullOrWhiteSpace(r.ArticleNumber) ? "?" : r.ArticleNumber)</td>
                         <td>@r.DisplayName</td>
                         <td class="stock-td-num" style="text-align:right">@r.QuantityOnHand.ToString("0.###")</td>
-                        <td class="stock-td-num" style="text-align:right">@(r.Min?.ToString() ?? "—")</td>
-                        <td class="stock-td-num" style="text-align:right">@(r.Max?.ToString() ?? "—")</td>
+                        <td class="stock-td-num" style="text-align:right">@(r.Min?.ToString() ?? "?")</td>
+                        <td class="stock-td-num" style="text-align:right">@(r.Max?.ToString() ?? "?")</td>
+                        <td class="stock-td-num" style="text-align:right">@(r.ReorderQty?.ToString("0.###") ?? "?")</td>
                         <td class="stock-td-num" style="text-align:right">
                             @if (r.Min is not null && r.QuantityOnHand < r.Min)
                             {
@@ -151,10 +172,12 @@
 
     private int _warehouseId;
     private int _locationId;
+    private int _supplierId;
     private string _search = "";
     private string _filter = "";
 
     private List<Warehouse> _warehouses = [];
+    private List<Supplier> _suppliers = [];
     private List<Location> _allLocations = [];
     private List<Location> _locationsForFilter = [];
     private List<Row> _rows = [];
@@ -184,6 +207,10 @@
         _pageIndex = 0;
         return Task.CompletedTask;
     }
+
+    private void OnSupplierChanged() => _pageIndex = 0;
+
+    private void OnStockStatusFilterChanged() => _pageIndex = 0;
 
     private async Task OnSyncClickedAsync()
     {
@@ -232,6 +259,9 @@
             new StockFilterRow(
                 r.WarehouseId,
                 r.LocationId,
+                r.SupplierId,
+                r.SupplierCode,
+                r.SupplierName,
                 r.ProductCode,
                 r.Sku,
                 r.ArticleNumber,
@@ -241,6 +271,7 @@
                 r.Max),
             _warehouseId,
             _locationId,
+            _supplierId,
             _search,
             _filter));
 
@@ -265,6 +296,7 @@
             {
                 "warehouse" => _sortDesc ? q.OrderByDescending(r => r.WarehouseCode) : q.OrderBy(r => r.WarehouseCode),
                 "location" => _sortDesc ? q.OrderByDescending(r => r.LocationCode) : q.OrderBy(r => r.LocationCode),
+                "supplier" => _sortDesc ? q.OrderByDescending(r => r.SupplierCode) : q.OrderBy(r => r.SupplierCode),
                 "product" => _sortDesc ? q.OrderByDescending(r => r.ProductCode) : q.OrderBy(r => r.ProductCode),
                 "sku" => _sortDesc ? q.OrderByDescending(r => r.Sku) : q.OrderBy(r => r.Sku),
                 "articleno" => _sortDesc ? q.OrderByDescending(r => r.ArticleNumber) : q.OrderBy(r => r.ArticleNumber),
@@ -276,6 +308,9 @@
                 "max" => _sortDesc
                     ? q.OrderByDescending(r => r.Max ?? int.MinValue)
                     : q.OrderBy(r => r.Max.HasValue ? 0 : 1).ThenBy(r => r.Max ?? int.MaxValue),
+                "reorder" => _sortDesc
+                    ? q.OrderByDescending(r => r.ReorderQty ?? decimal.MinValue)
+                    : q.OrderBy(r => r.ReorderQty.HasValue ? 0 : 1).ThenBy(r => r.ReorderQty ?? decimal.MaxValue),
                 "status" => _sortDesc ? q.OrderByDescending(StatusRank).ThenBy(r => r.Sku) : q.OrderBy(StatusRank).ThenBy(r => r.Sku),
                 _ => q.OrderByDescending(r => r.Id)
             };
@@ -306,6 +341,7 @@
         _pageIndex = 0;
         await using var db = await DbFactory.CreateDbContextAsync();
         _warehouses = await db.Warehouses.OrderBy(x => x.Code).ToListAsync();
+        _suppliers = await db.Suppliers.Where(x => x.IsActive).OrderBy(x => x.Code).ToListAsync();
         _allLocations = await db.Locations.OrderBy(x => x.Code).ToListAsync();
         SyncLocationsForFilter();
 
@@ -319,6 +355,7 @@
             .Include(x => x.Location)
             .Include(x => x.Item)
                 .ThenInclude(i => i!.Product)
+                    .ThenInclude(p => p!.Supplier)
             .Select(b => new
             {
                 b.Id,
@@ -327,7 +364,10 @@
                 b.LocationId,
                 LocationCode = b.Location!.Code,
                 b.ItemId,
-                ProductCode = b.Item!.Product != null ? b.Item.Product.Code : "",
+                SupplierId = b.Item!.Product != null ? b.Item.Product.SupplierId : 0,
+                SupplierCode = b.Item.Product != null && b.Item.Product.Supplier != null ? b.Item.Product.Supplier.Code : "",
+                SupplierName = b.Item.Product != null && b.Item.Product.Supplier != null ? b.Item.Product.Supplier.Name : "",
+                ProductCode = b.Item.Product != null ? b.Item.Product.Code : "",
                 Sku = b.Item.Sku,
                 ArticleNumber = b.Item.ArticleNumber,
                 DisplayName = b.Item.DisplayName,
@@ -344,19 +384,28 @@
             if (minmaxByKey.TryGetValue((x.WarehouseId, x.ItemId, x.LocationId), out var locMm))
                 mm = locMm;
 
+            var min = mm?.Min;
+            decimal? reorder = min is not null && x.QuantityOnHand < min
+                ? min.Value - x.QuantityOnHand
+                : null;
+
             return new Row(
                 x.Id,
                 x.WarehouseId,
                 x.WarehouseCode,
                 x.LocationId,
                 x.LocationCode,
+                x.SupplierId,
+                x.SupplierCode,
+                x.SupplierName,
                 x.ProductCode,
                 x.Sku,
                 x.ArticleNumber,
                 x.DisplayName,
                 x.QuantityOnHand,
-                mm?.Min,
-                mm?.Max);
+                min,
+                mm?.Max,
+                reorder);
         }).ToList();
     }
 
@@ -392,11 +441,15 @@
         string WarehouseCode,
         int LocationId,
         string LocationCode,
+        int SupplierId,
+        string SupplierCode,
+        string SupplierName,
         string ProductCode,
         string Sku,
         string ArticleNumber,
         string DisplayName,
         decimal QuantityOnHand,
         int? Min,
-        int? Max);
+        int? Max,
+        decimal? ReorderQty);
 }

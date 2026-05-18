@@ -24,8 +24,8 @@
             </div>
             <div>
                 <label for="prod-name">Name *</label>
-                <input id="prod-name" type="text" maxlength="100" @bind="_editing.Name"
-                       @onblur='() => ValidateMaxLength("Name", _editing.Name, 100)' required />
+                <input id="prod-name" type="text" maxlength="200" @bind="_editing.Name"
+                       @onblur='() => ValidateMaxLength("Name", _editing.Name, 200)' required />
             </div>
         </div>
         <div class="row">

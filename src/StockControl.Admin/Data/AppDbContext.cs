@@ -61,7 +61,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.ToTable("products");
             b.HasKey(x => x.Id);
             b.Property(x => x.Code).HasMaxLength(40).IsRequired();
-            b.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            b.Property(x => x.Name).HasMaxLength(200).IsRequired();
             b.HasIndex(x => x.Code).IsUnique();
             b.HasOne(x => x.Supplier).WithMany(x => x.Products).HasForeignKey(x => x.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -72,8 +72,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.ToTable("items");
             b.HasKey(x => x.Id);
             b.Property(x => x.Sku).HasMaxLength(40).IsRequired();
-            b.Property(x => x.ArticleNumber).HasMaxLength(50).IsRequired();
-            b.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
+            b.Property(x => x.ArticleNumber).HasMaxLength(100).IsRequired();
+            b.Property(x => x.DisplayName).HasMaxLength(200).IsRequired();
             b.Property(x => x.Unit).HasMaxLength(10).IsRequired();
             b.Property(x => x.PackagingType).HasConversion<int>();
             b.Property(x => x.PackageQuantity).HasColumnType("decimal(18,3)").IsRequired();

@@ -24,8 +24,8 @@
             </div>
             <div>
                 <label for="item-article">Article number</label>
-                <input id="item-article" type="text" maxlength="50" @bind="_editing.ArticleNumber"
-                       @onblur='() => ValidateMaxLength("Article number", _editing.ArticleNumber, 50)' />
+                <input id="item-article" type="text" maxlength="100" @bind="_editing.ArticleNumber"
+                       @onblur='() => ValidateMaxLength("Article number", _editing.ArticleNumber, 100)' />
                 <p class="hint" style="margin-top:6px;margin-bottom:0">Supplier / catalog article code (Artikelnummer). Distinct from internal SKU.</p>
             </div>
         </div>
@@ -38,8 +38,8 @@
             </div>
             <div>
                 <label for="item-name">Display name *</label>
-                <input id="item-name" type="text" maxlength="100" @bind="_editing.DisplayName"
-                       @onblur='() => ValidateMaxLength("Display name", _editing.DisplayName, 100)' required />
+                <input id="item-name" type="text" maxlength="200" @bind="_editing.DisplayName"
+                       @onblur='() => ValidateMaxLength("Display name", _editing.DisplayName, 200)' required />
             </div>
         </div>
         <div class="row">

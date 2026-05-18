@@ -336,6 +336,36 @@ input:focus, select:focus, textarea:focus {
   grid-column: 1 / -1;
 }
 
+.row > .admin-form-span-2 .admin-search-field,
+.row > .admin-form-span-2 .admin-search-hint {
+  max-width: none;
+}
+
+/* Stock filters: Search + Sync same width as the two-column rows above */
+.stock-filters .row > .admin-form-span-2 {
+  grid-column: 1 / -1;
+}
+
+.stock-filters .admin-search-field,
+.stock-filters .admin-search-hint {
+  max-width: none;
+  width: 100%;
+}
+
+.stock-filters .admin-search-field__input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stock-filters .stock-sync-btn {
+  display: block;
+  width: 100%;
+  max-width: none;
+  flex: none;
+  min-height: 48px;
+  min-width: 0;
+}
+
 .actions {
   display: flex;
   gap: 10px;
@@ -427,6 +457,20 @@ input:focus, select:focus, textarea:focus {
   font-size: 0.74rem;
   color: #c5d0e0;
   line-height: 1.45;
+}
+
+.hint.tight {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+/* Stock: Sync button full width inside stock-filters row */
+.stock-sync-btn {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  flex: none;
+  min-width: 0;
 }
 
 .hint-anchor a {
@@ -857,16 +901,18 @@ textarea.item-form-barcodes {
 }
 
 /* Stock */
-.stock-table-scroll .admin-stock-table col.admin-st-col-wh { width: 7%; }
-.stock-table-scroll .admin-stock-table col.admin-st-col-loc { width: 7%; }
-.stock-table-scroll .admin-stock-table col.admin-st-col-product { width: 8%; }
-.stock-table-scroll .admin-stock-table col.admin-st-col-sku { width: 8%; }
-.stock-table-scroll .admin-stock-table col.admin-st-col-art { width: 7%; }
-.stock-table-scroll .admin-stock-table col.admin-st-col-name { width: 26%; }
-.stock-table-scroll .admin-stock-table col.admin-st-col-qty { width: 7%; }
-.stock-table-scroll .admin-stock-table col.admin-st-col-min { width: 6%; }
-.stock-table-scroll .admin-stock-table col.admin-st-col-max { width: 6%; }
-.stock-table-scroll .admin-stock-table col.admin-st-col-status { width: 8%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-wh { width: 6%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-loc { width: 6%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-supplier { width: 7%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-product { width: 7%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-sku { width: 7%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-art { width: 6%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-name { width: 18%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-qty { width: 6%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-min { width: 5%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-max { width: 5%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-reorder { width: 6%; }
+.stock-table-scroll .admin-stock-table col.admin-st-col-status { width: 7%; }
 
 /* Make default ASP.NET alerts blend with the app shell */
 .alert {

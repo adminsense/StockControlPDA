@@ -3,6 +3,9 @@ namespace StockControl.Admin.Validation;
 public readonly record struct StockFilterRow(
     int WarehouseId,
     int LocationId,
+    int SupplierId,
+    string SupplierCode,
+    string SupplierName,
     string ProductCode,
     string Sku,
     string ArticleNumber,
@@ -13,11 +16,19 @@ public readonly record struct StockFilterRow(
 
 public static class StockGridFilter
 {
-    public static bool Matches(StockFilterRow r, int warehouseId, int locationId, string search, string filter)
+    public static bool Matches(
+        StockFilterRow r,
+        int warehouseId,
+        int locationId,
+        int supplierId,
+        string search,
+        string filter)
     {
         if (warehouseId != 0 && r.WarehouseId != warehouseId)
             return false;
         if (locationId != 0 && r.LocationId != locationId)
+            return false;
+        if (supplierId != 0 && r.SupplierId != supplierId)
             return false;
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -38,6 +49,14 @@ public static class StockGridFilter
             "above" => r.Max is not null && r.QuantityOnHand > r.Max,
             _ => true
         };
+    }
+
+    /// <summary>Quantity to bring on-hand up to min when below threshold; otherwise null.</summary>
+    public static decimal? ReorderQuantity(StockFilterRow r)
+    {
+        if (r.Min is null || r.QuantityOnHand >= r.Min)
+            return null;
+        return r.Min.Value - r.QuantityOnHand;
     }
 }
 

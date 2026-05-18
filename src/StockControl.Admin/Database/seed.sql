@@ -60,15 +60,15 @@ BEGIN TRY
         SupplierCode  nvarchar(20)  NOT NULL,
         SupplierName  nvarchar(100) NOT NULL,
         ProductCode   nvarchar(40)  NOT NULL,
-        ProductName   nvarchar(100) NOT NULL,
+        ProductName   nvarchar(200) NOT NULL,
         Sku           nvarchar(40)  NOT NULL,
-        DisplayName   nvarchar(100) NOT NULL,
+        DisplayName   nvarchar(200) NOT NULL,
         Unit          nvarchar(10)  NOT NULL,
         PackagingType int           NOT NULL,
         PackageQty    decimal(18,3) NOT NULL,
         Price         decimal(18,2) NOT NULL,
         StockQty      decimal(18,3) NOT NULL,
-        ArticleNumber nvarchar(50)  NOT NULL,
+        ArticleNumber nvarchar(100) NOT NULL,
         MinQty        int           NOT NULL,
         MaxQty        int           NOT NULL
     );
@@ -11335,12 +11335,12 @@ BEGIN TRY
           WHERE sb.WarehouseId = @wh1 AND sb.LocationId = @locA AND sb.ItemId = it.Id);
 
     INSERT INTO dbo.minmax_settings (WarehouseId, ItemId, LocationId, Min, Max, IsActive, CreatedAt, UpdatedAt)
-    SELECT @wh1, it.Id, 1, v.MinQty, v.MaxQty, 1, @now, NULL
+    SELECT @wh1, it.Id, @locA, v.MinQty, v.MaxQty, 1, @now, NULL
     FROM #inv v
     INNER JOIN dbo.items it ON it.Sku = v.Sku
     WHERE NOT EXISTS (
           SELECT 1 FROM dbo.minmax_settings mm
-          WHERE mm.WarehouseId = @wh1 AND mm.ItemId = it.Id AND mm.LocationId = 1);
+          WHERE mm.WarehouseId = @wh1 AND mm.ItemId = it.Id AND mm.LocationId = @locA);
 
     DROP TABLE #inv;
 

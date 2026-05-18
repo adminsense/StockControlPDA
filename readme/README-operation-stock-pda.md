@@ -276,6 +276,35 @@ These are both **correct**; which you prefer depends on whether the item list is
 
 ---
 
+## 📲 9. Release APK (Android store)
+
+The PDA embeds <code>appsettings.json</code> at build time. Production API:
+
+| Setting | Value |
+|--------|--------|
+| <code>Api:BaseUrl</code> | <code>https://allportstock.azurewebsites.net</code> |
+
+**Build signed APK** (from repo root):
+
+```powershell
+dotnet publish src/StockControl.PDA/StockControl.PDA.csproj -f net10.0-android -c Release -p:AndroidPackageFormat=apk
+```
+
+Output (copy for distribution):
+
+- <code>src/StockControl.PDA/bin/Release/net10.0-android/publish/com.companyname.stockcontrol.pda-Signed.apk</code>
+- Or run <code>tools/publish-pda-apk.ps1</code> → <code>dist/StockControl.PDA-1.0.apk</code>
+
+**Google Play** usually requires an **AAB** instead of APK:
+
+```powershell
+dotnet publish src/StockControl.PDA/StockControl.PDA.csproj -f net10.0-android -c Release -p:AndroidPackageFormat=aab
+```
+
+After changing <code>Api:BaseUrl</code>, always **rebuild** — the JSON is not read from disk at runtime.
+
+---
+
 ## Documentation
 
 - 🏠 [Main Documentation](../README.md) — Project overview

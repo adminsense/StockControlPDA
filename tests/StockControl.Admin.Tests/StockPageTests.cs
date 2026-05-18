@@ -8,6 +8,9 @@ public class StockPageTests
     private static StockFilterRow Row(
         int wh = 1,
         int loc = 10,
+        int supplierId = 5,
+        string supplierCode = "SUP01",
+        string supplierName = "Acme",
         string sku = "S1",
         string article = "A1",
         string product = "P1",
@@ -15,45 +18,61 @@ public class StockPageTests
         decimal qty = 5,
         int? min = null,
         int? max = null) =>
-        new(wh, loc, product, sku, article, name, qty, min, max);
+        new(wh, loc, supplierId, supplierCode, supplierName, product, sku, article, name, qty, min, max);
 
     [Fact]
     public void Filter_matches_warehouse()
     {
         var r = Row(wh: 2);
-        Assert.True(StockGridFilter.Matches(r, 2, 0, "", ""));
-        Assert.False(StockGridFilter.Matches(r, 1, 0, "", ""));
+        Assert.True(StockGridFilter.Matches(r, 2, 0, 0, "", ""));
+        Assert.False(StockGridFilter.Matches(r, 1, 0, 0, "", ""));
     }
 
     [Fact]
     public void Filter_matches_location()
     {
         var r = Row(loc: 99);
-        Assert.True(StockGridFilter.Matches(r, 0, 99, "", ""));
-        Assert.False(StockGridFilter.Matches(r, 0, 10, "", ""));
+        Assert.True(StockGridFilter.Matches(r, 0, 99, 0, "", ""));
+        Assert.False(StockGridFilter.Matches(r, 0, 10, 0, "", ""));
+    }
+
+    [Fact]
+    public void Filter_matches_supplier()
+    {
+        var r = Row(supplierId: 42);
+        Assert.True(StockGridFilter.Matches(r, 0, 0, 42, "", ""));
+        Assert.False(StockGridFilter.Matches(r, 0, 0, 7, "", ""));
+    }
+
+    [Fact]
+    public void Filter_search_matches_supplier_code()
+    {
+        var r = Row(supplierCode: "WURTH");
+        Assert.True(StockGridFilter.Matches(r, 0, 0, 0, "wur", ""));
+        Assert.False(StockGridFilter.Matches(r, 0, 0, 0, "zzz", ""));
     }
 
     [Fact]
     public void Filter_search_matches_sku_case_insensitive()
     {
         var r = Row(sku: "AbC-12");
-        Assert.True(StockGridFilter.Matches(r, 0, 0, "abc", ""));
-        Assert.False(StockGridFilter.Matches(r, 0, 0, "xyz", ""));
+        Assert.True(StockGridFilter.Matches(r, 0, 0, 0, "abc", ""));
+        Assert.False(StockGridFilter.Matches(r, 0, 0, 0, "xyz", ""));
     }
 
     [Fact]
     public void Filter_search_matches_article_when_present()
     {
         var r = Row(article: "ART-9");
-        Assert.True(StockGridFilter.Matches(r, 0, 0, "art", ""));
+        Assert.True(StockGridFilter.Matches(r, 0, 0, 0, "art", ""));
     }
 
     [Fact]
     public void Filter_search_ignores_empty_article()
     {
         var r = Row(article: "");
-        Assert.False(StockGridFilter.Matches(r, 0, 0, "only-in-article", ""));
-        Assert.True(StockGridFilter.Matches(r, 0, 0, "S1", ""));
+        Assert.False(StockGridFilter.Matches(r, 0, 0, 0, "only-in-article", ""));
+        Assert.True(StockGridFilter.Matches(r, 0, 0, 0, "S1", ""));
     }
 
     [Fact]
@@ -61,8 +80,8 @@ public class StockPageTests
     {
         var ok = Row(qty: 5, min: 3, max: 10);
         var below = Row(qty: 2, min: 3, max: 10);
-        Assert.False(StockGridFilter.Matches(ok, 0, 0, "", "below"));
-        Assert.True(StockGridFilter.Matches(below, 0, 0, "", "below"));
+        Assert.False(StockGridFilter.Matches(ok, 0, 0, 0, "", "below"));
+        Assert.True(StockGridFilter.Matches(below, 0, 0, 0, "", "below"));
     }
 
     [Fact]
@@ -70,8 +89,22 @@ public class StockPageTests
     {
         var ok = Row(qty: 5, min: 1, max: 10);
         var above = Row(qty: 11, min: 1, max: 10);
-        Assert.False(StockGridFilter.Matches(ok, 0, 0, "", "above"));
-        Assert.True(StockGridFilter.Matches(above, 0, 0, "", "above"));
+        Assert.False(StockGridFilter.Matches(ok, 0, 0, 0, "", "above"));
+        Assert.True(StockGridFilter.Matches(above, 0, 0, 0, "", "above"));
+    }
+
+    [Fact]
+    public void ReorderQuantity_when_below_min()
+    {
+        var r = Row(qty: 2, min: 10);
+        Assert.Equal(8m, StockGridFilter.ReorderQuantity(r));
+    }
+
+    [Fact]
+    public void ReorderQuantity_null_when_ok()
+    {
+        var r = Row(qty: 10, min: 5);
+        Assert.Null(StockGridFilter.ReorderQuantity(r));
     }
 
     [Fact]

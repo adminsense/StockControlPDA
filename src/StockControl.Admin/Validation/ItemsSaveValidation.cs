@@ -5,8 +5,8 @@ namespace StockControl.Admin.Validation;
 public static class ItemsSaveValidation
 {
     public const int MaxSkuLength = 40;
-    public const int MaxArticleLength = 50;
-    public const int MaxDisplayNameLength = 100;
+    public const int MaxArticleLength = 100;
+    public const int MaxDisplayNameLength = 200;
     public const int MaxUnitLength = 10;
 
     public static string? ValidateSave(
@@ -25,11 +25,11 @@ public static class ItemsSaveValidation
         if (skuTrimmedUpper.Length > MaxSkuLength)
             return "SKU must be 40 characters or fewer.";
         if (articleTrimmed.Length > MaxArticleLength)
-            return "Article number must be 50 characters or fewer.";
+            return "Article number must be 100 characters or fewer.";
         if (string.IsNullOrWhiteSpace(displayNameTrimmed))
             return "Display name is required.";
         if (displayNameTrimmed.Length > MaxDisplayNameLength)
-            return "Display name must be 100 characters or fewer.";
+            return "Display name must be 200 characters or fewer.";
         if (string.IsNullOrWhiteSpace(unitTrimmedUpper))
             return "Quantity unit is required.";
         if (unitTrimmedUpper.Length > MaxUnitLength)

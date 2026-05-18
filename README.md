@@ -68,8 +68,6 @@ Template: [`docs/pda-move-stock.html`](docs/pda-move-stock.html) — screenshot 
   <img src="./readme/images/pda-move-stock.png" alt="PDA — Move stock (mock screenshot)" />
 </p>
 
-Details: [README-operation-stock-pda](readme/README-operation-stock-pda.md) · Admin UX: [README-admin-stock](readme/README-admin-stock.md)
-
 ## 🛠️ 5. Tech stack
 
 - **Admin**: Blazor Server + EF Core + SQL Server

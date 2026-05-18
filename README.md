@@ -62,8 +62,6 @@ Search → form → grid pattern shared by Users, Warehouses, Locations, Supplie
 
 ### 4.3 PDA — Move stock (mock)
 
-Template: [`docs/pda-move-stock.html`](docs/pda-move-stock.html) — screenshot should match the HTML when updated.
-
 <p align="center">
   <img src="./readme/images/pda-move-stock.png" alt="PDA — Move stock (mock screenshot)" />
 </p>

@@ -362,9 +362,9 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# Local overrides only (appsettings.json is committed for deploy)
-appsettings.Development.json
-**/appsettings.Development.json
+# App settings (connection strings, API URLs, secrets)
+**/appsettings.json
+**/appsettings.*.json
 
 # PDA release binaries (build with tools/publish-pda-apk.ps1)
 dist/

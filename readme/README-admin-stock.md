@@ -11,8 +11,10 @@
 Blazor Server **desktop Admin** used to register master data and view stock balances. The Admin UI is **English** (labels + validation messages).
 
 <p align="center">
-  <img src="./images/mock_admin_template.png" alt="Stock Control — Admin tabs (desktop)" width="920" />
+  <img src="./images/mock_admin_template.png" alt="Stock Control — Admin: Stock tab (filters + list)" width="920" />
 </p>
+
+*Screenshot (`images/mock_admin_template.png`): **Stock Control** tab — two-row tab bar (8 tabs), **STOCK** filters (Warehouse, Location, Supplier, Stock status, full-width Search and Sync), **LIST** grid with Supplier, Reorder, and Status.*
 
 ---
 
@@ -31,7 +33,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 | 🔘 **Active toggle** | **ON** = active in DB; **OFF** = inactive. Inactive records stay in the list but cannot be opened for edit until active again. |
 | 💾 **Save / Update** | Single primary action; label switches automatically (`Id == 0` → Save, else Update). |
 
-**Stock** tab: search uses the same **SearchField** pattern; **Warehouse** / **Location** are dropdown filters (not part of the text search hint).
+**Stock** tab (see screenshot above): **Search** uses **SearchField** (SKU, article number, product code, display name). Dropdown filters: **Warehouse**, **Location**, **Supplier**, **Stock status** (all / below min / above max). **Search** and **Sync** span the full filter width (aligned with the two-column rows above).
 
 ### 🔎 Search hints (live filter)
 
@@ -44,7 +46,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 | 📦 **Products** | Code, name |
 | 🏷️ **Items** | SKU, article number, product code, display name, barcodes |
 | ⚖️ **Min / Max** | Warehouse code, location code, SKU, article number |
-| 📦 **Stock** | SKU, article number, product code, display name — *plus* **Warehouse** / **Location** dropdowns |
+| 📦 **Stock** | SKU, article number, product code, display name — *plus* **Warehouse**, **Location**, **Supplier**, **Stock status** dropdowns |
 
 ---
 
@@ -346,13 +348,14 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
     </tr>
     <tr>
       <td>📦 <strong>Stock</strong></td>
-      <td>View on-hand quantities by warehouse + location + item, compare to Min/Max</td>
+      <td>View on-hand quantities by warehouse + location + item; compare to Min/Max; filter by supplier and stock status</td>
       <td>
-        Filters: <code>Warehouse</code>, <code>Location</code>, <code>Search</code> (SKU, article number, product code, or name), <code>Below/Above</code>
+        Filters: <code>Warehouse</code>, <code>Location</code>, <code>Supplier</code>, <code>Stock status</code> (all / below min / above max), <code>Search</code> (SKU, article number, product code, display name), <code>Sync</code>
       </td>
       <td>
         <ul>
           <li>Home page: route <code>/</code> (also <code>/stock</code>)</li>
+          <li>List columns: Warehouse, Location, Supplier, Product, SKU, Art. no., Name, On hand, Min, Max, <strong>Reorder</strong> (qty to reach min when below), Status</li>
           <li><strong>Sync</strong>: compares latest <code>items</code> activity to last baseline; modal when unchanged; busy overlay + reload when catalog changed</li>
           <li>Min/Max resolve order: location override first, then warehouse default</li>
           <li>Status tag: OK / Below / Above</li>

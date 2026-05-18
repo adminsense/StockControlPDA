@@ -32,7 +32,7 @@ This repository contains:
 - **Admin (desktop)**:
   - **8 tabs** (two rows of 4): Users, Warehouses, Locations, Suppliers, Products, Items (SKU), **Min / Max**, Stock Control
   - CRUD + validations (English); **Min / Max** lives on `/minmax` (not inside the Items form)
-  - **Stock** (`/` and `/stock`): filters + pagination (10 rows/page); **Sync** checks whether `items` changed since the last baseline — if not, modal *“Everything is synchronized.”*; if yes, a **busy** overlay then reload (balances + Min/Max resolution)
+  - **Stock** (`/` and `/stock`): **Warehouse**, **Location**, **Supplier**, **Stock status** (all / below min / above max), full-width **Search** + **Sync**; grid columns include **Supplier**, **Reorder**, **Status**; pagination (10 rows/page); **Sync** checks whether `items` changed since the last baseline — if not, modal *“Everything is synchronized.”*; if yes, a **busy** overlay then reload (balances + Min/Max resolution)
   - **UI**: stronger contrast for inputs, placeholders, and dropdowns for warehouse lighting (`StockControl.Admin.Client` → `admin-theme.css`, `color-scheme: dark`)
 - **PDA (Android)**:
   - MAUI app contains **`Platforms/Android` only** (iOS / Windows / Mac Catalyst folders removed)
@@ -44,10 +44,12 @@ This repository contains:
 
 Screenshots should match the **current** UI when updated in-repo.
 
-### 4.1 Admin — tabs overview
+### 4.1 Admin — Stock Control (home)
+
+Screenshot: `readme/images/mock_admin_template.png` — **Stock Control** tab with filter panel (Warehouse, Location, Supplier, Stock status, Search, Sync) and stock list (Supplier, Reorder, Status).
 
 <p align="center">
-  <img src="./readme/images/mock_admin_template.png" alt="Stock Control — Admin tabs (desktop)" />
+  <img src="./readme/images/mock_admin_template.png" alt="Stock Control — Admin: Stock tab with filters and list" />
 </p>
 
 ### 4.2 Admin — standard master forms

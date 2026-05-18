@@ -36,7 +36,6 @@ This repository contains:
   - **UI**: stronger contrast for inputs, placeholders, and dropdowns for warehouse lighting (`StockControl.Admin.Client` → `admin-theme.css`, `color-scheme: dark`)
 - **PDA (Android)**:
   - MAUI app contains **`Platforms/Android` only** (iOS / Windows / Mac Catalyst folders removed)
-  - **UI mock:** `docs/pda-move-stock.html` + `readme/images/pda-move-stock.png` — see [README-operation-stock-pda](readme/README-operation-stock-pda.md) §5
   - Scan-first flow (keyboard wedge / Enter); **Sync** \| **Reset** on **Move stock**; `GET /api/stock/sync` (MVP: server counts)
   - Fast stock movements (Inbound/Outbound); **Move stock** UI should converge to the HTML mock (pickers + Summary)
 
@@ -45,8 +44,6 @@ This repository contains:
 Screenshots should match the **current** UI when updated in-repo.
 
 ### 4.1 Admin — Stock Control (home)
-
-Screenshot: `readme/images/mock_admin_template.png` — **Stock Control** tab with filter panel (Warehouse, Location, Supplier, Stock status, Search, Sync) and stock list (Supplier, Reorder, Status).
 
 <p align="center">
   <img src="./readme/images/mock_admin_template.png" alt="Stock Control — Admin: Stock tab with filters and list" />
@@ -60,7 +57,7 @@ Search → form → grid pattern shared by Users, Warehouses, Locations, Supplie
   <img src="./readme/images/forms_screen.png" alt="Admin — standard forms (search, form, list)" />
 </p>
 
-### 4.3 PDA — Move stock (mock)
+### 4.3 PDA — Move stock
 
 <p align="center">
   <img src="./readme/images/pda-move-stock.png" alt="PDA — Move stock (mock screenshot)" />
@@ -83,6 +80,16 @@ Search → form → grid pattern shared by Users, Warehouses, Locations, Supplie
 - 📋 **Admin documentation**: [README-admin-stock](readme/README-admin-stock.md)
 - 📋 **PDA documentation**: [README-operation-stock-pda](readme/README-operation-stock-pda.md)
 - 📋 **PDA+Admin Installation**: [README-StockControlInstall](readme/README-StockControlInstall.md)
+
+### Interactive UI mocks (HTML)
+
+Open in a browser for client demos. Admin mocks navigate between each other: **Users** → details, **Stock Control** → main.
+
+| App | Mock | Notes |
+|-----|------|--------|
+| **Admin — Stock (home)** | [`docs/stock-control-admin-mock.html`](docs/stock-control-admin-mock.html) | Start here. Matches `readme/images/mock_admin_template.png`. |
+| **Admin — master tabs (details)** | [`docs/stock-control-admin--details-mock.html`](docs/stock-control-admin--details-mock.html) | Users, Warehouses, CRUD forms, etc. |
+| **PDA — Move stock** | [`docs/pda-move-stock.html`](docs/pda-move-stock.html) | Matches `readme/images/pda-move-stock.png`. See [README-operation-stock-pda](readme/README-operation-stock-pda.md) §4. |
 
 ---
 

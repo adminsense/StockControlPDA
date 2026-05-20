@@ -93,12 +93,14 @@ Suggested helper: `IAuditService.LogAsync(AuditEntry entry)` in `StockControl.Ad
 
 ## 6. UI (Admin only)
 
+**Interactive mocks:** [`docs/stock-control-admin-mock.html`](../docs/stock-control-admin-mock.html) (login + full menu + Audit tab) · [`docs/README-mocks.md`](../docs/README-mocks.md). Standalone audit-only: [`docs/stock-control-admin--audit-mock.html`](../docs/stock-control-admin--audit-mock.html).
+
 **Route:** `/audit` (or **Audit** tab) — **Role 1 (Admin)** only.
 
 **Grid (keep small):**
 
-- Filters: Date from/to, Action, User, Entity, Success
-- Columns: Timestamp, Action, Entity, Entity ID, User, Status, View
+- Filters: Date from/to, Action, User, Success (no entity filter)
+- Columns: Timestamp, Action, Entity (name only), User, IP, Status, View — record id stays in DB / detail modal JSON, not in the grid
 - Pagination: 25–50 rows
 - **Detail modal:** timestamp, user, IP, JSON diff (when present), error text
 

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Stock Control — PDA (interactive mock)</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a222d;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #e8eef5;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --in: #1b6b3a;
+      --out: #8b1a1a;
+      --warn: #ca8a04;
+      --radius: 12px;
+      --font: system-ui, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100dvh;
+      background: var(--bg); color: var(--text);
+      font-family: var(--font); font-size: 14px;
+    }
+
+    /* Login (LoginPage.xaml) */
+    #screen-login {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: 1fr auto 1fr;
+      padding: 24px;
+    }
+    #screen-login.hidden { display: none; }
+    .login-card {
+      grid-row: 2;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+    }
+    .login-card h1 {
+      margin: 0 0 4px; font-size: 18px; font-weight: 700; text-align: center;
+    }
+    .login-sub {
+      margin: 0 0 16px; font-size: 12px; color: var(--muted); text-align: center;
+    }
+    .lbl { display: block; font-size: 12px; margin-bottom: 4px; color: var(--muted); }
+    input, select {
+      width: 100%; padding: 12px; margin-bottom: 12px;
+      border-radius: 8px; border: 1px solid var(--border);
+      background: #0d1218; color: var(--text); font-size: 15px;
+    }
+    .login-password-wrap { position: relative; margin-bottom: 12px; }
+    .login-password-wrap input { margin-bottom: 0; padding-right: 44px; }
+    .eye-btn {
+      position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      width: 36px; height: 36px; border: none; background: transparent;
+      color: var(--muted); cursor: pointer; font-size: 18px;
+    }
+    .login-error { color: #f87171; font-size: 12px; margin-bottom: 12px; display: none; }
+    .login-error.show { display: block; }
+    .btn-signin {
+      width: 100%; padding: 14px; border: none; border-radius: 8px;
+      background: var(--accent); color: #fff; font-weight: 700; font-size: 16px;
+      cursor: pointer;
+    }
+    .dev-hint {
+      margin-top: 14px; padding: 10px; border-radius: 8px; font-size: 11px;
+      background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd; line-height: 1.4;
+    }
+
+    #screen-app.hidden { display: none; }
+    #screen-app { padding: 16px; max-width: 480px; margin: 0 auto; }
+
+    .top-bar {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px;
+      align-items: center; margin-bottom: 12px;
+    }
+    .user-line { font-size: 12px; color: var(--muted); }
+    .btn-outlined {
+      padding: 6px 12px; font-size: 12px; border-radius: 8px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text); cursor: pointer;
+    }
+    .intro { font-size: 13px; color: var(--muted); line-height: 1.45; margin-bottom: 12px; }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px; margin-bottom: 12px;
+    }
+    .card h2 { margin: 0 0 10px; font-size: 15px; font-weight: 700; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .scan-hint { font-size: 12px; color: var(--warn); margin-top: 4px; display: none; }
+    .scan-hint.show { display: block; }
+
+    .summary dl {
+      margin: 0; display: grid;
+      grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px;
+    }
+    .summary dt { color: var(--muted); }
+    .summary dd { margin: 0; font-weight: 600; }
+    .bar-wrap {
+      margin-top: 10px; height: 6px; background: #0d1218;
+      border-radius: 4px; border: 1px solid var(--border); overflow: hidden;
+    }
+    .bar { height: 100%; background: linear-gradient(90deg, var(--warn), #22c55e); width: 30%; }
+    .status-pill {
+      display: inline-block; margin-top: 8px; padding: 4px 10px;
+      border-radius: 6px; font-size: 12px; font-weight: 600;
+      background: #14532d; color: #86efac;
+    }
+
+    .qty-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; padding: 14px 0;
+    }
+    .qty-row button {
+      width: 52px; height: 52px; border-radius: 12px;
+      border: 1px solid var(--border); background: #243044;
+      color: var(--text); font-size: 22px; cursor: pointer;
+    }
+    .qty-num { font-size: 28px; font-weight: 700; min-width: 48px; text-align: center; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-in, .btn-out {
+      padding: 14px; border: none; border-radius: 10px;
+      font-weight: 700; font-size: 15px; color: #fff; cursor: pointer;
+    }
+    .btn-in { background: var(--in); }
+    .btn-out { background: var(--out); }
+    .secondary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .btn-sync {
+      padding: 12px; border-radius: 10px; border: 1px solid var(--accent);
+      background: #1e3a5f; color: #fff; font-weight: 600; cursor: pointer;
+    }
+    .btn-reset {
+      padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-weight: 600; cursor: pointer;
+    }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      background: #1e293b; border: 1px solid var(--border);
+      padding: 12px 18px; border-radius: 10px; max-width: 90vw;
+      transition: transform 0.25s; z-index: 50;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .mock-pill {
+      position: fixed; top: 8px; right: 8px; font-size: 10px; font-weight: 800;
+      text-transform: uppercase; padding: 4px 8px; border-radius: 999px;
+      background: rgba(250, 204, 21, 0.15); color: #fde68a;
+      border: 1px solid rgba(250, 204, 21, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <span class="mock-pill">PDA mock</span>
+
+  <!-- LOGIN: POST /api/auth/login?app=pda → Bearer token in session -->
+  <div id="screen-login">
+    <div class="login-card">
+      <h1>Stock Control — PDA</h1>
+      <p class="login-sub">Sign in with your Admin PDA account (role 2).</p>
+      <form id="login-form">
+        <label class="lbl" for="pda-user">Username</label>
+        <input id="pda-user" type="text" autocomplete="username" value="pda" placeholder="Username" />
+
+        <label class="lbl" for="pda-pass">Password</label>
+        <div class="login-password-wrap">
+          <input id="pda-pass" type="password" autocomplete="current-password" value="Pda2!Stock" placeholder="Password" />
+          <button type="button" class="eye-btn" id="toggle-pass" aria-label="Show password">👁</button>
+        </div>
+
+        <p class="login-error" id="login-error">Invalid username or password.</p>
+        <button type="submit" class="btn-signin">Sign in</button>
+      </form>
+      <p class="dev-hint">
+        <strong>Dev:</strong> user <code>pda</code> / <code>Pda2!Stock</code> (role 2). Real MAUI app calls Admin API and stores JWT for <code>HttpClient</code> Bearer header.
+      </p>
+    </div>
+  </div>
+
+  <!-- MAIN: MainPage.xaml (warehouse → location + item → scan → qty → In/Out) -->
+  <div id="screen-app" class="hidden">
+    <div class="top-bar">
+      <span class="user-line" id="user-label">Signed in as pda</span>
+      <button type="button" class="btn-outlined" id="btn-signout">Sign out</button>
+    </div>
+    <p class="intro">Pick warehouse, location, and item — or scan a code and press Enter. Use − / + for quantity, then Inbound or Outbound.</p>
+
+    <div class="card">
+      <h2>Warehouse &amp; item</h2>
+      <label class="lbl" for="wh">Warehouse</label>
+      <select id="wh">
+        <option value="WH01">WH01 — Main</option>
+        <option value="WH02">WH02 — Branch</option>
+      </select>
+      <div class="row2" style="margin-top:10px">
+        <div>
+          <label class="lbl" for="loc">Location</label>
+          <select id="loc"></select>
+        </div>
+        <div>
+          <label class="lbl" for="item">Item</label>
+          <select id="item"></select>
+        </div>
+      </div>
+      <label class="lbl" for="scan" style="margin-top:12px">Scan or type code</label>
+      <input id="scan" type="text" placeholder="Scan or type code" autocomplete="off" />
+      <p class="scan-hint" id="scan-hint">Code not found — check catalog sync.</p>
+    </div>
+
+    <div class="card">
+      <h2>Summary</h2>
+      <div class="summary">
+        <dl>
+          <dt>Warehouse</dt><dd id="s-wh">WH01</dd>
+          <dt>Location</dt><dd id="s-loc">A01-01</dd>
+          <dt>Item</dt><dd id="s-item">—</dd>
+          <dt>On hand</dt><dd id="s-oh">0</dd>
+          <dt>Min / Max</dt><dd id="s-mm">0 / 25</dd>
+        </dl>
+        <div class="bar-wrap"><div class="bar" id="mm-bar"></div></div>
+        <span class="status-pill" id="s-pill">OK</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Quantity</h2>
+      <div class="qty-row">
+        <button type="button" id="q-minus" aria-label="Decrease">−</button>
+        <span class="qty-num" id="qty">1</span>
+        <button type="button" id="q-plus" aria-label="Increase">+</button>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn-out" id="btn-outbound">Outbound (−)</button>
+        <button type="button" class="btn-in" id="btn-inbound">Inbound (+)</button>
+      </div>
+      <div class="secondary">
+        <button type="button" class="btn-sync" id="btn-sync">Sync</button>
+        <button type="button" class="btn-reset" id="btn-reset">Reset flow</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      var DEV_USER = "pda";
+      var DEV_PASS = "Pda2!Stock";
+
+      var locations = {
+        WH01: [
+          { code: "A01-01", label: "A01-01 — Belgium" },
+          { code: "B01-01", label: "B01-01 — Netherlands" }
+        ],
+        WH02: [{ code: "C01-01", label: "C01-01 — Germany" }]
+      };
+      var items = [
+        { sku: "947219001-011171", name: "Akerstroms wandhouder SESAM 800 MEDIUM", bc: "947219001011171", min: 0, max: 25, oh: { "A01-01": 0, "B01-01": 2 } },
+        { sku: "947220001-011168", name: "Akerstroms wandhouder SESAM 800 SMALL", bc: "947220001011168", min: 0, max: 25, oh: { "A01-01": 0 } }
+      ];
+
+      var loginScreen = document.getElementById("screen-login");
+      var appScreen = document.getElementById("screen-app");
+      var loginForm = document.getElementById("login-form");
+      var loginError = document.getElementById("login-error");
+      var passInput = document.getElementById("pda-pass");
+      var wh = document.getElementById("wh");
+      var loc = document.getElementById("loc");
+      var itemSel = document.getElementById("item");
+      var scan = document.getElementById("scan");
+      var qtyEl = document.getElementById("qty");
+      var toast = document.getElementById("toast");
+      var qty = 1;
+
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(function () { toast.classList.remove("show"); }, 2400);
+      }
+
+      document.getElementById("toggle-pass").addEventListener("click", function () {
+        var show = passInput.type === "password";
+        passInput.type = show ? "text" : "password";
+        this.textContent = show ? "🙈" : "👁";
+      });
+
+      loginForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var u = document.getElementById("pda-user").value.trim();
+        var p = passInput.value;
+        if (u === DEV_USER && p === DEV_PASS) {
+          loginError.classList.remove("show");
+          loginScreen.classList.add("hidden");
+          appScreen.classList.remove("hidden");
+          document.getElementById("user-label").textContent = "Signed in as " + u;
+          showToast("Signed in (mock). Real app: Bearer JWT on API calls.");
+          fillPickers();
+          updateSummary();
+          return;
+        }
+        loginError.classList.toggle("show", true);
+        if (u === "admin") loginError.textContent = "This account cannot sign in here (role 1 = web only).";
+      });
+
+      document.getElementById("btn-signout").addEventListener("click", function () {
+        appScreen.classList.add("hidden");
+        loginScreen.classList.remove("hidden");
+        showToast("Signed out (mock).");
+      });
+
+      function fillPickers() {
+        var whCode = wh.value;
+        loc.innerHTML = locations[whCode].map(function (l) {
+          return '<option value="' + l.code + '">' + l.label + '</option>';
+        }).join("");
+        itemSel.innerHTML = '<option value="">— select —</option>' + items.map(function (it, i) {
+          return '<option value="' + i + '">' + it.sku + ' — ' + it.name.substring(0, 28) + '…</option>';
+        }).join("");
+      }
+
+      function selectedItem() {
+        var i = itemSel.value;
+        return i === "" ? null : items[parseInt(i, 10)];
+      }
+
+      function updateSummary() {
+        var it = selectedItem();
+        var locCode = loc.value;
+        document.getElementById("s-wh").textContent = wh.value;
+        document.getElementById("s-loc").textContent = locCode;
+        if (!it) {
+          document.getElementById("s-item").textContent = "—";
+          document.getElementById("s-oh").textContent = "0";
+          document.getElementById("s-mm").textContent = "—";
+          return;
+        }
+        document.getElementById("s-item").textContent = it.name;
+        var oh = it.oh[locCode] != null ? it.oh[locCode] : 0;
+        document.getElementById("s-oh").textContent = String(oh);
+        document.getElementById("s-mm").textContent = it.min + " / " + it.max;
+        var pill = document.getElementById("s-pill");
+        if (oh < it.min) { pill.textContent = "Below min"; pill.style.background = "#713f12"; pill.style.color = "#fcd34d"; }
+        else if (oh > it.max) { pill.textContent = "Above max"; pill.style.background = "#7f1d1d"; pill.style.color = "#fecaca"; }
+        else { pill.textContent = "OK"; pill.style.background = "#14532d"; pill.style.color = "#86efac"; }
+        var span = Math.max(1, it.max - it.min);
+        document.getElementById("mm-bar").style.width = Math.min(100, ((oh - it.min) / span) * 100) + "%";
+      }
+
+      wh.addEventListener("change", function () { fillPickers(); updateSummary(); });
+      loc.addEventListener("change", updateSummary);
+      itemSel.addEventListener("change", updateSummary);
+
+      scan.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        var v = scan.value.trim();
+        document.getElementById("scan-hint").classList.remove("show");
+        var hit = items.findIndex(function (it) {
+          return it.bc === v.replace(/\s/g, "") || it.sku === v;
+        });
+        if (hit >= 0) {
+          itemSel.value = String(hit);
+          updateSummary();
+          showToast("Item matched from scan.");
+        } else {
+          document.getElementById("scan-hint").classList.add("show");
+        }
+      });
+
+      document.getElementById("q-minus").addEventListener("click", function () {
+        qty = Math.max(1, qty - 1); qtyEl.textContent = String(qty);
+      });
+      document.getElementById("q-plus").addEventListener("click", function () {
+        qty = Math.min(9999, qty + 1); qtyEl.textContent = String(qty);
+      });
+
+      document.getElementById("btn-inbound").addEventListener("click", function () {
+        var it = selectedItem();
+        if (!it) { showToast("Select warehouse, location, and item."); return; }
+        var c = loc.value;
+        it.oh[c] = (it.oh[c] || 0) + qty;
+        showToast("Inbound +" + qty + " (mock). Real: POST stock movement API.");
+        qty = 1; qtyEl.textContent = "1";
+        updateSummary();
+      });
+
+      document.getElementById("btn-outbound").addEventListener("click", function () {
+        var it = selectedItem();
+        if (!it) { showToast("Select warehouse, location, and item."); return; }
+        var c = loc.value;
+        var oh = it.oh[c] || 0;
+        if (oh < qty) { showToast("Insufficient stock."); return; }
+        it.oh[c] = oh - qty;
+        showToast("Outbound −" + qty + " (mock).");
+        qty = 1; qtyEl.textContent = "1";
+        updateSummary();
+      });
+
+      document.getElementById("btn-sync").addEventListener("click", function () {
+        showToast("Catalog synced from server (mock).");
+      });
+
+      document.getElementById("btn-reset").addEventListener("click", function () {
+        qty = 1; qtyEl.textContent = "1";
+        scan.value = "";
+        itemSel.value = "";
+        document.getElementById("scan-hint").classList.remove("show");
+        updateSummary();
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -55,7 +55,7 @@ Run **Stock Control Admin** on a Windows notebook together with the **MAUI PDA**
 <tr><td width="520" align="left" valign="top"><strong>Config file</strong></td><td align="left" valign="top"><code>src/StockControl.Admin/appsettings.json</code></td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Setting</strong></td><td align="left" valign="top"><code>ConnectionStrings:connStockControlPDA</code></td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Value</strong></td><td align="left" valign="top">Azure SQL in repo: <strong><code>adminsensedb.uksouth.cloudapp.azure.com</code></strong>, database <strong><code>AllportStock</code></strong> (see <code>appsettings.json</code>).</td></tr>
-<tr><td width="520" align="left" valign="top"><strong>First Admin start</strong></td><td align="left" valign="top">Startup runs EF <strong><code>MigrateAsync</code></strong>. Schema is created or updated automatically.</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Database schema</strong></td><td align="left" valign="top">Apply EF migrations manually: <strong><code>dotnet ef database update --project src/StockControl.Admin</code></strong> (not on app startup).</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Manual migrations (optional)</strong></td><td align="left" valign="top"><a href="README-admin-stock.md">README-admin-stock</a> → <strong>Database (EF Core)</strong> (<code>dotnet ef database update ...</code>).</td></tr>
 </tbody>
 </table>

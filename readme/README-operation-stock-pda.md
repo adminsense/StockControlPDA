@@ -23,7 +23,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 </thead>
 <tbody>
 <tr><td width="520" align="left" valign="top"><strong>Platform</strong></td><td align="left" valign="top">Android PDA</td></tr>
-<tr><td width="520" align="left" valign="top"><strong>Workflow</strong></td><td align="left" valign="top"><strong>Move stock</strong> follows the mock <a href="../docs/pda-move-stock.html"><code>pda-move-stock.html</code></a>: pickers, scan, Summary, quantity, In/Out, <strong>Sync</strong> | <strong>Reset</strong> — see <strong>section 4</strong>.</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Workflow</strong></td><td align="left" valign="top">Mock <a href="../docs/pda-move-stock.html"><code>pda-move-stock.html</code></a>: scan product → stock location dropdown → quantity Add/Subtract — same screen as before, fields reordered.</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Scanner</strong></td><td align="left" valign="top">Keyboard wedge (text + Enter)</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Connectivity</strong></td><td align="left" valign="top">Online (MVP)</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>MAUI targets</strong></td><td align="left" valign="top"><strong>Android only</strong> — <code>Platforms/Android</code> only (<code>net10.0-android</code>, min API 21). iOS / Windows / Mac Catalyst folders are not in this repo.</td></tr>
@@ -74,10 +74,10 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 <tr><th width="520" align="left" valign="top">Area (mock)</th><th align="left" valign="top">Intended behaviour</th></tr>
 </thead>
 <tbody>
-<tr><td width="520" align="left" valign="top">🏭 <strong>Warehouse</strong> / 📍 <strong>Location</strong> / 🏷️ <strong>Item</strong></td><td align="left" valign="top"><strong>Pickers.</strong> How the <strong>item</strong> list is filtered is a <strong>product/API choice</strong> (rules <strong>A–E</strong>, <strong>section 6</strong>). <strong>Scan</strong> (Enter) should still set location or item when the code matches.</td></tr>
-<tr><td width="520" align="left" valign="top">⌨️ <strong>Scan or type code</strong></td><td align="left" valign="top">Keyboard wedge + <strong>Enter</strong> resolves a <strong>location code</strong> or <strong>item</strong> (SKU / barcode / article number per API rules — <strong>section 5</strong>).</td></tr>
-<tr><td width="520" align="left" valign="top">📊 <strong>Summary</strong></td><td align="left" valign="top"><strong>Warehouse</strong>, <strong>location</strong>, <strong>item</strong>, <strong>on hand</strong>, <strong>min/max</strong>, status pill — server lookups (<code>/api/pda/catalog/summary</code>).</td></tr>
-<tr><td width="520" align="left" valign="top">🔢 <strong>Quantity</strong></td><td align="left" valign="top">Stepper <strong>− / +</strong> then <strong>Inbound (+)</strong> / <strong>Outbound (−)</strong>.</td></tr>
+<tr><td width="520" align="left" valign="top">⌨️ <strong>Scan product code</strong></td><td align="left" valign="top">First field. Keyboard wedge + <strong>Enter</strong> resolves <strong>product</strong> (SKU / barcode / article number — <strong>section 5</strong>). Shown under the scan field when recognized.</td></tr>
+<tr><td width="520" align="left" valign="top">📍 <strong>Stock location</strong></td><td align="left" valign="top"><strong>Dropdown</strong> (warehouse implied in label, e.g. <code>WH01 · A01-01</code>). Second field on the same card.</td></tr>
+<tr><td width="520" align="left" valign="top">📊 <strong>Summary</strong></td><td align="left" valign="top"><strong>Product</strong>, <strong>location</strong>, <strong>on hand</strong>, <strong>min/max</strong>, status pill — server lookups (<code>/api/pda/catalog/summary</code>).</td></tr>
+<tr><td width="520" align="left" valign="top">🔢 <strong>Quantity</strong></td><td align="left" valign="top">Stepper <strong>− / +</strong> then <strong>Add (+)</strong> / <strong>Subtract (−)</strong>. <strong>Sync</strong> | <strong>Reset flow</strong> unchanged.</td></tr>
 <tr><td width="520" align="left" valign="top">🔄 <strong>Sync</strong> | <strong>Reset flow</strong></td><td align="left" valign="top">Same row. <strong>Sync</strong> → <code>GET /api/stock/sync</code> (MVP: counts + connectivity); after success, <strong>reload catalog pickers</strong> from <code>/api/pda/catalog/...</code>. <strong>Reset</strong> clears selection + quantity (mock + MAUI).</td></tr>
 </tbody>
 </table>

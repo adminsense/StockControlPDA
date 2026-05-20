@@ -83,13 +83,14 @@ Search → form → grid pattern shared by Users, Warehouses, Locations, Supplie
 
 ### Interactive UI mocks (HTML)
 
-Open in a browser for client demos. Admin mocks navigate between each other: **Users** → details, **Stock Control** → main.
+Open in a browser for client demos. Admin mocks navigate between each other: **Users** → details, **Stock Control** → main, **Audit Logs** → audit mock.
 
 | App | Mock | Notes |
 |-----|------|--------|
 | **Admin — Stock (home)** | [`docs/stock-control-admin-mock.html`](docs/stock-control-admin-mock.html) | Start here. Matches `readme/images/mock_admin_template.png`. |
 | **Admin — master tabs (details)** | [`docs/stock-control-admin--details-mock.html`](docs/stock-control-admin--details-mock.html) | Users, Warehouses, CRUD forms, etc. |
-| **PDA — Move stock** | [`docs/pda-move-stock.html`](docs/pda-move-stock.html) | Matches `readme/images/pda-move-stock.png`. See [README-operation-stock-pda](readme/README-operation-stock-pda.md) §4. |
+| **Admin — Audit Logs (proposal)** | [`docs/stock-control-admin--audit-mock.html`](docs/stock-control-admin--audit-mock.html) | Read-only audit grid + detail modal. See [audit_stock.md](readme/audit_stock.md). |
+| **PDA — Move stock** | [`docs/pda-move-stock.html`](docs/pda-move-stock.html) | Same screen: scan product → location dropdown → quantity (Add/Subtract). See [README-operation-stock-pda](readme/README-operation-stock-pda.md) §4. |
 
 ---
 

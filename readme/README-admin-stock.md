@@ -81,7 +81,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 
 ## 🗄️ Database (EF Core)
 
-- Migrations: `src/StockControl.Admin/Migrations/`. The Admin app applies pending migrations on startup (`MigrateAsync`).
+- Migrations: `src/StockControl.Admin/Migrations/`. Apply via terminal: `dotnet ef database update --project src/StockControl.Admin`.
 - To update the database manually from the repo root:
 
   `dotnet ef database update --project src/StockControl.Admin/StockControl.Admin.csproj --startup-project src/StockControl.Admin/StockControl.Admin.csproj`
@@ -420,7 +420,7 @@ In **Development**, if `Jwt:Key` is missing, a dev-only default is used (do not 
 5. **Sign out** (header) deletes the cookie and clears the session.
 6. All Admin pages require role claim **`Admin`** (`FallbackPolicy` in `Auth/AuthServiceExtensions.cs`).
 
-Admin does **not** call `POST /api/auth/login` for the UI login; it validates in-process (`AdminSignInService` + `UserAuthService`). The token is the **same** as the one returned by the API for PDA.
+Admin UI login calls `POST /api/auth/login?app=admin` from the browser (`stockcontrol.js`), which sets the HttpOnly JWT cookie. The token format is the **same** as the Bearer token returned for PDA.
 
 #### PDA (Android MAUI)
 
@@ -489,16 +489,11 @@ Migration **`AddUserRoleAndPassword`** adds:
 - `users.Role` (`int`, NOT NULL, default **2** for existing rows)
 - `users.Password` (`nvarchar(500)`, nullable until set)
 
-Applied automatically on Admin startup (`MigrateAsync` in `Program.cs`).
+Apply manually: `dotnet ef database update --project src/StockControl.Admin`.
 
-### First-time passwords (existing database)
+### Test passwords (database seed)
 
-If **every** user has an empty `Password` after migration, the first startup **once** assigns:
-
-- First active user (lowest `Id` among active): **`Role = 1`**, password **`ChangeMe1!`**
-- All other users: **`Role = 2`**, password **`ChangeMe1!`**
-
-Sign in with those credentials, then open **Users** and set proper roles/passwords. **Change `ChangeMe1!` immediately** in production.
+Passwords are set in SQL only (migration `FixSeedUserPasswordsByUsername` or [`scripts/seed-user-passwords.sql`](../scripts/seed-user-passwords.sql)). See **[LOGIN-TEST-USERS.md](LOGIN-TEST-USERS.md)** for usernames **admin**, **pda** and password `Pda2!Stock`. The app does not create passwords on startup.
 
 For new users, use the **Users** tab: pick role **1** or **2**, set password on **Save**.
 
@@ -517,7 +512,7 @@ For new users, use the **Users** tab: pick role **1** or **2**, set password on 
 | EF mapping | `src/StockControl.Admin/Data/AppDbContext.cs` |
 | JWT config + policies | `src/StockControl.Admin/Auth/AuthServiceExtensions.cs` |
 | Token create/validate | `src/StockControl.Admin/Auth/JwtTokenService.cs` |
-| Admin sign-in / sign-out | `src/StockControl.Admin/Auth/AdminSignInService.cs` |
+| Admin sign-in / sign-out | `src/StockControl.Admin/wwwroot/js/stockcontrol.js`, `Api/AuthApi.cs` |
 | Login API | `src/StockControl.Admin/Api/AuthApi.cs` |
 | Admin login UI | `src/StockControl.Admin/Shared/LoginModal.razor` |
 | PDA login UI | `src/StockControl.PDA/LoginPage.xaml` |

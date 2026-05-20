@@ -1,0 +1,59 @@
+@using StockControl.Admin.Auth
+@using StockControl.Admin.Data
+
+@if (Entry is not null)
+{
+    <div class="sc-modal-backdrop" role="presentation" @onclick="Close">
+        <div class="sc-modal audit-detail-modal" role="dialog" aria-modal="true" aria-label="Audit detail" @onclick:stopPropagation="true">
+            <div class="sc-modal-header">
+                <div class="sc-modal-title">@($"{Entry.Action} — {Entry.EntityName}")</div>
+                <button class="sc-modal-x" type="button" @onclick="Close" aria-label="Close">✕</button>
+            </div>
+            <div class="sc-modal-body">
+                <dl class="audit-detail-grid">
+                    <dt>Timestamp</dt>
+                    <dd class="mono">@FormatTs(Entry.Timestamp) UTC</dd>
+                    <dt>User</dt>
+                    <dd class="mono">@Entry.Username@(Entry.UserId is int uid ? $" (id {uid})" : "")</dd>
+                    <dt>Status</dt>
+                    <dd class="@(Entry.Success ? "audit-status-ok" : "audit-status-fail")">@(Entry.Success ? "Success" : "Failed")</dd>
+                    @if (!string.IsNullOrWhiteSpace(Entry.IpAddress))
+                    {
+                        <dt>IP</dt>
+                        <dd class="mono">@Entry.IpAddress</dd>
+                    }
+                    <dt>Entity</dt>
+                    <dd>@Entry.EntityName</dd>
+                    @if (!string.IsNullOrWhiteSpace(Entry.ErrorMessage))
+                    {
+                        <dt>Error</dt>
+                        <dd class="audit-status-fail">@Entry.ErrorMessage</dd>
+                    }
+                </dl>
+                @if (!string.IsNullOrWhiteSpace(Entry.OldValues))
+                {
+                    <p class="audit-json-label">OLD VALUES</p>
+                    <pre class="audit-json-block">@Entry.OldValues</pre>
+                }
+                @if (!string.IsNullOrWhiteSpace(Entry.NewValues))
+                {
+                    <p class="audit-json-label">NEW VALUES</p>
+                    <pre class="audit-json-block">@Entry.NewValues</pre>
+                }
+            </div>
+            <div class="sc-modal-actions">
+                <button class="btn ghost" type="button" @onclick="Close">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public AuditLog? Entry { get; set; }
+    [Parameter] public EventCallback OnClosed { get; set; }
+
+    private static string FormatTs(DateTimeOffset ts)
+        => ts.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
+
+    private Task Close() => OnClosed.InvokeAsync();
+}

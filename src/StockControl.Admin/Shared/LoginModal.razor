@@ -1,0 +1,82 @@
+@using StockControl.Admin.Auth
+@inject IJSRuntime Js
+@inject NavigationManager Nav
+
+<div class="sc-modal-backdrop login-backdrop" role="presentation">
+    <div class="sc-modal login-modal" role="dialog" aria-modal="true" aria-label="Sign in" @onclick:stopPropagation="true">
+        <div class="sc-modal-header">
+            <div class="sc-modal-title">Sign in</div>
+        </div>
+        <form class="login-form" @onsubmit="SubmitAsync" @onsubmit:preventDefault="true">
+            <div class="sc-modal-body">
+                <label for="login-user">Username</label>
+                <input id="login-user" type="text" autocomplete="username" @bind="_username" disabled="@_busy" />
+
+                <label for="login-pass">Password</label>
+                <div class="login-password-wrap">
+                    <input id="login-pass"
+                           type="@(_showPassword ? "text" : "password")"
+                           autocomplete="current-password"
+                           @bind="_password"
+                           disabled="@_busy" />
+                    <button type="button"
+                            class="login-password-toggle"
+                            tabindex="-1"
+                            aria-label="@(_showPassword ? "Hide password" : "Show password")"
+                            title="@(_showPassword ? "Hide password" : "Show password")"
+                            disabled="@_busy"
+                            @onclick="TogglePassword">
+                        <i class="bi @(_showPassword ? "bi-eye-slash" : "bi-eye")" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_error))
+                {
+                    <p class="login-error">@_error</p>
+                }
+            </div>
+            <div class="sc-modal-actions">
+                <button class="btn success" type="submit" disabled="@_busy">Sign in</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@code {
+    private string _username = "";
+    private string _password = "";
+    private string? _error;
+    private bool _busy;
+    private bool _showPassword;
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    private async Task SubmitAsync()
+    {
+        _error = null;
+        _busy = true;
+        try
+        {
+            var result = await Js.InvokeAsync<LoginJsResult>("loginAdmin", _username.Trim(), _password);
+            if (result is { Ok: true })
+            {
+                Nav.NavigateTo(Nav.Uri, forceLoad: true);
+                return;
+            }
+
+            _error = result?.Error ?? "Sign in failed.";
+        }
+        catch (JSException ex)
+        {
+            _error = string.IsNullOrWhiteSpace(ex.Message) ? "Sign in failed. Please try again." : ex.Message;
+        }
+        catch (Exception)
+        {
+            _error = "Sign in failed. Please try again.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

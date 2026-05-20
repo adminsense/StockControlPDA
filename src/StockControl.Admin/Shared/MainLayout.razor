@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@inject IJSRuntime Js
+@inject NavigationManager Nav
 
 <PageTitle>Stock Control — Admin</PageTitle>
 
@@ -10,9 +12,25 @@
                 Compact master-data registration. On PDAs, the scanner types into the focused field and may send <span class="mono">Enter</span>.
             </p>
         </div>
+        <AuthorizeView>
+            <Authorized>
+                <div class="header-user">
+                    <span class="hint">@context.User.Identity?.Name</span>
+                    <button class="btn ghost" type="button" @onclick="SignOutAsync">Sign out</button>
+                </div>
+            </Authorized>
+        </AuthorizeView>
     </header>
 
     <AdminTabs />
 
     @Body
 </div>
+
+@code {
+    private async Task SignOutAsync()
+    {
+        await Js.InvokeVoidAsync("logoutAdmin");
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+}

@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Stock Control — Admin (Audit Logs mock)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    :root {
+      --bg: #0c111b;
+      --panel: #141c2a;
+      --line: rgba(255, 255, 255, 0.16);
+      --text: #f8fafc;
+      --muted: #b6c4d8;
+      --field-bg: #1e293b;
+      --field-border: rgba(255, 255, 255, 0.28);
+      --field-text: #f8fafc;
+      --placeholder: #cbd5e1;
+      --radius: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      font-family: var(--font);
+      background: linear-gradient(165deg, #0a0f18 0%, var(--bg) 45%);
+      color: var(--text);
+      color-scheme: dark;
+    }
+    body { margin: 0; min-height: 100dvh; padding: 12px; }
+    .shell { max-width: min(1320px, calc(100vw - 24px)); margin: 0 auto; }
+    header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; margin-bottom: 12px;
+    }
+    h1 { margin: 0; font-size: 1.12rem; font-weight: 800; }
+    .sub { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
+    .mock-badge {
+      font-size: 0.62rem; font-weight: 800; text-transform: uppercase;
+      padding: 6px 10px; border-radius: 999px;
+      border: 1px solid rgba(250, 204, 21, 0.45);
+      background: rgba(250, 204, 21, 0.12); color: #fde68a;
+      white-space: nowrap;
+    }
+    nav.tabs {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px;
+    }
+    nav.tabs button {
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); color: var(--muted);
+      padding: 10px 8px; border-radius: 12px; font-size: 0.78rem; font-weight: 700;
+      cursor: pointer; min-height: 44px;
+    }
+    nav.tabs button[aria-selected="true"] {
+      background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.45); color: var(--text);
+    }
+    nav.tabs button[data-tab]:not([data-tab="audit"]) { opacity: 0.9; }
+    section.panel {
+      border: 1px solid var(--line); border-radius: var(--radius);
+      background: var(--panel); padding: 14px; margin-bottom: 12px;
+    }
+    section.panel h2 {
+      margin: 0 0 10px; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #c5d0e0; font-weight: 800;
+    }
+    label { display: block; font-size: 0.72rem; color: #d8e2ef; margin-bottom: 6px; font-weight: 700; }
+    input[type="date"], input[type="search"], select {
+      width: 100%; padding: 12px; border-radius: 12px;
+      border: 1px solid var(--field-border); background-color: var(--field-bg);
+      color: var(--field-text); font-size: 0.95rem; outline: none;
+    }
+    input::placeholder { color: var(--placeholder); opacity: 1; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .filter-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .btn {
+      min-height: 44px; padding: 0 16px; border-radius: 12px;
+      border: 1px solid var(--line); font-size: 0.88rem; font-weight: 800;
+      cursor: pointer; color: var(--text); background: rgba(255, 255, 255, 0.06);
+    }
+    .btn.primary {
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.35), rgba(59, 130, 246, 0.12));
+      border-color: rgba(59, 130, 246, 0.45);
+    }
+    .btn.danger {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.35), rgba(239, 68, 68, 0.12));
+      border-color: rgba(239, 68, 68, 0.45);
+    }
+    .btn.ghost { background: rgba(255, 255, 255, 0.05); }
+    .hint { margin-top: 10px; font-size: 0.74rem; color: #c5d0e0; line-height: 1.45; }
+    .audit-table-scroll { overflow-x: auto; min-width: 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; table-layout: fixed; min-width: 900px; }
+    th, td {
+      padding: 10px 6px; text-align: left; border-bottom: 1px solid var(--line);
+      vertical-align: middle; word-break: break-word;
+    }
+    th {
+      color: #c5d0e0; font-weight: 800; font-size: 0.62rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      position: sticky; top: 0; background: var(--panel); z-index: 1;
+    }
+    tr.row-failed td { background: rgba(239, 68, 68, 0.08); }
+    .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88em; }
+    .badge {
+      display: inline-block; padding: 4px 8px; border-radius: 999px;
+      font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .badge-login { background: rgba(59, 130, 246, 0.2); color: #bfdbfe; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .badge-logout { background: rgba(100, 116, 139, 0.25); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.35); }
+    .badge-fail { background: rgba(239, 68, 68, 0.2); color: #fecaca; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .badge-create { background: rgba(34, 197, 94, 0.2); color: #bbf7d0; border: 1px solid rgba(34, 197, 94, 0.4); }
+    .badge-update { background: rgba(59, 130, 246, 0.2); color: #bfdbfe; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .badge-deactivate { background: rgba(100, 116, 139, 0.2); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.35); }
+    .badge-stock-in { background: rgba(34, 197, 94, 0.18); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.35); }
+    .badge-stock-out { background: rgba(249, 115, 22, 0.2); color: #fed7aa; border: 1px solid rgba(249, 115, 22, 0.4); }
+    .badge-sync { background: rgba(14, 165, 233, 0.2); color: #bae6fd; border: 1px solid rgba(14, 165, 233, 0.4); }
+    .status-ok { color: #86efac; font-weight: 800; }
+    .status-fail { color: #fca5a5; font-weight: 800; }
+    .actions.between { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .mini-actions { display: flex; gap: 8px; }
+    .pager, .view-btn {
+      min-height: 40px; padding: 0 10px; border-radius: 10px;
+      border: 1px solid rgba(59, 130, 246, 0.45);
+      background: rgba(59, 130, 246, 0.16);
+      color: var(--text); font-weight: 800; cursor: pointer;
+    }
+    .view-btn {
+      width: 40px; min-width: 40px; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #bfdbfe;
+    }
+    .pager:disabled { opacity: 0.42; cursor: not-allowed; }
+    .sc-modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
+      display: none; place-items: center; padding: 16px; z-index: 9999;
+    }
+    .sc-modal-backdrop.show { display: grid; }
+    .sc-modal {
+      width: min(640px, 100%); max-height: min(90vh, 720px); overflow: auto;
+      border-radius: var(--radius); border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.15)), var(--panel);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+    }
+    .sc-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid var(--line);
+    }
+    .sc-modal-title { font-weight: 900; text-transform: uppercase; font-size: 0.74rem; }
+    .sc-modal-x {
+      border: none; background: transparent; color: var(--muted);
+      font-size: 1.1rem; cursor: pointer; padding: 4px 8px;
+    }
+    .sc-modal-body { padding: 14px; font-size: 0.85rem; line-height: 1.45; }
+    .detail-grid {
+      display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; margin-bottom: 14px;
+    }
+    .detail-grid dt { color: #94a3b8; font-weight: 700; font-size: 0.72rem; margin: 0; }
+    .detail-grid dd { margin: 0; color: var(--text); }
+    .json-block {
+      margin: 0; padding: 12px; border-radius: 10px;
+      background: rgba(0, 0, 0, 0.25); border: 1px solid var(--line);
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.72rem; line-height: 1.4; overflow-x: auto; white-space: pre-wrap;
+    }
+    .sc-modal-actions { padding: 0 14px 14px; display: flex; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>Stock Control — Admin</h1>
+        <p class="sub">Audit trail (proposal). Admin role <span class="mono">1</span> only — read-only log of sign-in, master data, and PDA stock events.</p>
+      </div>
+      <span class="mock-badge">UI mock</span>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Admin sections">
+      <button type="button" role="tab" data-tab="users">Users</button>
+      <button type="button" role="tab" data-tab="warehouses">Warehouses</button>
+      <button type="button" role="tab" data-tab="locations">Locations</button>
+      <button type="button" role="tab" data-tab="suppliers">Suppliers</button>
+      <button type="button" role="tab" data-tab="products">Products</button>
+      <button type="button" role="tab" data-tab="items">Items (SKU)</button>
+      <button type="button" role="tab" data-tab="minmax">Min / Max</button>
+      <button type="button" role="tab" data-tab="stock">Stock Control</button>
+      <button type="button" role="tab" data-tab="audit" aria-selected="true">Audit Logs</button>
+    </nav>
+
+    <main id="panel-audit" role="tabpanel">
+      <section class="panel">
+        <h2>Filters</h2>
+        <div class="row">
+          <div>
+            <label for="audit-from">Date from</label>
+            <input id="audit-from" type="date" value="2026-05-01" />
+          </div>
+          <div>
+            <label for="audit-to">Date to</label>
+            <input id="audit-to" type="date" value="2026-05-20" />
+          </div>
+        </div>
+        <div class="row3">
+          <div>
+            <label for="audit-action">Action</label>
+            <select id="audit-action">
+              <option selected>All</option>
+              <optgroup label="Authentication">
+                <option>Login</option>
+                <option>LoginFailed</option>
+                <option>Logout</option>
+              </optgroup>
+              <optgroup label="Master data">
+                <option>Create</option>
+                <option>Update</option>
+                <option>Activate</option>
+                <option>Deactivate</option>
+              </optgroup>
+              <optgroup label="Stock">
+                <option>StockIn</option>
+                <option>StockOut</option>
+                <option>Sync</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label for="audit-user">User</label>
+            <input id="audit-user" type="search" placeholder="username" autocomplete="off" />
+          </div>
+          <div>
+            <label for="audit-status">Status</label>
+            <select id="audit-status">
+              <option selected>All</option>
+              <option>Success</option>
+              <option>Failed</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button type="button" class="btn primary"><i class="bi bi-funnel"></i> Apply filters</button>
+          <button type="button" class="btn danger"><i class="bi bi-x-lg"></i> Clear</button>
+        </div>
+        <p class="hint">Simplified vs Immo: no severity filter, no badge legend modal, no export. Retention ~90 days (proposal).</p>
+      </section>
+
+      <section class="panel">
+        <h2>Audit log</h2>
+        <div class="audit-table-scroll">
+          <table class="audit-table" aria-label="Audit log entries">
+            <thead>
+              <tr>
+                <th style="width:14%">Timestamp</th>
+                <th style="width:12%">Action</th>
+                <th style="width:14%">Entity</th>
+                <th style="width:12%">User</th>
+                <th style="width:12%">IP</th>
+                <th style="width:9%">Status</th>
+                <th style="width:6%">View</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-detail="stockin">
+                <td class="mono">2026-05-20 14:32:08</td>
+                <td><span class="badge badge-stock-in">StockIn</span></td>
+                <td>StockMovement</td>
+                <td class="mono">scanner1</td>
+                <td class="mono">192.168.1.42</td>
+                <td class="status-ok">✓ OK</td>
+                <td><button type="button" class="view-btn" title="View details" aria-label="View"><i class="bi bi-eye"></i></button></td>
+              </tr>
+              <tr data-detail="update">
+                <td class="mono">2026-05-20 14:18:55</td>
+                <td><span class="badge badge-update">Update</span></td>
+                <td>Item</td>
+                <td class="mono">admin</td>
+                <td class="mono">10.0.0.8</td>
+                <td class="status-ok">✓ OK</td>
+                <td><button type="button" class="view-btn" title="View details"><i class="bi bi-eye"></i></button></td>
+              </tr>
+              <tr data-detail="login-fail" class="row-failed">
+                <td class="mono">2026-05-20 13:05:12</td>
+                <td><span class="badge badge-fail">LoginFailed</span></td>
+                <td>Auth</td>
+                <td class="mono">unknown</td>
+                <td class="mono">203.0.113.9</td>
+                <td class="status-fail">✗ Failed</td>
+                <td><button type="button" class="view-btn" title="View details"><i class="bi bi-eye"></i></button></td>
+              </tr>
+              <tr data-detail="login">
+                <td class="mono">2026-05-20 08:01:03</td>
+                <td><span class="badge badge-login">Login</span></td>
+                <td>Auth</td>
+                <td class="mono">admin</td>
+                <td class="mono">10.0.0.8</td>
+                <td class="status-ok">✓ OK</td>
+                <td><button type="button" class="view-btn" title="View details"><i class="bi bi-eye"></i></button></td>
+              </tr>
+              <tr data-detail="stockout">
+                <td class="mono">2026-05-19 16:44:21</td>
+                <td><span class="badge badge-stock-out">StockOut</span></td>
+                <td>StockMovement</td>
+                <td class="mono">scanner2</td>
+                <td class="mono">192.168.1.55</td>
+                <td class="status-ok">✓ OK</td>
+                <td><button type="button" class="view-btn" title="View details"><i class="bi bi-eye"></i></button></td>
+              </tr>
+              <tr data-detail="deactivate">
+                <td class="mono">2026-05-19 11:20:00</td>
+                <td><span class="badge badge-deactivate">Deactivate</span></td>
+                <td>User</td>
+                <td class="mono">admin</td>
+                <td class="mono">10.0.0.8</td>
+                <td class="status-ok">✓ OK</td>
+                <td><button type="button" class="view-btn" title="View details"><i class="bi bi-eye"></i></button></td>
+              </tr>
+              <tr data-detail="sync">
+                <td class="mono">2026-05-19 09:15:33</td>
+                <td><span class="badge badge-sync">Sync</span></td>
+                <td>Stock</td>
+                <td class="mono">admin</td>
+                <td class="mono">10.0.0.8</td>
+                <td class="status-ok">✓ OK</td>
+                <td><button type="button" class="view-btn" title="View details"><i class="bi bi-eye"></i></button></td>
+              </tr>
+              <tr data-detail="logout">
+                <td class="mono">2026-05-18 17:30:00</td>
+                <td><span class="badge badge-logout">Logout</span></td>
+                <td>Auth</td>
+                <td class="mono">scanner1</td>
+                <td class="mono">192.168.1.42</td>
+                <td class="status-ok">✓ OK</td>
+                <td><button type="button" class="view-btn" title="View details"><i class="bi bi-eye"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="actions between">
+          <div class="hint" style="margin:0">Showing <strong>1</strong>-<strong>25</strong> of <strong>312</strong></div>
+          <div class="mini-actions">
+            <button class="pager" disabled>Prev</button>
+            <button class="pager">Next</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="sc-modal-backdrop" id="detail-backdrop" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <div class="sc-modal">
+      <div class="sc-modal-header">
+        <span class="sc-modal-title" id="detail-title">Audit detail</span>
+        <button type="button" class="sc-modal-x" id="detail-close" aria-label="Close">✕</button>
+      </div>
+      <div class="sc-modal-body" id="detail-body"></div>
+      <div class="sc-modal-actions">
+        <button type="button" class="btn ghost" id="detail-ok">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var details = {
+        stockin: {
+          title: 'StockIn — StockMovement',
+          html: '<dl class="detail-grid">' +
+            '<dt>Timestamp</dt><dd>2026-05-20 14:32:08 UTC</dd>' +
+            '<dt>User</dt><dd>scanner1 (id 2, role Admin PDA)</dd>' +
+            '<dt>Status</dt><dd class="status-ok">Success</dd>' +
+            '<dt>IP</dt><dd class="mono">192.168.1.42</dd>' +
+            '<dt>Entity</dt><dd>StockMovement</dd>' +
+            '</dl>' +
+            '<p style="margin:0 0 6px;font-weight:700;font-size:0.72rem;color:#94a3b8">NEW VALUES</p>' +
+            '<pre class="json-block">{\n  "locationCode": "A01-01",\n  "itemCode": "947219001-011171",\n  "quantity": 2,\n  "direction": "IN",\n  "quantityAfter": 2\n}</pre>'
+        },
+        update: {
+          title: 'Update — Item',
+          html: '<dl class="detail-grid">' +
+            '<dt>Timestamp</dt><dd>2026-05-20 14:18:55 UTC</dd>' +
+            '<dt>User</dt><dd>admin (id 1)</dd>' +
+            '<dt>Status</dt><dd class="status-ok">Success</dd>' +
+            '</dl>' +
+            '<p style="margin:0 0 6px;font-weight:700;font-size:0.72rem;color:#94a3b8">OLD VALUES</p>' +
+            '<pre class="json-block">{\n  "min": 0,\n  "max": 25\n}</pre>' +
+            '<p style="margin:12px 0 6px;font-weight:700;font-size:0.72rem;color:#94a3b8">NEW VALUES</p>' +
+            '<pre class="json-block">{\n  "min": 20,\n  "max": 100\n}</pre>'
+        },
+        'login-fail': {
+          title: 'LoginFailed',
+          html: '<dl class="detail-grid">' +
+            '<dt>Timestamp</dt><dd>2026-05-20 13:05:12 UTC</dd>' +
+            '<dt>User</dt><dd>unknown</dd>' +
+            '<dt>Status</dt><dd class="status-fail">Failed</dd>' +
+            '<dt>Error</dt><dd>Invalid username or password.</dd>' +
+            '</dl>'
+        },
+        login: {
+          title: 'Login — admin',
+          html: '<dl class="detail-grid">' +
+            '<dt>Timestamp</dt><dd>2026-05-20 08:01:03 UTC</dd>' +
+            '<dt>User</dt><dd>admin (id 1, role Admin)</dd>' +
+            '<dt>App</dt><dd>Admin web (JWT cookie)</dd>' +
+            '<dt>Status</dt><dd class="status-ok">Success</dd>' +
+            '</dl>'
+        },
+        stockout: {
+          title: 'StockOut — StockMovement',
+          html: '<dl class="detail-grid">' +
+            '<dt>Timestamp</dt><dd>2026-05-19 16:44:21 UTC</dd>' +
+            '<dt>User</dt><dd>scanner2 (id 3)</dd>' +
+            '</dl>' +
+            '<pre class="json-block">{\n  "locationCode": "A01-03-R2",\n  "itemCode": "942216000-011164",\n  "quantity": 1,\n  "direction": "OUT",\n  "quantityAfter": 4\n}</pre>'
+        },
+        deactivate: {
+          title: 'Deactivate — User',
+          html: '<dl class="detail-grid">' +
+            '<dt>User</dt><dd>admin</dd>' +
+            '<dt>Entity</dt><dd>User (olduser)</dd>' +
+            '</dl>' +
+            '<pre class="json-block">{\n  "username": "olduser",\n  "isActive": false\n}</pre>'
+        },
+        sync: {
+          title: 'Sync — Stock catalog',
+          html: '<dl class="detail-grid">' +
+            '<dt>User</dt><dd>admin</dd>' +
+            '<dt>Note</dt><dd>Catalog activity changed; grid reloaded.</dd>' +
+            '</dl>'
+        },
+        logout: {
+          title: 'Logout — scanner1',
+          html: '<dl class="detail-grid">' +
+            '<dt>Timestamp</dt><dd>2026-05-18 17:30:00 UTC</dd>' +
+            '<dt>User</dt><dd>scanner1 (PDA session ended)</dd>' +
+            '<dt>App</dt><dd>PDA API / device</dd>' +
+            '</dl>'
+        }
+      };
+
+      var backdrop = document.getElementById('detail-backdrop');
+      var titleEl = document.getElementById('detail-title');
+      var bodyEl = document.getElementById('detail-body');
+
+      function openDetail(key) {
+        var d = details[key];
+        if (!d) return;
+        titleEl.textContent = d.title;
+        bodyEl.innerHTML = d.html;
+        backdrop.classList.add('show');
+      }
+
+      function closeDetail() {
+        backdrop.classList.remove('show');
+      }
+
+      document.querySelectorAll('tbody tr[data-detail] .view-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var row = btn.closest('tr');
+          openDetail(row.getAttribute('data-detail'));
+        });
+      });
+
+      document.getElementById('detail-close').addEventListener('click', closeDetail);
+      document.getElementById('detail-ok').addEventListener('click', closeDetail);
+      backdrop.addEventListener('click', function (e) {
+        if (e.target === backdrop) closeDetail();
+      });
+
+      document.querySelectorAll('nav.tabs button[data-tab]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var tab = btn.getAttribute('data-tab');
+          if (tab === 'audit') return;
+          if (tab === 'stock') {
+            window.location.href = 'stock-control-admin-mock.html';
+            return;
+          }
+          window.location.href = 'stock-control-admin--details-mock.html';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

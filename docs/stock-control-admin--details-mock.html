@@ -37,7 +37,7 @@
     .sub { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
     nav.tabs {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
       margin-bottom: 12px;
     }
@@ -284,6 +284,7 @@
       <button type="button" role="tab" data-tab="items">Items (SKU)</button>
       <button type="button" role="tab" data-tab="minmax">Min / Max</button>
       <button type="button" role="tab" data-tab="stock">Stock Control</button>
+      <button type="button" role="tab" data-tab="audit">Audit Logs</button>
     </nav>
 
     <!-- USERS -->
@@ -857,6 +858,10 @@
           var tab = btn.getAttribute('data-tab');
           if (tab === 'stock') {
             window.location.href = 'stock-control-admin-mock.html';
+            return;
+          }
+          if (tab === 'audit') {
+            window.location.href = 'stock-control-admin--audit-mock.html';
             return;
           }
           selectTab(tab);

@@ -32,7 +32,7 @@
     h1 { margin: 0; font-size: 1.12rem; font-weight: 800; }
     .sub { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
     nav.tabs {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px;
     }
     nav.tabs button {
       border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); color: var(--muted);
@@ -42,8 +42,8 @@
     nav.tabs button[aria-selected="true"] {
       background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.45); color: var(--text);
     }
-    nav.tabs button[data-tab]:not([data-tab="stock"]):not([data-tab="users"]) { cursor: default; opacity: 0.85; }
-    nav.tabs button[data-tab="users"] { cursor: pointer; }
+    nav.tabs button[data-tab]:not([data-tab="stock"]):not([data-tab="users"]):not([data-tab="audit"]) { cursor: default; opacity: 0.85; }
+    nav.tabs button[data-tab="users"], nav.tabs button[data-tab="audit"] { cursor: pointer; }
     section.panel {
       border: 1px solid var(--line); border-radius: var(--radius);
       background: var(--panel); padding: 14px; margin-bottom: 12px;
@@ -132,6 +132,7 @@
       <button type="button" role="tab" data-tab="items">Items (SKU)</button>
       <button type="button" role="tab" data-tab="minmax">Min / Max</button>
       <button type="button" role="tab" data-tab="stock" aria-selected="true">Stock Control</button>
+      <button type="button" role="tab" data-tab="audit">Audit Logs</button>
     </nav>
 
     <main id="panel-stock" role="tabpanel">
@@ -301,9 +302,9 @@
 
       document.querySelectorAll('nav.tabs button[data-tab]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          if (btn.getAttribute('data-tab') === 'users') {
-            window.location.href = 'stock-control-admin--details-mock.html';
-          }
+          var tab = btn.getAttribute('data-tab');
+          if (tab === 'users') window.location.href = 'stock-control-admin--details-mock.html';
+          if (tab === 'audit') window.location.href = 'stock-control-admin--audit-mock.html';
         });
       });
     })();

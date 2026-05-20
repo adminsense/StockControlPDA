@@ -17,7 +17,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 ### 🔐 Sign in
 
 <p align="center">
-  <img src="./images/mock_login.png" alt="Stock Control — PDA sign in" width="480" />
+  <img src="./images/pda-login-stock.png" alt="Stock Control — PDA sign in" width="420" />
 </p>
 
 Same login layout as Admin (white card, underline fields, purple **Sign in**). Title: **Stock Control — PDA**.
@@ -120,7 +120,7 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 <tr><th width="520" align="left" valign="top">Screen</th><th align="left" valign="top">Role</th></tr>
 </thead>
 <tbody>
-<tr><td width="520" align="left" valign="top"><strong>Login</strong></td><td align="left" valign="top">Implemented — <code>LoginPage.xaml</code>, JWT Bearer. Test user <code>pda</code> / <code>Pda2!Stock</code> (screenshot: <code>images/mock_login.png</code>).</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Login</strong></td><td align="left" valign="top">Implemented — <code>LoginPage.xaml</code>, JWT Bearer. Test user <code>pda</code> / <code>Pda2!Stock</code> (screenshot: <code>images/pda-login-stock.png</code>).</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Min/Max alerts</strong></td><td align="left" valign="top">List below min / above max with filters (planned).</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Quick lookup</strong></td><td align="left" valign="top">Balance by item/location (planned).</td></tr>
 </tbody>

@@ -18,10 +18,10 @@ Open in a browser. These previews mirror **current** Blazor Admin and MAUI PDA �
 
 Same screen everywhere: dark backdrop `#0c111b`, **white card**, bold labels, **underline** inputs, purple **Sign in** `#512bd4`.
 
-| | Title |
-|---|--------|
-| **Admin** | Stock Control — Admin |
-| **PDA** | Stock Control — PDA |
+| | Title | Screenshot in repo |
+|---|--------|-------------------|
+| **Admin** | Stock Control — Admin | `readme/images/mock_login.png` |
+| **PDA** | Stock Control — PDA | `readme/images/pda-login-stock.png` |
 
 No role hint under the title (production UI).
 

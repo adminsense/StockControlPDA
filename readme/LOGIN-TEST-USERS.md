@@ -11,4 +11,4 @@ Use these accounts after applying migrations and [`scripts/seed-user-passwords.s
 - Passwords are stored as hashes in `users.Password`; the script above sets both test users.
 - Create additional users in **Admin → Users** (role **1** or **2**, password required on **Save**).
 
-**Screenshots:** [`images/mock_login.png`](./images/mock_login.png) — same login layout (white card, underline fields, purple **Sign in**) for Admin and PDA.
+**Screenshots:** Admin — [`images/mock_login.png`](./images/mock_login.png); PDA — [`images/pda-login-stock.png`](./images/pda-login-stock.png) (white card, underline fields, purple **Sign in**).

@@ -43,7 +43,7 @@ Apply passwords: [`scripts/seed-user-passwords.sql`](../scripts/seed-user-passwo
 </thead>
 <tbody>
 <tr><td width="520" align="left" valign="top"><strong>Platform</strong></td><td align="left" valign="top">Android PDA</td></tr>
-<tr><td width="520" align="left" valign="top"><strong>Workflow</strong></td><td align="left" valign="top">Mock <a href="../docs/pda-move-stock.html"><code>pda-move-stock.html</code></a>: scan product → stock location dropdown → quantity Add/Subtract — same screen as before, fields reordered.</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Workflow</strong></td><td align="left" valign="top">One screen: scan product (or pick item) → location (dropdown or scan) → quantity <strong>Inbound (+)</strong> / <strong>Outbound (−)</strong>. Layout: <code>readme/images/pda-move-stock.png</code>, <code>MainPage.xaml</code>, <a href="../docs/stock-control-pda-mock.html"><code>stock-control-pda-mock.html</code></a>.</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Scanner</strong></td><td align="left" valign="top">Keyboard wedge (text + Enter)</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Connectivity</strong></td><td align="left" valign="top">Online (MVP)</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>MAUI targets</strong></td><td align="left" valign="top"><strong>Android only</strong> — <code>Platforms/Android</code> only (<code>net10.0-android</code>, min API 21). iOS / Windows / Mac Catalyst folders are not in this repo.</td></tr>
@@ -86,8 +86,16 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 ## 🎨 4. Move stock — UI mock & MAUI behaviour
 
 <p align="center">
-  <img src="./images/pda-move-stock.png" alt="PDA — Move stock (mock screenshot)" width="420" />
+  <img src="./images/pda-move-stock.png" alt="PDA — Move stock" width="420" />
 </p>
+
+**Screen layout** (`readme/images/pda-move-stock.png` = reference for code + mock):
+
+1. **Warehouse** (dropdown)
+2. **Location** + **Item** (dropdowns, same row)
+3. **Scan or type code** (scanner focus; product or location code + Enter)
+4. **Summary** — item, on hand, min/max, status
+5. **Quantity** — stepper **− / +**, **Outbound (−)** / **Inbound (+)**; **Sync** | **Reset flow**
 
 <table width="100%" border="0" cellspacing="0" cellpadding="10" style="table-layout:fixed">
 <colgroup><col width="520" /><col /></colgroup>
@@ -95,10 +103,11 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 <tr><th width="520" align="left" valign="top">Area (mock)</th><th align="left" valign="top">Intended behaviour</th></tr>
 </thead>
 <tbody>
-<tr><td width="520" align="left" valign="top">⌨️ <strong>Scan product code</strong></td><td align="left" valign="top">First field. Keyboard wedge + <strong>Enter</strong> resolves <strong>product</strong> (SKU / barcode / article number — <strong>section 5</strong>). Shown under the scan field when recognized.</td></tr>
-<tr><td width="520" align="left" valign="top">📍 <strong>Stock location</strong></td><td align="left" valign="top"><strong>Dropdown</strong> (warehouse implied in label, e.g. <code>WH01 · A01-01</code>). Second field on the same card.</td></tr>
-<tr><td width="520" align="left" valign="top">📊 <strong>Summary</strong></td><td align="left" valign="top"><strong>Product</strong>, <strong>location</strong>, <strong>on hand</strong>, <strong>min/max</strong>, status pill — server lookups (<code>/api/pda/catalog/summary</code>).</td></tr>
-<tr><td width="520" align="left" valign="top">🔢 <strong>Quantity</strong></td><td align="left" valign="top">Stepper <strong>− / +</strong> then <strong>Add (+)</strong> / <strong>Subtract (−)</strong>. <strong>Sync</strong> | <strong>Reset flow</strong> unchanged.</td></tr>
+<tr><td width="520" align="left" valign="top">🏭 <strong>Warehouse</strong></td><td align="left" valign="top">Dropdown at top of the card (filters locations).</td></tr>
+<tr><td width="520" align="left" valign="top">📍 <strong>Location</strong> + 🏷️ <strong>Item</strong></td><td align="left" valign="top">Side-by-side dropdowns; can be set before or after scan.</td></tr>
+<tr><td width="520" align="left" valign="top">⌨️ <strong>Scan or type code</strong></td><td align="left" valign="top">Keyboard wedge + <strong>Enter</strong>: product code → selects <strong>Item</strong>; location code (≤ 12) → selects <strong>Location</strong> (<strong>section 5</strong>).</td></tr>
+<tr><td width="520" align="left" valign="top">📊 <strong>Summary</strong></td><td align="left" valign="top"><strong>Item</strong>, on hand, min/max, status — <code>/api/pda/catalog/summary</code>.</td></tr>
+<tr><td width="520" align="left" valign="top">🔢 <strong>Quantity</strong></td><td align="left" valign="top">Stepper <strong>− / +</strong>, then <strong>Inbound (+)</strong> / <strong>Outbound (−)</strong>. <strong>Sync</strong> | <strong>Reset flow</strong>.</td></tr>
 <tr><td width="520" align="left" valign="top">🔄 <strong>Sync</strong> | <strong>Reset flow</strong></td><td align="left" valign="top">Same row. <strong>Sync</strong> → <code>GET /api/stock/sync</code> (MVP: counts + connectivity); after success, <strong>reload catalog pickers</strong> from <code>/api/pda/catalog/...</code>. <strong>Reset</strong> clears selection + quantity (mock + MAUI).</td></tr>
 </tbody>
 </table>
@@ -117,19 +126,17 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 </tbody>
 </table>
 
-## 🔁 5. Scan-first flow
+## 🔁 5. Operator flow (one screen)
 
-1. **Scan location**
-   - Validate size (≤ 12) and existence/active status.
-2. **Scan item**
-   - Accept any barcode line stored on the item (`items.Barcodes`, newline-separated).
-3. **Enter quantity**
-   - Default = 1; numeric keypad; minimal validation.
-4. **Confirm action**
-   - Inbound (+) writes `stock_movements(IN)`; Outbound (−) writes `stock_movements(OUT)`.
-   - Update `stock_balances` (or receive updated balance from the API).
+Visual layout is fixed in `pda-move-stock.png` (warehouse → location/item → scan field). **Typical sequence:**
 
-> **Tip:** if the wrong location/item is selected, use **Reset flow** on **Move stock** before scanning again.
+1. **Scan product** — type/scan SKU or barcode in **Scan or type code** + **Enter** → updates **Item** picker and **Summary**.
+2. **Stock location** — pick **Location** (and **Warehouse** if needed), or scan location code in the same field.
+3. **Quantity** — stepper **− / +**, then **Inbound (+)** or **Outbound (−)**.
+
+Pickers and scan work together; order can vary as long as product + location are set before posting.
+
+> **Tip:** wrong selection → **Reset flow**, then scan again.
 
 ## ✅ 6. Rules & validations (MVP)
 

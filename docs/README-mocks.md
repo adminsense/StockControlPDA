@@ -18,10 +18,12 @@ Open in a browser. These previews mirror **current** Blazor Admin and MAUI PDA �
 
 Same screen everywhere: dark backdrop `#0c111b`, **white card**, bold labels, **underline** inputs, purple **Sign in** `#512bd4`.
 
-| | Title | Subtitle |
-|---|--------|----------|
-| **Admin** | Stock Control — Admin | Sign in with your Admin account (role 1). |
-| **PDA** | Stock Control — PDA | Sign in with your Admin PDA account (role 2). |
+| | Title |
+|---|--------|
+| **Admin** | Stock Control — Admin |
+| **PDA** | Stock Control — PDA |
+
+No role hint under the title (production UI).
 
 Mocks match `LoginModal.razor` / `LoginPage.xaml` and `admin-theme.css` (login block overrides global dark inputs).
 
@@ -32,7 +34,7 @@ Mocks match `LoginModal.razor` / `LoginPage.xaml` and `admin-theme.css` (login b
 
 ## PDA
 
-1. Same login as Admin; then **Move stock** (dark UI) — `MainPage.xaml`.
+1. Same login as Admin; then **Move stock** — layout per `readme/images/pda-move-stock.png` (`MainPage.xaml` + this mock).
 2. Mock: **Sign in** without credentials (preview).
 3. Real app: `POST /api/auth/login?app=pda` → Bearer → `//MainPage`.
 

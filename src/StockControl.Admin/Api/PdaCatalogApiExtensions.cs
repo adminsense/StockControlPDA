@@ -9,10 +9,10 @@ public static class PdaCatalogApiExtensions
 {
     public static WebApplication MapPdaCatalogApi(this WebApplication app)
     {
-        app.MapGet("/api/pda/catalog/warehouses", ListWarehousesAsync).DisableAntiforgery();
-        app.MapGet("/api/pda/catalog/warehouses/{warehouseId:int}/locations", ListLocationsAsync).DisableAntiforgery();
-        app.MapGet("/api/pda/catalog/items", ListItemsAsync).DisableAntiforgery();
-        app.MapGet("/api/pda/catalog/summary", GetSummaryAsync).DisableAntiforgery();
+        app.MapGet("/api/pda/catalog/warehouses", ListWarehousesAsync).RequireAuthorization("PdaOnly").DisableAntiforgery();
+        app.MapGet("/api/pda/catalog/warehouses/{warehouseId:int}/locations", ListLocationsAsync).RequireAuthorization("PdaOnly").DisableAntiforgery();
+        app.MapGet("/api/pda/catalog/items", ListItemsAsync).RequireAuthorization("PdaOnly").DisableAntiforgery();
+        app.MapGet("/api/pda/catalog/summary", GetSummaryAsync).RequireAuthorization("PdaOnly").DisableAntiforgery();
         return app;
     }
 

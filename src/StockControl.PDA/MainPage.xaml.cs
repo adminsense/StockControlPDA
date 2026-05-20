@@ -35,8 +35,25 @@ public partial class MainPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        var session = ServiceHelper.Services.GetRequiredService<IAuthSession>();
+        if (!await session.IsLoggedInAsync())
+        {
+            await Shell.Current.GoToAsync("//Login");
+            return;
+        }
+
+        var name = await session.GetDisplayNameAsync();
+        UserLabel.Text = string.IsNullOrWhiteSpace(name) ? "" : $"Signed in as {name}";
+
         await LoadInitialCatalogAsync();
         Dispatcher.Dispatch(() => ScanEntry.Focus());
+    }
+
+    private async void OnSignOutClicked(object? sender, EventArgs e)
+    {
+        var session = ServiceHelper.Services.GetRequiredService<IAuthSession>();
+        await session.ClearAsync();
+        await Shell.Current.GoToAsync("//Login");
     }
 
     private async Task LoadInitialCatalogAsync()

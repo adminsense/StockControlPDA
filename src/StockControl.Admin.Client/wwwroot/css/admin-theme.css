@@ -115,8 +115,16 @@ header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  gap: 16px;
   margin-bottom: 12px;
+}
+
+.header-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 h1 {
@@ -588,6 +596,33 @@ input:focus, select:focus, textarea:focus {
   color: #d1dae6;
   font-size: 0.85rem;
   line-height: 1.4;
+}
+
+.login-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+}
+
+.login-modal {
+  width: min(360px, calc(100vw - 32px));
+}
+
+.login-form label {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.login-form input {
+  width: 100%;
+}
+
+.login-error {
+  margin: 10px 0 0;
+  color: #fecaca;
+  font-size: 0.8rem;
 }
 
 table {

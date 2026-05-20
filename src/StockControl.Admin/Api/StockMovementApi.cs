@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StockControl.Admin.Auth;
 using StockControl.Admin.Data;
 using StockControl.Admin.Validation;
 
@@ -18,9 +20,11 @@ public static class StockMovementApiExtensions
     {
         app.MapPost("/api/stock/movements", HandlePostAsync)
             .WithName("PostStockMovement")
+            .RequireAuthorization("PdaOnly")
             .DisableAntiforgery();
         app.MapGet("/api/stock/sync", HandleGetSyncAsync)
             .WithName("GetStockCatalogSync")
+            .RequireAuthorization("PdaOnly")
             .DisableAntiforgery();
         return app;
     }
@@ -46,6 +50,7 @@ public static class StockMovementApiExtensions
     }
 
     private static async Task<IResult> HandlePostAsync(
+        HttpContext http,
         [FromBody] StockMovementApiRequest dto,
         [FromServices] IDbContextFactory<AppDbContext> dbFactory,
         CancellationToken cancellationToken)
@@ -124,19 +129,9 @@ public static class StockMovementApiExtensions
         if (itemId == 0)
             return Results.BadRequest("Unknown or inactive item (SKU, barcode, or article number).");
 
-        var userId = dto.UserId ?? 0;
+        var userId = GetAuthenticatedUserId(http);
         if (userId <= 0)
-        {
-            userId = await db.Users
-                .AsNoTracking()
-                .Where(u => u.IsActive)
-                .OrderBy(u => u.Id)
-                .Select(u => u.Id)
-                .FirstOrDefaultAsync(cancellationToken);
-        }
-
-        if (userId <= 0)
-            return Results.BadRequest("No active user in database (set userId in request for MVP testing).");
+            return Results.Unauthorized();
 
         var userExists = await db.Users.AsNoTracking().AnyAsync(u => u.Id == userId && u.IsActive, cancellationToken);
         if (!userExists)
@@ -205,5 +200,12 @@ public static class StockMovementApiExtensions
         }
 
         return Results.Ok(new { ok = true, message = "Saved." });
+    }
+
+    private static int GetAuthenticatedUserId(HttpContext http)
+    {
+        var raw = http.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? http.User.FindFirstValue(AuthConstants.UserIdClaim);
+        return int.TryParse(raw, out var id) ? id : 0;
     }
 }

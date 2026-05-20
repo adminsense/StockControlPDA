@@ -416,7 +416,7 @@ A user can only sign in where their role matches the app. Example: role **2** ca
 
 ### Configuration (`Jwt` in appsettings)
 
-Copy from `src/StockControl.Admin/appsettings.example.json` into your local `appsettings.json` (not committed — see repo `.gitignore`).
+Copy from `src/StockControl.Admin/appsettings.example.json` into your local `appsettings.json` (not committed — see repo `.gitignore`). **Login** uses SQL `users` username/password; **Jwt:Key** only signs the session token.
 
 ```json
 {
@@ -431,7 +431,7 @@ Copy from `src/StockControl.Admin/appsettings.example.json` into your local `app
 
 | Setting | Description |
 |---------|-------------|
-| `Key` | Symmetric signing secret (HMAC-SHA256). **Required in production** (Azure App Settings: `Jwt__Key`). Minimum ~32 characters. |
+| `Key` | Symmetric signing secret (HMAC-SHA256) for JWT **after** login — **not** the user password. Default in `appsettings.Production.json` (deployed with the app). Optional override: Azure `Jwt__Key`. |
 | `Issuer` / `Audience` | Validated on every token (Admin cookie and PDA Bearer). |
 | `ExpiryHours` | Token lifetime (default **12**). After expiry, sign in again. |
 

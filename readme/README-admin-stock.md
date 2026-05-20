@@ -62,6 +62,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 | 🧩 **Min/Max** | Dedicated **Min / Max** tab (`/minmax`): targets per warehouse + item + **location** (location required) |
 | 📦 **Stock** | On-hand per Warehouse + Location + Item |
 | 🌐 **Language** | English (UI + validation messages) |
+| 🔐 **Auth** | JWT (Admin: HttpOnly cookie; PDA: Bearer token). Roles **1** = Admin, **2** = Admin PDA |
 
 ---
 
@@ -122,12 +123,14 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
     <tr>
       <td><code>users</code></td>
       <td>
-        <code>Username</code>, <code>Name</code>, <code>IsActive</code>
+        <code>Username</code>, <code>Name</code>, <code>Role</code>, <code>Password</code>, <code>IsActive</code>
       </td>
       <td>
         <ul>
           <li><code>Username</code> required, unique, ≤ 50</li>
           <li><code>Name</code> required, ≤ 50</li>
+          <li><code>Role</code> required, <code>int</code> — only codes stored: <strong>1</strong> = Admin (web), <strong>2</strong> = Admin PDA (scanner app)</li>
+          <li><code>Password</code> optional in DB until set; stores a <strong>hash</strong> (not plain text), ≤ 500 chars</li>
         </ul>
       </td>
     </tr>
@@ -246,14 +249,17 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
   <tbody>
     <tr>
       <td>👥 <strong>Users</strong></td>
-      <td>Create / Edit / Activate / Deactivate users</td>
+      <td>Create / Edit / Activate / Deactivate users; assign role and password for Admin / PDA sign-in</td>
       <td>
-        <code>Username</code>, <code>Name</code>, <code>Status</code>
+        <code>Username</code>, <code>Name</code>, <code>Role</code> (1 or 2), <code>Password</code>, <code>Status</code>
       </td>
       <td>
         <ul>
           <li><code>Username</code> required, unique, ≤ 50</li>
           <li><code>Name</code> required, ≤ 50</li>
+          <li><code>Role</code>: <strong>1</strong> = Admin (web only), <strong>2</strong> = Admin PDA (PDA app only)</li>
+          <li><code>Password</code> required on <strong>Save</strong> (new user); on <strong>Update</strong>, leave blank to keep the current hash</li>
+          <li>Minimum password length: 6 characters</li>
         </ul>
       </td>
     </tr>
@@ -364,6 +370,159 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
     </tr>
   </tbody>
 </table>
+
+---
+
+## Authentication (JWT — Admin + PDA)
+
+Both the **Admin (Blazor Server)** and the **PDA (MAUI)** use the **same JWT** format: one signing key, one issuer/audience, and the same claims. Passwords are never stored in plain text — only a hash in the SQL column `users.Password`.
+
+### Roles (`users.Role`)
+
+| Code | Enum (C#) | Who uses it | Purpose |
+|------|-----------|-------------|---------|
+| **1** | `UserRole.Admin` | **Admin web** (desktop browser) | Master data, Stock tab, Users management |
+| **2** | `UserRole.AdminPda` | **PDA app** (Android) | Move stock, catalog sync, scan workflows |
+
+A user can only sign in where their role matches the app. Example: role **2** cannot open the Admin UI; role **1** cannot sign in on the PDA.
+
+### Configuration (`Jwt` in appsettings)
+
+Copy from `src/StockControl.Admin/appsettings.example.json` into your local `appsettings.json` (not committed — see repo `.gitignore`).
+
+```json
+{
+  "Jwt": {
+    "Key": "change-this-to-a-long-random-secret-at-least-32-chars",
+    "Issuer": "StockControl",
+    "Audience": "StockControl",
+    "ExpiryHours": 12
+  }
+}
+```
+
+| Setting | Description |
+|---------|-------------|
+| `Key` | Symmetric signing secret (HMAC-SHA256). **Required in production** (Azure App Settings: `Jwt__Key`). Minimum ~32 characters. |
+| `Issuer` / `Audience` | Validated on every token (Admin cookie and PDA Bearer). |
+| `ExpiryHours` | Token lifetime (default **12**). After expiry, sign in again. |
+
+In **Development**, if `Jwt:Key` is missing, a dev-only default is used (do not rely on this in production).
+
+### How sign-in works
+
+#### Admin (web)
+
+1. Opening any Admin route without a valid JWT shows a **login modal** (`Shared/LoginModal.razor`) — username + password.
+2. Credentials are checked against `users` where `IsActive = 1` and **`Role = 1`**.
+3. On success, the server issues a JWT via `JwtTokenService` and stores it in an **HttpOnly cookie** named `StockControl.Jwt` (not accessible to JavaScript).
+4. Each HTTP request (including the Blazor circuit) is authenticated with **JWT Bearer** middleware, which reads the token from that cookie.
+5. **Sign out** (header) deletes the cookie and clears the session.
+6. All Admin pages require role claim **`Admin`** (`FallbackPolicy` in `Auth/AuthServiceExtensions.cs`).
+
+Admin does **not** call `POST /api/auth/login` for the UI login; it validates in-process (`AdminSignInService` + `UserAuthService`). The token is the **same** as the one returned by the API for PDA.
+
+#### PDA (Android MAUI)
+
+1. On launch, `AppShell` sends the user to **Login** or **Move stock** depending on whether a token exists in **SecureStorage**.
+2. Login screen (`LoginPage`) calls **`POST /api/auth/login?app=pda`** with JSON `{ "username", "password" }`.
+3. Server validates **`Role = 2`** (`AdminPda`). Response: `{ "ok", "token", "displayName", "error" }`.
+4. The app saves the JWT and display name in SecureStorage (`Services/AuthSession.cs`).
+5. All API `HttpClient` calls attach `Authorization: Bearer <token>` via `AuthTokenHandler`.
+6. **Sign out** on the Move stock screen clears storage and returns to Login.
+
+### Login API (shared by PDA; same token builder as Admin)
+
+| Method | Route | Query | Role required |
+|--------|-------|-------|----------------|
+| `POST` | `/api/auth/login` | `app=pda` | **2** (Admin PDA) |
+| `POST` | `/api/auth/login` | *(omit or any value ≠ `pda`)* | **1** (Admin) |
+
+Example (PDA):
+
+```http
+POST /api/auth/login?app=pda
+Content-Type: application/json
+
+{"username":"scanner1","password":"YourPassword"}
+```
+
+Success (`200`):
+
+```json
+{"ok":true,"token":"<JWT>","displayName":"Scanner One","error":null}
+```
+
+Failure (`401`):
+
+```json
+{"ok":false,"token":null,"displayName":null,"error":"Invalid username or password."}
+```
+
+### Protected API endpoints (PDA only)
+
+These require a valid JWT with role **`AdminPda`** (`PdaOnly` policy):
+
+| Area | Routes |
+|------|--------|
+| Stock movements | `POST /api/stock/movements` |
+| Catalog sync | `GET /api/stock/sync` |
+| PDA catalog | `GET /api/pda/catalog/warehouses`, `.../locations`, `.../items`, `.../summary` |
+
+The movement API sets **`UserId`** from the JWT (`NameIdentifier` / `uid` claim), not from the request body — each scan is tied to the signed-in user.
+
+### JWT claims (inside the token)
+
+| Claim | Meaning |
+|-------|---------|
+| `NameIdentifier` / `uid` | `users.Id` |
+| `Name` | `users.Username` |
+| `display_name` | `users.Name` |
+| `role` | `Admin` or `AdminPda` (matches app access) |
+
+Implementation: `Auth/UserAuthService.cs` (`CreatePrincipal`), `Auth/JwtTokenService.cs` (`CreateToken`).
+
+### Database migration
+
+Migration **`AddUserRoleAndPassword`** adds:
+
+- `users.Role` (`int`, NOT NULL, default **2** for existing rows)
+- `users.Password` (`nvarchar(500)`, nullable until set)
+
+Applied automatically on Admin startup (`MigrateAsync` in `Program.cs`).
+
+### First-time passwords (existing database)
+
+If **every** user has an empty `Password` after migration, the first startup **once** assigns:
+
+- First active user (lowest `Id` among active): **`Role = 1`**, password **`ChangeMe1!`**
+- All other users: **`Role = 2`**, password **`ChangeMe1!`**
+
+Sign in with those credentials, then open **Users** and set proper roles/passwords. **Change `ChangeMe1!` immediately** in production.
+
+For new users, use the **Users** tab: pick role **1** or **2**, set password on **Save**.
+
+### Security notes (small team / ~3 users)
+
+- Always use **HTTPS** in production (Azure); the Admin JWT cookie is marked **Secure** when the request is HTTPS.
+- JWT avoids sending the password on every API call (only at login).
+- Same `Jwt:Key` on the server that hosts Admin + API; PDA only needs `Api:BaseUrl` pointing at that host.
+- Do not commit `appsettings.json` with real secrets; use Azure Application Settings or user secrets locally.
+
+### Code locations
+
+| Topic | Path |
+|-------|------|
+| Entity + enum | `src/StockControl.Admin/Data/Entities.cs` (`UserRole`, `AppUser`) |
+| EF mapping | `src/StockControl.Admin/Data/AppDbContext.cs` |
+| JWT config + policies | `src/StockControl.Admin/Auth/AuthServiceExtensions.cs` |
+| Token create/validate | `src/StockControl.Admin/Auth/JwtTokenService.cs` |
+| Admin sign-in / sign-out | `src/StockControl.Admin/Auth/AdminSignInService.cs` |
+| Login API | `src/StockControl.Admin/Api/AuthApi.cs` |
+| Admin login UI | `src/StockControl.Admin/Shared/LoginModal.razor` |
+| PDA login UI | `src/StockControl.PDA/LoginPage.xaml` |
+| PDA session + Bearer | `src/StockControl.PDA/Services/AuthSession.cs`, `AuthTokenHandler.cs`, `AuthApiClient.cs` |
+| Example config | `src/StockControl.Admin/appsettings.example.json` |
 
 ---
 

@@ -1,4 +1,5 @@
 ﻿@page "/"
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @using Microsoft.AspNetCore.Components.Web
 @namespace StockControl.Admin.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
@@ -32,6 +33,6 @@
     </div>
 
     <script src="_framework/blazor.server.js"></script>
-    <script src="js/stockcontrol.js"></script>
+    <script src="js/stockcontrol.js" asp-append-version="true"></script>
 </body>
 </html>

@@ -1,0 +1,241 @@
+@page "/audit"
+@attribute [Authorize(Roles = AuthConstants.AdminRole)]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using StockControl.Admin.Auth
+@using StockControl.Admin.Data
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<PageTitle>Audit Logs</PageTitle>
+
+<AuditDetailModal Entry="@_detail" OnClosed="CloseDetail" />
+
+<section class="panel">
+    <h2>Filters</h2>
+    <div class="row">
+        <div>
+            <label for="audit-from">Date from</label>
+            <input id="audit-from" type="date" @bind="_dateFrom" @bind:format="yyyy-MM-dd" />
+        </div>
+        <div>
+            <label for="audit-to">Date to</label>
+            <input id="audit-to" type="date" @bind="_dateTo" @bind:format="yyyy-MM-dd" />
+        </div>
+    </div>
+    <div class="row3">
+        <div>
+            <label for="audit-action">Action</label>
+            <select id="audit-action" @bind="_actionFilter">
+                <option value="">All</option>
+                <optgroup label="Authentication">
+                    <option value="@AuditActions.Login">Login</option>
+                    <option value="@AuditActions.LoginFailed">LoginFailed</option>
+                    <option value="@AuditActions.Logout">Logout</option>
+                </optgroup>
+                <optgroup label="Master data">
+                    <option value="@AuditActions.Create">Create</option>
+                    <option value="@AuditActions.Update">Update</option>
+                    <option value="@AuditActions.Activate">Activate</option>
+                    <option value="@AuditActions.Deactivate">Deactivate</option>
+                </optgroup>
+                <optgroup label="Stock">
+                    <option value="@AuditActions.StockIn">StockIn</option>
+                    <option value="@AuditActions.StockOut">StockOut</option>
+                    <option value="@AuditActions.Sync">Sync</option>
+                </optgroup>
+            </select>
+        </div>
+        <div>
+            <label for="audit-user">User</label>
+            <input id="audit-user" type="search" placeholder="username" @bind="_userFilter" autocomplete="off" />
+        </div>
+        <div>
+            <label for="audit-status">Status</label>
+            <select id="audit-status" @bind="_statusFilter">
+                <option value="">All</option>
+                <option value="ok">Success</option>
+                <option value="fail">Failed</option>
+            </select>
+        </div>
+    </div>
+    <div class="actions filter-actions">
+        <button class="btn primary" type="button" @onclick="ApplyFiltersAsync"><i class="bi bi-funnel"></i> Apply filters</button>
+        <button class="btn danger" type="button" @onclick="ClearFiltersAsync"><i class="bi bi-x-lg"></i> Clear</button>
+    </div>
+    <p class="hint">Read-only audit trail. Retention ~90 days (proposal). No entity-id column in grid — open View for JSON detail.</p>
+</section>
+
+<section class="panel">
+    <h2>Audit log</h2>
+    <div class="audit-table-scroll">
+        <table class="audit-table" aria-label="Audit log entries">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>User</th>
+                    <th>IP</th>
+                    <th>Status</th>
+                    <th class="audit-th-view">View</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_rows.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="audit-empty">No audit entries match the filters.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var row in _rows)
+                    {
+                        <tr class="@(row.Success ? "" : "audit-row-failed")">
+                            <td class="mono">@FormatTs(row.Timestamp)</td>
+                            <td><span class="audit-badge @AuditActions.BadgeClass(row.Action)">@row.Action</span></td>
+                            <td>@row.EntityName</td>
+                            <td class="mono">@row.Username</td>
+                            <td class="mono">@(row.IpAddress ?? "—")</td>
+                            <td class="@(row.Success ? "audit-status-ok" : "audit-status-fail")">@(row.Success ? "✓ OK" : "✗ Failed")</td>
+                            <td class="audit-td-view">
+                                <button type="button" class="audit-view-btn" title="View details" aria-label="View" @onclick="() => OpenDetail(row)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="actions" style="justify-content:space-between">
+        <div class="hint" style="margin:0">Showing <strong>@_showFrom</strong>-<strong>@_showTo</strong> of <strong>@_totalRows</strong></div>
+        <div class="mini-actions">
+            <button class="edit" type="button" @onclick="PrevPage" disabled="@(_pageIndex == 0)">Prev</button>
+            <button class="edit" type="button" @onclick="NextPage" disabled="@(_pageIndex >= _maxPageIndex)">Next</button>
+        </div>
+    </div>
+</section>
+
+@code {
+    private const int PageSize = 25;
+
+    private DateTime? _dateFrom;
+    private DateTime? _dateTo;
+    private string _actionFilter = "";
+    private string _userFilter = "";
+    private string _statusFilter = "";
+
+    private DateTime? _appliedDateFrom;
+    private DateTime? _appliedDateTo;
+    private string _appliedAction = "";
+    private string _appliedUser = "";
+    private string _appliedStatus = "";
+
+    private List<AuditLog> _rows = [];
+    private int _pageIndex;
+    private int _totalRows;
+    private AuditLog? _detail;
+
+    private int _maxPageIndex => Math.Max(0, (_totalRows - 1) / PageSize);
+    private int _showFrom => _totalRows == 0 ? 0 : (_pageIndex * PageSize) + 1;
+    private int _showTo => Math.Min(_totalRows, (_pageIndex * PageSize) + PageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var today = DateTime.Today;
+        _dateTo = today;
+        _dateFrom = today.AddDays(-30);
+        await ApplyFiltersAsync();
+    }
+
+    private static string FormatTs(DateTimeOffset ts)
+        => ts.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
+
+    private async Task ApplyFiltersAsync()
+    {
+        _appliedDateFrom = _dateFrom;
+        _appliedDateTo = _dateTo;
+        _appliedAction = _actionFilter;
+        _appliedUser = (_userFilter ?? "").Trim();
+        _appliedStatus = _statusFilter;
+        _pageIndex = 0;
+        await LoadPageAsync();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        var today = DateTime.Today;
+        _dateTo = today;
+        _dateFrom = today.AddDays(-30);
+        _actionFilter = "";
+        _userFilter = "";
+        _statusFilter = "";
+        await ApplyFiltersAsync();
+    }
+
+    private async Task LoadPageAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var q = db.AuditLogs.AsNoTracking().AsQueryable();
+
+        if (_appliedDateFrom is DateTime from)
+        {
+            var start = new DateTimeOffset(from.Date, TimeZoneInfo.Local.GetUtcOffset(from));
+            q = q.Where(x => x.Timestamp >= start);
+        }
+
+        if (_appliedDateTo is DateTime to)
+        {
+            var endLocal = to.Date.AddDays(1).AddTicks(-1);
+            var end = new DateTimeOffset(endLocal, TimeZoneInfo.Local.GetUtcOffset(endLocal));
+            q = q.Where(x => x.Timestamp <= end);
+        }
+
+        if (!string.IsNullOrWhiteSpace(_appliedAction))
+            q = q.Where(x => x.Action == _appliedAction);
+
+        if (!string.IsNullOrWhiteSpace(_appliedUser))
+        {
+            var u = _appliedUser;
+            q = q.Where(x => x.Username.Contains(u));
+        }
+
+        q = _appliedStatus switch
+        {
+            "ok" => q.Where(x => x.Success),
+            "fail" => q.Where(x => !x.Success),
+            _ => q
+        };
+
+        _totalRows = await q.CountAsync();
+        _rows = await q
+            .OrderByDescending(x => x.Timestamp)
+            .Skip(_pageIndex * PageSize)
+            .Take(PageSize)
+            .ToListAsync();
+    }
+
+    private async Task PrevPage()
+    {
+        if (_pageIndex > 0)
+        {
+            _pageIndex--;
+            await LoadPageAsync();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (_pageIndex < _maxPageIndex)
+        {
+            _pageIndex++;
+            await LoadPageAsync();
+        }
+    }
+
+    private void OpenDetail(AuditLog row) => _detail = row;
+
+    private void CloseDetail() => _detail = null;
+}

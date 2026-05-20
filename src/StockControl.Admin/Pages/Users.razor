@@ -1,7 +1,9 @@
 @page "/users"
 @using Microsoft.EntityFrameworkCore
+@using StockControl.Admin.Auth
 @using StockControl.Admin.Data
 @inject IDbContextFactory<AppDbContext> DbFactory
+@inject PasswordHasherService PasswordHasher
 
 <PageTitle>Users</PageTitle>
 
@@ -27,6 +29,18 @@
                 <input id="user-name" type="text" maxlength="50" @bind="_editing.Name"
                        @onblur='() => ValidateMaxLength("Name", _editing.Name, 50)' required />
             </div>
+            <div>
+                <label for="user-role">Role *</label>
+                <select id="user-role" @bind="_roleValue">
+                    <option value="1">Admin (1)</option>
+                    <option value="2">Admin PDA (2)</option>
+                </select>
+            </div>
+            <div>
+                <label for="user-password">@(_editing.Id == 0 ? "Password *" : "Password")</label>
+                <input id="user-password" type="password" autocomplete="new-password" @bind="_password"
+                       placeholder="@(_editing.Id == 0 ? "" : "Leave blank to keep current")" />
+            </div>
         </div>
 
         <div class="actions">
@@ -43,6 +57,8 @@
             <colgroup>
                 <col class="admin-us-col-user" />
                 <col class="admin-us-col-name" />
+                <col class="admin-us-col-role" />
+                <col class="admin-us-col-created" />
                 <col class="admin-us-col-status" />
                 <col class="admin-us-col-actions" />
             </colgroup>
@@ -50,6 +66,8 @@
                 <tr>
                     <SortableHeaderCell Label="User" SortKey="username" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="Name" SortKey="name" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Role" SortKey="role" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
+                    <SortableHeaderCell Label="Created" SortKey="created" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <SortableHeaderCell Label="Status" SortKey="status" ActiveKey="@_sortKey" Descending="@_sortDesc" SortRequested="RequestSort" />
                     <th class="admin-grid-th-actions" scope="col">Actions</th>
                 </tr>
@@ -60,9 +78,11 @@
                     <tr @key="u.Id"
                         class="@RowClass(u.Id, u.IsActive)"
                         @onclick="@(() => OnUserRowClick(u))">
-                        <td class="mono">@u.Username</td>
-                        <td>@u.Name</td>
-                        <td><span class="tag @(u.IsActive ? "ok" : "off")">@(u.IsActive ? "Active" : "Inactive")</span></td>
+                        <td class="mono admin-us-td-user">@u.Username</td>
+                        <td class="admin-us-td-name">@u.Name</td>
+                        <td class="admin-us-td-role">@UsersSaveValidation.RoleLabel(u.Role)</td>
+                        <td class="admin-us-td-created mono">@FormatCreated(u.CreatedAt)</td>
+                        <td class="admin-us-td-status"><span class="tag @(u.IsActive ? "ok" : "off")">@(u.IsActive ? "Active" : "Inactive")</span></td>
                         <td class="admin-grid-td-actions" @onclick:stopPropagation="true">
                             <div class="mini-actions mini-actions-row">
                                 <EditIconButton Title="Edit user" OnClick="@(() => StartEdit(u))" Disabled="@(!u.IsActive)" />
@@ -81,7 +101,7 @@
             <button class="edit" type="button" @onclick="NextPage" disabled="@(_pageIndex >= _maxPageIndex)">Next</button>
         </div>
     </div>
-    <p class="hint">Simple user registry (no roles). Suggestion: deactivate instead of deleting.</p>
+    <p class="hint">Roles: <strong>1</strong> = Admin (web), <strong>2</strong> = Admin PDA. Deactivate instead of deleting.</p>
 </section>
 
 @code {
@@ -89,6 +109,8 @@
     private string _status = "";
     private bool _isSaving;
     private AppUser _editing = new();
+    private string _password = "";
+    private int _roleValue = (int)UserRole.AdminPda;
     private int? _selectedRowId;
     private string? _success;
     private string? _error;
@@ -106,6 +128,9 @@
             cls += " admin-grid-row-clickable--selected";
         return cls;
     }
+
+    private static string FormatCreated(DateTimeOffset createdAt)
+        => createdAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
 
     private void OnUserRowClick(AppUser u)
     {
@@ -156,6 +181,8 @@
             {
                 "username" => _sortDesc ? q.OrderByDescending(x => x.Username) : q.OrderBy(x => x.Username),
                 "name" => _sortDesc ? q.OrderByDescending(x => x.Name) : q.OrderBy(x => x.Name),
+                "role" => _sortDesc ? q.OrderByDescending(x => x.Role) : q.OrderBy(x => x.Role),
+                "created" => _sortDesc ? q.OrderByDescending(x => x.CreatedAt) : q.OrderBy(x => x.CreatedAt),
                 "status" => _sortDesc ? q.OrderByDescending(x => x.IsActive) : q.OrderBy(x => x.IsActive),
                 _ => q.OrderByDescending(x => x.Id)
             };
@@ -203,6 +230,8 @@
         _error = null;
         _selectedRowId = null;
         _editing = new AppUser();
+        _password = "";
+        _roleValue = (int)UserRole.AdminPda;
     }
 
     private void StartEdit(AppUser u)
@@ -218,10 +247,13 @@
             Id = u.Id,
             Username = u.Username,
             Name = u.Name,
+            Role = u.Role,
             IsActive = u.IsActive,
             CreatedAt = u.CreatedAt,
             UpdatedAt = u.UpdatedAt
         };
+        _password = "";
+        _roleValue = (int)u.Role;
     }
 
     private void CancelEdit()
@@ -238,7 +270,12 @@
         _editing.Username = (_editing.Username ?? "").Trim();
         _editing.Name = (_editing.Name ?? "").Trim();
 
-        var validationError = UsersSaveValidation.ValidateSave(_editing.Username, _editing.Name);
+        _editing.Role = Enum.IsDefined(typeof(UserRole), _roleValue)
+            ? (UserRole)_roleValue
+            : UserRole.AdminPda;
+
+        var validationError = UsersSaveValidation.ValidateSave(
+            _editing.Username, _editing.Name, _editing.Role, _editing.Id == 0, _password);
         if (validationError is not null)
         {
             _error = validationError;
@@ -253,12 +290,24 @@
             if (_editing.Id == 0)
             {
                 _editing.CreatedAt = DateTimeOffset.UtcNow;
+                _editing.PasswordHash = PasswordHasher.Hash(_editing, _password.Trim());
                 db.Users.Add(_editing);
             }
             else
             {
-                _editing.UpdatedAt = DateTimeOffset.UtcNow;
-                db.Users.Update(_editing);
+                var entity = await db.Users.FirstOrDefaultAsync(x => x.Id == _editing.Id);
+                if (entity is null)
+                {
+                    _error = "User not found.";
+                    return;
+                }
+
+                entity.Username = _editing.Username;
+                entity.Name = _editing.Name;
+                entity.Role = _editing.Role;
+                entity.UpdatedAt = DateTimeOffset.UtcNow;
+                if (!string.IsNullOrWhiteSpace(_password))
+                    entity.PasswordHash = PasswordHasher.Hash(entity, _password.Trim());
             }
 
             await db.SaveChangesAsync();

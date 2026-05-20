@@ -14,7 +14,25 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
   <img src="./images/mock_admin_template.png" alt="Stock Control — Admin: Stock tab (filters + list)" width="920" />
 </p>
 
-*Screenshot (`images/mock_admin_template.png`): **Stock Control** tab — two-row tab bar (8 tabs), **STOCK** filters (Warehouse, Location, Supplier, Stock status, full-width Search and Sync), **LIST** grid with Supplier, Reorder, and Status.*
+*Screenshot (`images/mock_admin_template.png`): header with **Stock Control** above **Locations** (same column width), **STOCK** filters (Warehouse, Location, Supplier, Stock status, full-width Search and Sync), **LIST** grid with Supplier, Reorder, and Status. Eight section tabs in two rows below.*
+
+---
+
+### 🔐 Sign in
+
+<p align="center">
+  <img src="./images/mock_login.png" alt="Stock Control — Admin sign in" width="480" />
+</p>
+
+| Field | Value |
+|-------|--------|
+| **Username** | `admin` |
+| **Password** | `Pda2!Stock` |
+| **Role** | **1** (Admin web only) |
+
+On first visit (or after **Sign out**), the **login modal** appears (`Shared/LoginModal.razor`). JWT is stored in an HttpOnly cookie (`StockControl.Jwt`).
+
+Apply passwords: [`scripts/seed-user-passwords.sql`](../scripts/seed-user-passwords.sql). More detail: [LOGIN-TEST-USERS.md](LOGIN-TEST-USERS.md) and **Authentication** below.
 
 ---
 
@@ -56,7 +74,7 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 |------|-------|
 | 🖥️ **Platform** | Windows desktop |
 | 🧱 **App type** | Blazor Server (Admin) |
-| 🧭 **Navigation** | 8 tabs (4 + 4 rows) |
+| 🧭 **Navigation** | 4-column menu: **Stock Control** in header (col. 3, above **Locations**); 8 tabs in two rows (4 + 4) |
 | ✅ **CRUD** | Create / Edit / Activate / Deactivate |
 | 🔎 **Pagination** | 10 rows per page (Prev/Next) |
 | 🧩 **Min/Max** | Dedicated **Min / Max** tab (`/minmax`): targets per warehouse + item + **location** (location required) |
@@ -66,7 +84,11 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 
 ---
 
-## 🧭 Tabs (8)
+## 🧭 Navigation
+
+**Stock Control** (`/` and `/stock`) — button in the **header row**, aligned above **Locations** (not in the tab grid).
+
+**Tabs** (two rows × 4 columns):
 
 - **Users**
 - **Warehouses**
@@ -75,7 +97,13 @@ Blazor Server **desktop Admin** used to register master data and view stock bala
 - **Products**
 - **Items (SKU)**
 - **Min / Max** (`/minmax`)
-- **Stock** (`/` and `/stock`)
+- **Audit Logs** (`/audit`, role **1** only)
+
+<p align="center">
+  <img src="./images/mock_audit.png" alt="Stock Control — Admin: Audit Logs" width="920" />
+</p>
+
+*Screenshot (`images/mock_audit.png`): read-only audit list (admins only). See [audit_stock.md](audit_stock.md).*
 
 ---
 
@@ -413,7 +441,9 @@ In **Development**, if `Jwt:Key` is missing, a dev-only default is used (do not 
 
 #### Admin (web)
 
-1. Opening any Admin route without a valid JWT shows a **login modal** (`Shared/LoginModal.razor`) — username + password.
+![Sign in](images/mock_login.png)
+
+1. Opening any Admin route without a valid JWT shows a **login modal** (`Shared/LoginModal.razor`) — username + password (see table in **Sign in** above: `admin` / `Pda2!Stock`).
 2. Credentials are checked against `users` where `IsActive = 1` and **`Role = 1`**.
 3. On success, the server issues a JWT via `JwtTokenService` and stores it in an **HttpOnly cookie** named `StockControl.Jwt` (not accessible to JavaScript).
 4. Each HTTP request (including the Blazor circuit) is authenticated with **JWT Bearer** middleware, which reads the token from that cookie.

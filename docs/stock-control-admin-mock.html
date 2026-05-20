@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Stock Control — Admin (interactive mock)</title>
+  <title>Stock Control — Admin (preview)</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <style>
     :root {
@@ -37,91 +37,98 @@
       background: rgba(250, 204, 21, 0.12); color: #fde68a;
       white-space: nowrap;
     }
-    header.app-header {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 16px; margin-bottom: 12px;
+    .admin-nav-layout {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 6px; margin-bottom: 12px; align-items: center;
+    }
+    .header-brand { min-width: 0; }
+    .admin-nav-r1-c1 { grid-column: 1; grid-row: 1; align-self: start; }
+    .admin-nav-r1-c3 { grid-column: 3; grid-row: 1; width: 100%; }
+    .admin-nav-r1-c4 { grid-column: 4; grid-row: 1; justify-self: end; }
+    .admin-nav-r2-c1 { grid-column: 1; grid-row: 2; }
+    .admin-nav-r2-c2 { grid-column: 2; grid-row: 2; }
+    .admin-nav-r2-c3 { grid-column: 3; grid-row: 2; }
+    .admin-nav-r2-c4 { grid-column: 4; grid-row: 2; }
+    .admin-nav-r3-c1 { grid-column: 1; grid-row: 3; }
+    .admin-nav-r3-c2 { grid-column: 2; grid-row: 3; }
+    .admin-nav-r3-c3 { grid-column: 3; grid-row: 3; }
+    .admin-nav-r3-c4 { grid-column: 4; grid-row: 3; }
+    .header-actions {
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    }
+    .header-hint { font-size: 0.74rem; color: #c5d0e0; white-space: nowrap; }
+    .header-signout.btn.ghost {
+      flex: none; width: auto; min-height: 36px; padding: 0 12px; font-size: 0.8rem;
     }
     h1 { margin: 0; font-size: 1.12rem; font-weight: 800; }
     .sub { margin: 4px 0 0; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
-    .header-user { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
     .hint { font-size: 0.74rem; color: #c5d0e0; line-height: 1.45; }
     .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.92em; }
 
-    /* Login (matches LoginModal.razor) */
+    /* Login — copy of admin-theme.css .login-page (white card, underline fields) */
     #screen-login {
       position: fixed; inset: 0; z-index: 1000;
-      display: grid; place-items: center; padding: 16px;
-      background: rgba(0, 0, 0, 0.55);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px; background: #0c111b;
     }
     #screen-login.hidden { display: none; }
-    .login-modal {
-      width: min(360px, calc(100vw - 32px));
-      border: 1px solid var(--line); border-radius: var(--radius);
-      background: var(--panel);
+    #screen-login .login-card {
+      width: min(400px, calc(100vw - 48px));
+      padding: 20px; background: #ffffff;
+      border: 1px solid #e2e8f0; border-radius: 12px; color: #000;
     }
-    .login-modal-header { padding: 14px 14px 0; }
-    .login-modal-title { font-weight: 900; text-transform: uppercase; font-size: 0.74rem; }
-    .login-form { padding: 0 14px 14px; }
-    .login-form label {
-      display: block; margin: 10px 0 4px; font-size: 0.75rem; color: #94a3b8;
+    #screen-login .login-heading {
+      margin: 0 0 4px; font-size: 18px; font-weight: 700;
+      text-align: center; color: #000;
     }
-    .login-form input {
-      width: 100%; padding: 12px; border-radius: 12px;
-      border: 1px solid var(--field-border); background: var(--field-bg);
-      color: var(--text); font-size: 0.95rem;
+    #screen-login .login-subtitle {
+      margin: 0 0 12px; font-size: 12px; color: #64748b;
+      text-align: center; line-height: 1.35;
     }
-    .login-password-wrap { position: relative; }
-    .login-password-wrap input { padding-right: 2.5rem; }
-    .login-password-toggle {
-      position: absolute; right: 0; top: 0; bottom: 0; width: 2.25rem;
-      border: none; background: transparent; color: #94a3b8; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+    #screen-login .login-form { display: flex; flex-direction: column; }
+    #screen-login .login-label {
+      display: block; font-size: 12px; font-weight: 700;
+      margin: 0 0 2px; color: #212121;
     }
-    .login-error { margin: 10px 0 0; color: #fecaca; font-size: 0.8rem; }
-    .login-actions { margin-top: 14px; }
-    .btn {
-      min-height: 44px; padding: 0 16px; border-radius: 12px;
-      border: 1px solid var(--line); font-size: 0.88rem; font-weight: 800;
-      cursor: pointer; color: var(--text); background: rgba(255, 255, 255, 0.06);
-      width: 100%;
+    #screen-login .login-field {
+      width: 100%; min-height: 44px; margin-bottom: 12px;
+      padding: 10px 0; font-size: 14px; color: #000;
+      background: transparent; border: none;
+      border-bottom: 1px solid #acacac; border-radius: 0;
+      box-shadow: none; outline: none;
     }
-    .btn.success {
-      background: linear-gradient(180deg, rgba(34, 197, 94, 0.35), rgba(34, 197, 94, 0.12));
-      border-color: rgba(34, 197, 94, 0.45);
+    #screen-login .login-field::placeholder { color: #c8c8c8; }
+    #screen-login .login-field:focus { border-bottom-color: #512bd4; }
+    #screen-login .login-error { margin: 0 0 12px; font-size: 12px; color: #dc2626; display: none; }
+    #screen-login .login-submit {
+      width: 100%; min-height: 44px; margin-top: 4px; padding: 14px 10px;
+      border: none; border-radius: 8px; background: #512bd4; color: #fff;
+      font-size: 14px; font-weight: 600; cursor: pointer;
     }
-    .btn.ghost { background: rgba(255, 255, 255, 0.05); width: auto; min-height: 36px; font-size: 0.8rem; }
-    .login-dev-hint {
-      margin-top: 12px; padding: 10px; border-radius: 10px;
-      background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25);
-      font-size: 0.72rem; color: #bfdbfe; line-height: 1.4;
-    }
-
+    .btn.ghost { background: rgba(255, 255, 255, 0.05); width: auto; min-height: 36px; font-size: 0.8rem;
+      border: 1px solid var(--line); color: var(--text); padding: 0 12px; border-radius: 12px; cursor: pointer; }
     #screen-app.hidden { display: none; }
 
-    /* Menu: hero Stock + 4×2 grid */
-    .tabs-admin-shell { margin-bottom: 12px; }
-    .tabs-admin-hero { display: flex; justify-content: center; margin-bottom: 8px; }
-    .tabs-admin-hero-link {
-      display: flex; align-items: center; justify-content: center;
-      width: 100%; max-width: calc(50% - 3px); min-height: 52px;
-      padding: 14px 20px; border: 1px solid rgba(59, 130, 246, 0.45);
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(59, 130, 246, 0.28), rgba(59, 130, 246, 0.1));
-      color: var(--text); font-size: 0.95rem; font-weight: 800;
-      text-decoration: none; cursor: pointer;
+    .preview-note {
+      position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+      font-size: 0.68rem; color: #64748b; text-align: center;
+      max-width: 90vw; z-index: 500; pointer-events: none;
     }
-    .tabs-admin-hero-link[aria-selected="true"] {
-      border-color: rgba(96, 165, 250, 0.75);
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
-    }
-    nav.tabs-admin-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-    }
+    #screen-app:not(.hidden) ~ .preview-note { display: none; }
+
+    /* Menu: linha 1 título + Stock Control (col. 3) + Sign out; linhas 2–3 abas */
+    .tabs-admin-tab-link,
     nav.tabs-admin-grid button {
-      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04);
-      color: var(--muted); padding: 10px 8px; border-radius: 12px;
-      font-size: 0.78rem; font-weight: 700; cursor: pointer; min-height: 44px;
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 44px; padding: 10px 16px; box-sizing: border-box;
+      border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04); color: var(--muted);
+      font-size: 0.78rem; font-weight: 700; white-space: nowrap;
+      text-decoration: none; cursor: pointer; width: 100%;
     }
+    .tabs-admin-shell,
+    nav.tabs-admin-grid { display: contents; }
+    .tabs-admin-tab-link[aria-selected="true"],
     nav.tabs-admin-grid button[aria-selected="true"] {
       background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.45); color: var(--text);
     }
@@ -134,8 +141,8 @@
       margin: 0 0 10px; font-size: 0.72rem; text-transform: uppercase;
       letter-spacing: 0.08em; color: #c5d0e0; font-weight: 800;
     }
-    label { display: block; font-size: 0.72rem; color: #d8e2ef; margin-bottom: 6px; font-weight: 700; }
-    input, select {
+    #screen-app label { display: block; font-size: 0.72rem; color: #d8e2ef; margin-bottom: 6px; font-weight: 700; }
+    #screen-app input, #screen-app select {
       width: 100%; padding: 12px; border-radius: 12px;
       border: 1px solid var(--field-border); background: var(--field-bg);
       color: var(--text); font-size: 0.95rem;
@@ -165,30 +172,20 @@
   </style>
 </head>
 <body>
-  <!-- LOGIN (Blazor LoginModal + POST /api/auth/login?app=admin → JWT cookie) -->
+  <!-- LOGIN only (App.razor NotAuthorized → LoginModal; no menu/header behind) -->
   <div id="screen-login" role="dialog" aria-label="Sign in">
-    <div class="login-modal" onclick="event.stopPropagation()">
-      <div class="login-modal-header">
-        <div class="login-modal-title">Sign in</div>
-      </div>
+    <div class="login-card">
+      <h1 class="login-heading">Stock Control — Admin</h1>
+      <p class="login-subtitle">Sign in with your Admin account (role 1).</p>
       <form class="login-form" id="login-form">
-        <label for="login-user">Username</label>
-        <input id="login-user" type="text" autocomplete="username" value="admin" />
+        <label class="login-label" for="login-user">Username</label>
+        <input class="login-field" id="login-user" type="text" autocomplete="username" placeholder="Username" />
 
-        <label for="login-pass">Password</label>
-        <div class="login-password-wrap">
-          <input id="login-pass" type="password" autocomplete="current-password" value="Pda2!Stock" />
-          <button type="button" class="login-password-toggle" id="toggle-pass" aria-label="Show password">
-            <i class="bi bi-eye" id="toggle-pass-icon"></i>
-          </button>
-        </div>
-        <p class="login-error" id="login-error" hidden></p>
-        <div class="login-actions">
-          <button class="btn success" type="submit">Sign in</button>
-        </div>
-        <p class="login-dev-hint">
-          <strong>Dev (same as SQL seed):</strong> user <span class="mono">admin</span> / password <span class="mono">Pda2!Stock</span> — role <strong>1</strong> (Admin web). Real app sets HttpOnly cookie <span class="mono">StockControl.Jwt</span> via <span class="mono">loginAdmin</span> JS → API.
-        </p>
+        <label class="login-label" for="login-pass">Password</label>
+        <input class="login-field" id="login-pass" type="password" autocomplete="current-password" placeholder="Password" />
+
+        <p class="login-error" id="login-error"></p>
+        <button class="login-submit" type="submit">Sign in</button>
       </form>
     </div>
   </div>
@@ -196,34 +193,28 @@
   <!-- APP (after login) -->
   <div id="screen-app" class="hidden">
     <div class="shell">
-      <header class="app-header">
-        <div>
+      <div class="admin-nav-layout">
+        <div class="header-brand admin-nav-r1-c1">
           <h1>Stock Control — Admin</h1>
           <p class="sub">Compact master-data registration. On PDAs, the scanner types into the focused field and may send <span class="mono">Enter</span>.</p>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
-          <span class="mock-badge">Interactive mock</span>
-          <div class="header-user">
-            <span class="hint" id="header-user">admin</span>
-            <button type="button" class="btn ghost" id="btn-signout">Sign out</button>
-          </div>
+        <button type="button" class="tabs-admin-tab-link admin-nav-r1-c3" data-tab="stock" aria-selected="true">Stock Control</button>
+        <div class="header-actions admin-nav-r1-c4">
+          <span class="header-hint" id="header-user">admin</span>
+          <button type="button" class="btn ghost header-signout" id="btn-signout">Sign out</button>
         </div>
-      </header>
-
-      <div class="tabs-admin-shell">
-        <div class="tabs-admin-hero">
-          <button type="button" class="tabs-admin-hero-link" data-tab="stock" aria-selected="true">Stock Control</button>
+        <div class="tabs-admin-shell">
+          <nav class="tabs-admin-grid" role="tablist">
+            <button type="button" class="tabs-admin-tab-link admin-nav-r2-c1" role="tab" data-tab="users">Users</button>
+            <button type="button" class="tabs-admin-tab-link admin-nav-r2-c2" role="tab" data-tab="warehouses">Warehouses</button>
+            <button type="button" class="tabs-admin-tab-link admin-nav-r2-c3" role="tab" data-tab="locations">Locations</button>
+            <button type="button" class="tabs-admin-tab-link admin-nav-r2-c4" role="tab" data-tab="suppliers">Suppliers</button>
+            <button type="button" class="tabs-admin-tab-link admin-nav-r3-c1" role="tab" data-tab="products">Products</button>
+            <button type="button" class="tabs-admin-tab-link admin-nav-r3-c2" role="tab" data-tab="items">Items (SKU)</button>
+            <button type="button" class="tabs-admin-tab-link admin-nav-r3-c3" role="tab" data-tab="minmax">Min / Max</button>
+            <button type="button" class="tabs-admin-tab-link admin-nav-r3-c4" role="tab" data-tab="audit">Audit Logs</button>
+          </nav>
         </div>
-        <nav class="tabs-admin-grid" role="tablist">
-          <button type="button" role="tab" data-tab="users">Users</button>
-          <button type="button" role="tab" data-tab="warehouses">Warehouses</button>
-          <button type="button" role="tab" data-tab="locations">Locations</button>
-          <button type="button" role="tab" data-tab="suppliers">Suppliers</button>
-          <button type="button" role="tab" data-tab="products">Products</button>
-          <button type="button" role="tab" data-tab="items">Items (SKU)</button>
-          <button type="button" role="tab" data-tab="minmax">Min / Max</button>
-          <button type="button" role="tab" data-tab="audit">Audit Logs</button>
-        </nav>
       </div>
 
       <div id="panel-stock" class="tab-panel active" role="tabpanel">
@@ -307,19 +298,17 @@
     </div>
   </div>
 
+  <p class="preview-note">Preview: sign in as <strong>admin</strong> / <strong>Pda2!Stock</strong> — then full Admin UI (cookie + page reload in the real app).</p>
+
   <div class="toast" id="toast" role="status"></div>
 
   <script>
     (function () {
       var DEV_USER = "admin";
-      var DEV_PASS = "Pda2!Stock";
       var loginScreen = document.getElementById("screen-login");
       var appScreen = document.getElementById("screen-app");
       var loginForm = document.getElementById("login-form");
       var loginError = document.getElementById("login-error");
-      var passInput = document.getElementById("login-pass");
-      var togglePass = document.getElementById("toggle-pass");
-      var toggleIcon = document.getElementById("toggle-pass-icon");
       var toast = document.getElementById("toast");
 
       var tabTitles = {
@@ -334,27 +323,14 @@
         showToast._t = setTimeout(function () { toast.classList.remove("show"); }, 2600);
       }
 
-      togglePass.addEventListener("click", function () {
-        var show = passInput.type === "password";
-        passInput.type = show ? "text" : "password";
-        toggleIcon.className = show ? "bi bi-eye-slash" : "bi bi-eye";
-        togglePass.setAttribute("aria-label", show ? "Hide password" : "Show password");
-      });
-
       loginForm.addEventListener("submit", function (e) {
         e.preventDefault();
-        loginError.hidden = true;
+        loginError.classList.remove("show");
         var u = document.getElementById("login-user").value.trim();
-        var p = passInput.value;
-        if (u === DEV_USER && p === DEV_PASS) {
-          loginScreen.classList.add("hidden");
-          appScreen.classList.remove("hidden");
-          document.getElementById("header-user").textContent = u;
-          showToast("Signed in (mock). Real app: JWT cookie + reload.");
-          return;
-        }
-        loginError.textContent = u === DEV_USER ? "Invalid username or password." : "This account cannot sign in here.";
-        loginError.hidden = false;
+        loginScreen.classList.add("hidden");
+        appScreen.classList.remove("hidden");
+        document.getElementById("header-user").textContent = u || DEV_USER;
+        showToast("Preview only — real app calls loginAdmin + cookie.");
       });
 
       document.getElementById("btn-signout").addEventListener("click", function () {
@@ -364,7 +340,7 @@
       });
 
       function selectTab(tab) {
-        document.querySelectorAll(".tabs-admin-hero-link, nav.tabs-admin-grid button").forEach(function (el) {
+        document.querySelectorAll(".tabs-admin-tab-link, nav.tabs-admin-grid button").forEach(function (el) {
           el.setAttribute("aria-selected", el.getAttribute("data-tab") === tab ? "true" : "false");
         });
         document.querySelectorAll(".tab-panel").forEach(function (p) { p.classList.remove("active"); });

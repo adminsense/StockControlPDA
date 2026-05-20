@@ -56,6 +56,7 @@ Run **Stock Control Admin** on a Windows notebook together with the **MAUI PDA**
 <tr><td width="520" align="left" valign="top"><strong>Setting</strong></td><td align="left" valign="top"><code>ConnectionStrings:connStockControlPDA</code></td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Value</strong></td><td align="left" valign="top">Azure SQL in repo: <strong><code>adminsensedb.uksouth.cloudapp.azure.com</code></strong>, database <strong><code>AllportStock</code></strong> (see <code>appsettings.json</code>).</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Database schema</strong></td><td align="left" valign="top">Apply EF migrations manually: <strong><code>dotnet ef database update --project src/StockControl.Admin</code></strong> (not on app startup).</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Test passwords</strong></td><td align="left" valign="top">Run <a href="../scripts/seed-user-passwords.sql"><code>scripts/seed-user-passwords.sql</code></a> — <strong>admin</strong> / <strong>pda</strong>, password <code>Pda2!Stock</code>. See <a href="LOGIN-TEST-USERS.md">LOGIN-TEST-USERS.md</a> and <code>images/mock_login.png</code>.</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Manual migrations (optional)</strong></td><td align="left" valign="top"><a href="README-admin-stock.md">README-admin-stock</a> → <strong>Database (EF Core)</strong> (<code>dotnet ef database update ...</code>).</td></tr>
 </tbody>
 </table>

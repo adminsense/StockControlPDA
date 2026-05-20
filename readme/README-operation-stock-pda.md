@@ -14,6 +14,26 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 
 ---
 
+### 🔐 Sign in
+
+<p align="center">
+  <img src="./images/mock_login.png" alt="Stock Control — PDA sign in" width="480" />
+</p>
+
+Same login layout as Admin (white card, underline fields, purple **Sign in**). Title: **Stock Control — PDA**.
+
+| Field | Value |
+|-------|--------|
+| **Username** | `pda` |
+| **Password** | `Pda2!Stock` |
+| **Role** | **2** (PDA only — cannot open Admin web) |
+
+After sign-in, the app stores the JWT in **SecureStorage** and opens **Move stock**. **Sign out** on that screen returns to login.
+
+Apply passwords: [`scripts/seed-user-passwords.sql`](../scripts/seed-user-passwords.sql). Shared auth details: [README-admin-stock.md](README-admin-stock.md) → **Authentication** · [LOGIN-TEST-USERS.md](LOGIN-TEST-USERS.md).
+
+---
+
 ### 📌 Quick facts
 
 <table width="100%" border="0" cellspacing="0" cellpadding="10" style="table-layout:fixed">
@@ -27,6 +47,7 @@ Scan-driven **operation app** built with **.NET MAUI for Android** for fast ware
 <tr><td width="520" align="left" valign="top"><strong>Scanner</strong></td><td align="left" valign="top">Keyboard wedge (text + Enter)</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Connectivity</strong></td><td align="left" valign="top">Online (MVP)</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>MAUI targets</strong></td><td align="left" valign="top"><strong>Android only</strong> — <code>Platforms/Android</code> only (<code>net10.0-android</code>, min API 21). iOS / Windows / Mac Catalyst folders are not in this repo.</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Sign in</strong></td><td align="left" valign="top">User <code>pda</code> / <code>Pda2!Stock</code> (role <strong>2</strong>). See <strong>Sign in</strong> above and <a href="LOGIN-TEST-USERS.md">LOGIN-TEST-USERS.md</a>.</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Local install</strong></td><td align="left" valign="top"><strong><a href="README-StockControlInstall.md">README-StockControlInstall.md</a></strong> — run Admin + PDA from a notebook (no physical PDA).</td></tr>
 </tbody>
 </table>
@@ -90,7 +111,7 @@ Admin holds **master data** and **posted transactions**. It does **not** magical
 <tr><th width="520" align="left" valign="top">Screen</th><th align="left" valign="top">Role</th></tr>
 </thead>
 <tbody>
-<tr><td width="520" align="left" valign="top"><strong>Login</strong></td><td align="left" valign="top">Authenticate operator (future).</td></tr>
+<tr><td width="520" align="left" valign="top"><strong>Login</strong></td><td align="left" valign="top">Implemented — <code>LoginPage.xaml</code>, JWT Bearer. Test user <code>pda</code> / <code>Pda2!Stock</code> (screenshot: <code>images/mock_login.png</code>).</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Min/Max alerts</strong></td><td align="left" valign="top">List below min / above max with filters (planned).</td></tr>
 <tr><td width="520" align="left" valign="top"><strong>Quick lookup</strong></td><td align="left" valign="top">Balance by item/location (planned).</td></tr>
 </tbody>

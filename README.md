@@ -45,12 +45,20 @@ This repository contains:
 
 Screenshots in `readme/images/` match the **current** UI.
 
-### 4.1 Sign in (Admin + PDA)
+### 4.1 Sign in — Admin
 
-White card on dark background; underline fields; purple **Sign in** button. Same pattern in both apps.
+White card on dark background; underline fields; purple **Sign in**. Title: **Stock Control — Admin**.
 
 <p align="center">
-  <img src="./readme/images/mock_login.png" alt="Stock Control — Sign in (Admin and PDA)" />
+  <img src="./readme/images/mock_login.png" alt="Stock Control — Admin sign in" width="400" />
+</p>
+
+### 4.2 Sign in — PDA
+
+Same login pattern on the handset. Title: **Stock Control — PDA** (`LoginPage.xaml`).
+
+<p align="center">
+  <img src="./readme/images/pda-login-stock.png" alt="Stock Control — PDA sign in" width="420" />
 </p>
 
 | App | Username | Password | Role |
@@ -60,7 +68,7 @@ White card on dark background; underline fields; purple **Sign in** button. Same
 
 Seed script: [`scripts/seed-user-passwords.sql`](scripts/seed-user-passwords.sql). Details: [readme/LOGIN-TEST-USERS.md](readme/LOGIN-TEST-USERS.md).
 
-### 4.2 Admin — Stock Control (home)
+### 4.3 Admin — Stock Control (home)
 
 <p align="center">
   <img src="./readme/images/mock_admin_template.png" alt="Stock Control — Admin: Stock tab with filters and list" />
@@ -68,7 +76,7 @@ Seed script: [`scripts/seed-user-passwords.sql`](scripts/seed-user-passwords.sql
 
 *Header row: title, **Stock Control** (same width as **Locations** below), user + **Sign out**. Two tab rows: Users, Warehouses, Locations, Suppliers, Products, Items (SKU), Min / Max, Audit Logs.*
 
-### 4.3 Admin — standard master forms
+### 4.4 Admin — standard master forms
 
 Search → form → grid pattern shared by Users, Warehouses, Locations, Suppliers, Products, Items, and Min / Max.
 
@@ -76,7 +84,7 @@ Search → form → grid pattern shared by Users, Warehouses, Locations, Supplie
   <img src="./readme/images/forms_screen.png" alt="Admin — standard forms (search, form, list)" />
 </p>
 
-### 4.4 Admin — Audit Logs
+### 4.5 Admin — Audit Logs
 
 <p align="center">
   <img src="./readme/images/mock_audit.png" alt="Stock Control — Admin: Audit Logs" />
@@ -84,11 +92,13 @@ Search → form → grid pattern shared by Users, Warehouses, Locations, Supplie
 
 Read-only grid for admins (role **1**). Proposal notes: [readme/audit_stock.md](readme/audit_stock.md).
 
-### 4.5 PDA — Move stock
+### 4.6 PDA — Move stock
 
 <p align="center">
-  <img src="./readme/images/pda-move-stock.png" alt="PDA — Move stock" />
+  <img src="./readme/images/pda-move-stock.png" alt="PDA — Move stock" width="420" />
 </p>
+
+*Field order (top → bottom, reference screenshot): **Warehouse** → **Location** + **Item** → **Scan or type code** → **Summary** → **Quantity** (**Inbound (+)** / **Outbound (−)**). Matches `MainPage.xaml` and `docs/stock-control-pda-mock.html`.*
 
 ## 🛠️ 5. Tech stack
 
@@ -117,7 +127,7 @@ Open in a browser for client demos. Admin mocks navigate between each other: **U
 | **Admin — Stock (home)** | [`docs/stock-control-admin-mock.html`](docs/stock-control-admin-mock.html) | Start here. Matches `readme/images/mock_admin_template.png`. |
 | **Admin — master tabs (details)** | [`docs/stock-control-admin--details-mock.html`](docs/stock-control-admin--details-mock.html) | Users, Warehouses, CRUD forms, etc. |
 | **Admin — Audit Logs (proposal)** | [`docs/stock-control-admin--audit-mock.html`](docs/stock-control-admin--audit-mock.html) | Read-only audit grid + detail modal. See [audit_stock.md](readme/audit_stock.md). |
-| **PDA — Move stock** | [`docs/pda-move-stock.html`](docs/pda-move-stock.html) | Same screen: scan product → location dropdown → quantity (Add/Subtract). See [README-operation-stock-pda](readme/README-operation-stock-pda.md) §4. |
+| **PDA — Move stock** | [`docs/stock-control-pda-mock.html`](docs/stock-control-pda-mock.html) | One screen; workflow uses scan + location + quantity (see PDA readme §4–5). |
 
 ---
 

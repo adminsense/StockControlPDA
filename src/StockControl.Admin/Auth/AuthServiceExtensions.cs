@@ -16,7 +16,7 @@ public static class AuthServiceExtensions
 
 {
 
-    public static IServiceCollection AddStockControlAuth(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment env)
+    public static IServiceCollection AddStockControlAuth(this IServiceCollection services, IConfiguration configuration)
 
     {
 
@@ -24,19 +24,10 @@ public static class AuthServiceExtensions
 
         var jwtSection = configuration.GetSection(AuthOptions.SectionName);
 
+        // Signing key for JWT after login — not the user password. Login uses users.Username + users.Password (hash) in SQL.
         var key = jwtSection["Key"];
-
         if (string.IsNullOrWhiteSpace(key))
-
-        {
-
-            if (!env.IsDevelopment())
-
-                throw new InvalidOperationException("Jwt:Key must be configured in appsettings.");
-
-            key = "StockControl-Dev-Jwt-Key-Min32Chars-ChangeMe!";
-
-        }
+            key = "StockControl-App-Jwt-Signing-Key-Min32Chars";
 
 
 
@@ -52,7 +43,8 @@ public static class AuthServiceExtensions
 
         services.AddHttpContextAccessor();
 
-        services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
+        services.AddScoped<ServerAuthenticationStateProvider>();
+        services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<ServerAuthenticationStateProvider>());
 
         services.AddCascadingAuthenticationState();
 

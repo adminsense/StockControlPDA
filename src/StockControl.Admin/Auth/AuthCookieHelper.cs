@@ -10,11 +10,12 @@ public static class AuthCookieHelper
             HttpOnly = true,
             Secure = http.Request.IsHttps,
             SameSite = SameSiteMode.Lax,
+            Path = "/",
             MaxAge = TimeSpan.FromHours(hours),
             IsEssential = true
         });
     }
 
     public static void DeleteJwtCookie(HttpContext http)
-        => http.Response.Cookies.Delete(AuthConstants.JwtCookieName);
+        => http.Response.Cookies.Delete(AuthConstants.JwtCookieName, new CookieOptions { Path = "/" });
 }

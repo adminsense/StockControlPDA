@@ -18,10 +18,20 @@ public enum PackagingType
     Kit = 5
 }
 
+/// <summary>Stored as int in <c>users.Role</c>: 1 = admin (web), 2 = admin_pda (PDA).</summary>
+public enum UserRole
+{
+    Admin = 1,
+    AdminPda = 2
+}
+
 public sealed class AppUser : EntityBase
 {
     public string Username { get; set; } = "";
     public string Name { get; set; } = "";
+    public UserRole Role { get; set; } = UserRole.AdminPda;
+    /// <summary>Hashed password; column <c>Password</c> in SQL.</summary>
+    public string? PasswordHash { get; set; }
 }
 
 public sealed class Warehouse : EntityBase
@@ -131,4 +141,22 @@ public sealed class StockMovement
     public string Direction { get; set; } = "";
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+
+/// <summary>Immutable audit trail row (see readme/audit_stock.md).</summary>
+public sealed class AuditLog
+{
+    public long Id { get; set; }
+    public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
+    public string Action { get; set; } = "";
+    public string EntityName { get; set; } = "";
+    public int? EntityId { get; set; }
+    public int? UserId { get; set; }
+    public string Username { get; set; } = "";
+    public bool Success { get; set; } = true;
+    public string Severity { get; set; } = "Information";
+    public string? IpAddress { get; set; }
+    public string? OldValues { get; set; }
+    public string? NewValues { get; set; }
+    public string? ErrorMessage { get; set; }
 }

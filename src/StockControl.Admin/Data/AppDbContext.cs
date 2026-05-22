@@ -13,6 +13,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<MinMaxSetting> MinMaxSettings => Set<MinMaxSetting>();
     public DbSet<StockBalance> StockBalances => Set<StockBalance>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,6 +25,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.HasKey(x => x.Id);
             b.Property(x => x.Username).HasMaxLength(50).IsRequired();
             b.Property(x => x.Name).HasMaxLength(50).IsRequired();
+            b.Property(x => x.Role).HasConversion<int>().IsRequired();
+            b.Property(x => x.PasswordHash).HasColumnName("Password").HasMaxLength(500).IsRequired(false);
             b.HasIndex(x => x.Username).IsUnique();
         });
 
@@ -106,6 +109,24 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.HasOne(x => x.Location).WithMany().HasForeignKey(x => x.LocationId).OnDelete(DeleteBehavior.Restrict);
             b.HasOne(x => x.Item).WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
             b.HasIndex(x => new { x.WarehouseId, x.LocationId, x.ItemId }).IsUnique();
+        });
+
+        modelBuilder.Entity<AuditLog>(b =>
+        {
+            b.ToTable("audit_logs");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Timestamp).IsRequired();
+            b.Property(x => x.Action).HasMaxLength(32).IsRequired();
+            b.Property(x => x.EntityName).HasMaxLength(64).IsRequired();
+            b.Property(x => x.Username).HasMaxLength(50).IsRequired();
+            b.Property(x => x.Severity).HasMaxLength(16).IsRequired();
+            b.Property(x => x.IpAddress).HasMaxLength(64).IsRequired(false);
+            b.Property(x => x.OldValues).HasColumnType("nvarchar(max)").IsRequired(false);
+            b.Property(x => x.NewValues).HasColumnType("nvarchar(max)").IsRequired(false);
+            b.Property(x => x.ErrorMessage).HasMaxLength(500).IsRequired(false);
+            b.HasIndex(x => x.Timestamp).IsDescending();
+            b.HasIndex(x => new { x.UserId, x.Timestamp }).IsDescending(false, true);
+            b.HasIndex(x => new { x.EntityName, x.EntityId });
         });
 
         modelBuilder.Entity<StockMovement>(b =>

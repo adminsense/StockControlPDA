@@ -43,17 +43,13 @@ BEGIN TRY
         
     DECLARE @locA int = (SELECT TOP (1) Id FROM dbo.locations WHERE WarehouseId = @wh1 AND Code = N'A01-01');
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE Username = N'marco')
-        INSERT INTO dbo.users (Username, Name, IsActive, CreatedAt, UpdatedAt)
-        VALUES (N'marco', N'Marco', 1, @now, NULL);
+    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE Username = N'admin')
+        INSERT INTO dbo.users (Username, Name, Role, IsActive, CreatedAt, UpdatedAt)
+        VALUES (N'admin', N'Admin', 1, 1, @now, NULL);
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE Username = N'operador01')
-        INSERT INTO dbo.users (Username, Name, IsActive, CreatedAt, UpdatedAt)
-        VALUES (N'operador01', N'Operador 01', 1, @now, NULL);
-
-    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE Username = N'teste')
-        INSERT INTO dbo.users (Username, Name, IsActive, CreatedAt, UpdatedAt)
-        VALUES (N'teste', N'Teste', 0, @now, NULL);
+    IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE Username = N'pda')
+        INSERT INTO dbo.users (Username, Name, Role, IsActive, CreatedAt, UpdatedAt)
+        VALUES (N'pda', N'pda', 2, 1, @now, NULL);
 
     IF OBJECT_ID('tempdb..#inv') IS NOT NULL DROP TABLE #inv;
     CREATE TABLE #inv (

@@ -165,8 +165,6 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        SumWarehouse.Text = $"{summary.WarehouseCode} ({summary.WarehouseName})";
-        SumLocation.Text = summary.LocationCode;
         SumItem.Text = $"{summary.ItemName} ({summary.ItemSku})";
         SumOnHand.Text = FormatQty(summary.OnHand);
 
@@ -229,8 +227,6 @@ public partial class MainPage : ContentPage
 
     private void ClearSummaryLabels()
     {
-        SumWarehouse.Text = "—";
-        SumLocation.Text = "—";
         SumItem.Text = "—";
         SumOnHand.Text = "—";
         SumMinMax.Text = "—";

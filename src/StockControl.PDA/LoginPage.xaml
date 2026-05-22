@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+
+             x:Class="StockControl.PDA.LoginPage"
+
+             Title="Sign in"
+
+             Shell.NavBarIsVisible="False"
+
+             BackgroundColor="#0C111B">
+
+
+
+    <Grid Padding="24" RowDefinitions="*,Auto,*">
+
+        <Border Grid.Row="1"
+
+                Padding="20"
+
+                Stroke="#E2E8F0"
+
+                BackgroundColor="#FFFFFF">
+
+            <Border.StrokeShape>
+
+                <RoundRectangle CornerRadius="12" />
+
+            </Border.StrokeShape>
+
+            <VerticalStackLayout Spacing="12">
+
+                <Label Text="Stock Control — PDA"
+
+                       FontAttributes="Bold"
+
+                       FontSize="18"
+
+                       TextColor="#000000"
+
+                       HorizontalOptions="Center" />
+
+                <Label Text="Username"
+
+                       FontSize="12"
+
+                       FontAttributes="Bold"
+
+                       TextColor="#212121" />
+
+                <Entry x:Name="UsernameEntry"
+
+                       Placeholder="Username"
+
+                       TextColor="#000000"
+
+                       PlaceholderColor="#C8C8C8"
+
+                       BackgroundColor="Transparent"
+
+                       ReturnType="Next"
+
+                       Completed="OnPasswordCompleted" />
+
+                <BoxView HeightRequest="1" Color="#ACACAC" />
+
+
+
+                <Label Text="Password"
+
+                       FontSize="12"
+
+                       FontAttributes="Bold"
+
+                       TextColor="#212121" />
+
+                <Entry x:Name="PasswordEntry"
+
+                       IsPassword="True"
+
+                       Placeholder="Password"
+
+                       TextColor="#000000"
+
+                       PlaceholderColor="#C8C8C8"
+
+                       BackgroundColor="Transparent"
+
+                       ReturnType="Done"
+
+                       Completed="OnPasswordCompleted" />
+
+                <BoxView HeightRequest="1" Color="#ACACAC" />
+
+
+
+                <Label x:Name="ErrorLabel"
+
+                       IsVisible="False"
+
+                       TextColor="#DC2626"
+
+                       FontSize="12" />
+
+
+
+                <Button x:Name="SignInButton"
+
+                        Text="Sign in"
+
+                        BackgroundColor="#512BD4"
+
+                        TextColor="#FFFFFF"
+
+                        FontAttributes="Bold"
+
+                        CornerRadius="8"
+
+                        Padding="14,10"
+
+                        MinimumHeightRequest="44"
+
+                        Clicked="OnSignInClicked" />
+
+            </VerticalStackLayout>
+
+        </Border>
+
+    </Grid>
+
+</ContentPage>
+

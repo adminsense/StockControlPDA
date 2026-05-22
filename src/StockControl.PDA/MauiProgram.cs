@@ -21,6 +21,7 @@ public static class MauiProgram
 		}
 
 		builder.Services.Configure<ApiOptions>(builder.Configuration.GetSection(ApiOptions.SectionName));
+		builder.Services.AddSingleton<IAuthSession, AuthSession>();
 		void ConfigureApiBase(IServiceProvider sp, HttpClient client)
 		{
 			var baseUrl = sp.GetRequiredService<IOptions<ApiOptions>>().Value.BaseUrl?.Trim();
@@ -28,12 +29,18 @@ public static class MauiProgram
 				client.BaseAddress = uri;
 		}
 
+		builder.Services.AddHttpClient<IAuthApiClient, AuthApiClient>()
+			.ConfigureHttpClient(ConfigureApiBase);
+		builder.Services.AddTransient<AuthTokenHandler>();
 		builder.Services.AddHttpClient<IStockMovementClient, StockMovementHttpClient>()
-			.ConfigureHttpClient(ConfigureApiBase);
+			.ConfigureHttpClient(ConfigureApiBase)
+			.AddHttpMessageHandler<AuthTokenHandler>();
 		builder.Services.AddHttpClient<ICatalogSyncClient, CatalogSyncHttpClient>()
-			.ConfigureHttpClient(ConfigureApiBase);
+			.ConfigureHttpClient(ConfigureApiBase)
+			.AddHttpMessageHandler<AuthTokenHandler>();
 		builder.Services.AddHttpClient<IMoveStockCatalogClient, MoveStockCatalogHttpClient>()
-			.ConfigureHttpClient(ConfigureApiBase);
+			.ConfigureHttpClient(ConfigureApiBase)
+			.AddHttpMessageHandler<AuthTokenHandler>();
 
 		builder
 			.UseMauiApp<App>()

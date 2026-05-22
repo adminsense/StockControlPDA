@@ -7,6 +7,11 @@
     Title="Stock Control — PDA">
 
     <ShellContent
+        Title="Sign in"
+        ContentTemplate="{DataTemplate local:LoginPage}"
+        Route="Login" />
+
+    <ShellContent
         Title="Move"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />

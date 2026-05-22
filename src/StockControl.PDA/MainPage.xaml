@@ -4,219 +4,228 @@
              x:Class="StockControl.PDA.MainPage"
              Title="Move stock">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="12">
+    <ContentPage.Resources>
+        <Style TargetType="Picker">
+            <Setter Property="MinimumHeightRequest" Value="36" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style TargetType="Entry">
+            <Setter Property="MinimumHeightRequest" Value="36" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="Label">
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+        <Style x:Key="FieldCaption" TargetType="Label">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+        </Style>
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="MinimumHeightRequest" Value="40" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style x:Key="SignOutButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#512BD4, Dark=#94A3B8}" />
+            <Setter Property="BorderColor" Value="{AppThemeBinding Light=#CCCCCC, Dark=#2D3A4A}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="MinimumHeightRequest" Value="28" />
+            <Setter Property="MinimumWidthRequest" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="HorizontalOptions" Value="End" />
+        </Style>
+    </ContentPage.Resources>
 
-            <Label FontSize="13"
-                   LineBreakMode="WordWrap"
-                   TextColor="{AppThemeBinding Light=#555555, Dark=#AAAAAA}"
-                   Text="Pick warehouse, location, and item — or scan a code and press Enter. Use − / + for quantity, then Inbound or Outbound." />
+    <VerticalStackLayout Padding="10,8" Spacing="8">
 
-            <Border Padding="14">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="10" />
-                </Border.StrokeShape>
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Warehouse &amp; item"
-                           FontAttributes="Bold"
-                           FontSize="15" />
+        <Grid ColumnDefinitions="*,Auto"
+              ColumnSpacing="8"
+              Margin="0,0,0,2"
+              MinimumHeightRequest="32">
+            <Label x:Name="UserLabel"
+                   FontSize="11"
+                   VerticalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#64748B, Dark=#94A3B8}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource SignOutButton}"
+                    Text="Sign out"
+                    Clicked="OnSignOutClicked" />
+        </Grid>
 
-                    <Label Text="Warehouse"
-                           FontSize="12"
-                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                    <Picker x:Name="WarehousePicker"
-                            ItemDisplayBinding="{Binding PickerText}"
-                            SelectedIndexChanged="OnWarehousePickerChanged" />
+        <Border Padding="10">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="10" />
+            </Border.StrokeShape>
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Warehouse &amp; item" Style="{StaticResource SectionTitle}" />
 
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <VerticalStackLayout Grid.Column="0" Spacing="4">
-                            <Label Text="Location"
-                                   FontSize="12"
-                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Picker x:Name="LocationPicker"
-                                    ItemDisplayBinding="{Binding PickerText}"
-                                    SelectedIndexChanged="OnLocationOrItemChanged" />
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="1" Spacing="4">
-                            <Label Text="Item"
-                                   FontSize="12"
-                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Picker x:Name="ItemPicker"
-                                    ItemDisplayBinding="{Binding PickerText}"
-                                    SelectedIndexChanged="OnLocationOrItemChanged" />
-                        </VerticalStackLayout>
-                    </Grid>
+                <Label Text="Warehouse" Style="{StaticResource FieldCaption}" />
+                <Picker x:Name="WarehousePicker"
+                        ItemDisplayBinding="{Binding PickerText}"
+                        SelectedIndexChanged="OnWarehousePickerChanged" />
 
-                    <VerticalStackLayout Margin="0,8,0,0" Spacing="4">
-                        <Label Text="Scan or type code"
-                               FontSize="12"
-                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                        <Entry x:Name="ScanEntry"
-                               Placeholder="Scan or type code"
-                               ReturnType="Done"
-                               Completed="OnScanCompleted" />
-                        <Label x:Name="ScanHintLabel"
-                               FontSize="12"
-                               IsVisible="False"
-                               TextColor="#CA8A04" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                        <Label Text="Location" Style="{StaticResource FieldCaption}" />
+                        <Picker x:Name="LocationPicker"
+                                ItemDisplayBinding="{Binding PickerText}"
+                                SelectedIndexChanged="OnLocationOrItemChanged" />
                     </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label Text="Item" Style="{StaticResource FieldCaption}" />
+                        <Picker x:Name="ItemPicker"
+                                ItemDisplayBinding="{Binding PickerText}"
+                                SelectedIndexChanged="OnLocationOrItemChanged" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Scan or type code" Style="{StaticResource FieldCaption}" />
+                    <Entry x:Name="ScanEntry"
+                           Placeholder="Scan or type code"
+                           ReturnType="Done"
+                           Completed="OnScanCompleted" />
+                    <Label x:Name="ScanHintLabel"
+                           FontSize="11"
+                           IsVisible="False"
+                           TextColor="#CA8A04" />
                 </VerticalStackLayout>
-            </Border>
+            </VerticalStackLayout>
+        </Border>
 
-            <Border Padding="14">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="10" />
-                </Border.StrokeShape>
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Summary"
+        <Border Padding="10">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="10" />
+            </Border.StrokeShape>
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Summary" Style="{StaticResource SectionTitle}" />
+                <Grid ColumnDefinitions="Auto,*"
+                      ColumnSpacing="10"
+                      RowDefinitions="Auto,Auto,Auto"
+                      RowSpacing="4">
+                    <Label Grid.Row="0"
+                           Grid.Column="0"
+                           FontSize="12"
+                           Text="Item"
+                           Style="{StaticResource FieldCaption}" />
+                    <Label x:Name="SumItem"
+                           Grid.Row="0"
+                           Grid.Column="1"
                            FontAttributes="Bold"
-                           FontSize="15" />
-                    <Grid ColumnDefinitions="Auto,*"
-                          ColumnSpacing="12"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto"
-                          RowSpacing="6">
-                        <Label Grid.Row="0"
-                               Grid.Column="0"
-                               FontSize="13"
-                               Text="Warehouse"
-                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                        <Label x:Name="SumWarehouse"
-                               Grid.Row="0"
-                               Grid.Column="1"
-                               FontAttributes="Bold"
-                               FontSize="14" />
+                           FontSize="13"
+                           MaxLines="2"
+                           LineBreakMode="TailTruncation" />
 
-                        <Label Grid.Row="1"
-                               Grid.Column="0"
-                               FontSize="13"
-                               Text="Location"
-                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                        <Label x:Name="SumLocation"
-                               Grid.Row="1"
-                               Grid.Column="1"
-                               FontAttributes="Bold"
-                               FontSize="14" />
+                    <Label Grid.Row="1"
+                           Grid.Column="0"
+                           FontSize="12"
+                           Text="On hand"
+                           Style="{StaticResource FieldCaption}" />
+                    <Label x:Name="SumOnHand"
+                           Grid.Row="1"
+                           Grid.Column="1"
+                           FontAttributes="Bold"
+                           FontSize="13" />
 
-                        <Label Grid.Row="2"
-                               Grid.Column="0"
-                               FontSize="13"
-                               Text="Item"
-                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                        <Label x:Name="SumItem"
-                               Grid.Row="2"
-                               Grid.Column="1"
-                               FontAttributes="Bold"
-                               FontSize="14" />
-
-                        <Label Grid.Row="3"
-                               Grid.Column="0"
-                               FontSize="13"
-                               Text="On hand"
-                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                        <Label x:Name="SumOnHand"
-                               Grid.Row="3"
-                               Grid.Column="1"
-                               FontAttributes="Bold"
-                               FontSize="14" />
-
-                        <Label Grid.Row="4"
-                               Grid.Column="0"
-                               FontSize="13"
-                               Text="Min / Max"
-                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                        <Label x:Name="SumMinMax"
-                               Grid.Row="4"
-                               Grid.Column="1"
-                               FontAttributes="Bold"
-                               FontSize="14" />
-                    </Grid>
-                    <ProgressBar x:Name="MinMaxProgress"
-                                 Margin="0,8,0,0"
-                                 HeightRequest="6"
-                                 IsVisible="False"
-                                 Progress="0" />
-                    <Border x:Name="StatusPillBorder"
+                    <Label Grid.Row="2"
+                           Grid.Column="0"
+                           FontSize="12"
+                           Text="Min / Max"
+                           Style="{StaticResource FieldCaption}" />
+                    <Label x:Name="SumMinMax"
+                           Grid.Row="2"
+                           Grid.Column="1"
+                           FontAttributes="Bold"
+                           FontSize="13" />
+                </Grid>
+                <ProgressBar x:Name="MinMaxProgress"
                             Margin="0,4,0,0"
-                            Padding="8,4"
-                            HorizontalOptions="Start">
-                        <Border.StrokeShape>
-                            <RoundRectangle CornerRadius="6" />
-                        </Border.StrokeShape>
-                        <Label x:Name="StatusPillLabel"
-                               FontAttributes="Bold"
-                               FontSize="12" />
-                    </Border>
-                </VerticalStackLayout>
-            </Border>
-
-            <Border Padding="14">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="10" />
-                </Border.StrokeShape>
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Quantity"
+                            HeightRequest="4"
+                            IsVisible="False"
+                            Progress="0" />
+                <Border x:Name="StatusPillBorder"
+                        Margin="0,2,0,0"
+                        Padding="6,3"
+                        HorizontalOptions="Start">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="6" />
+                    </Border.StrokeShape>
+                    <Label x:Name="StatusPillLabel"
                            FontAttributes="Bold"
-                           FontSize="15" />
-                    <HorizontalStackLayout Padding="0,8"
-                                           HorizontalOptions="Center"
-                                           Spacing="16">
-                        <Button Clicked="OnQtyMinusClicked"
-                                FontSize="22"
-                                HeightRequest="52"
-                                Text="−"
-                                WidthRequest="52"
-                                BackgroundColor="{AppThemeBinding Light=#E8E8E8, Dark=#243044}"
-                                TextColor="{AppThemeBinding Light=#222222, Dark=#E8EEF5}" />
-                        <Label x:Name="QtyLabel"
-                               FontAttributes="Bold"
-                               FontSize="28"
-                               HorizontalTextAlignment="Center"
-                               MinimumWidthRequest="48"
-                               Text="1"
-                               VerticalOptions="Center" />
-                        <Button Clicked="OnQtyPlusClicked"
-                                FontSize="22"
-                                HeightRequest="52"
-                                Text="+"
-                                WidthRequest="52"
-                                BackgroundColor="{AppThemeBinding Light=#E8E8E8, Dark=#243044}"
-                                TextColor="{AppThemeBinding Light=#222222, Dark=#E8EEF5}" />
-                    </HorizontalStackLayout>
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button Grid.Column="0"
-                                BackgroundColor="#8B1A1A"
-                                Clicked="OnOutboundClicked"
-                                SemanticProperties.Hint="Register outbound stock"
-                                Text="Outbound (−)"
-                                TextColor="White" />
-                        <Button Grid.Column="1"
-                                BackgroundColor="#1B6B3A"
-                                Clicked="OnInboundClicked"
-                                SemanticProperties.Hint="Register inbound stock"
-                                Text="Inbound (+)"
-                                TextColor="White" />
-                    </Grid>
-                    <Grid Margin="0,4,0,0" ColumnDefinitions="*,*" ColumnSpacing="10">
-                        <Button Grid.Column="0"
-                                BackgroundColor="{AppThemeBinding Light=#D9E8FF, Dark=#1E3A5F}"
-                                BorderColor="{AppThemeBinding Light=#3B82F6, Dark=#3B82F6}"
-                                BorderWidth="1"
-                                Clicked="OnSyncClicked"
-                                SemanticProperties.Hint="Refresh catalog snapshot from server"
-                                Text="Sync"
-                                TextColor="{AppThemeBinding Light=#1E3A5F, Dark=White}" />
-                        <Button Grid.Column="1"
-                                BackgroundColor="Transparent"
-                                BorderColor="{AppThemeBinding Light=#CCCCCC, Dark=#2D3A4A}"
-                                BorderWidth="1"
-                                Clicked="OnResetClicked"
-                                SemanticProperties.Hint="Clear selection and quantity"
-                                Text="Reset flow"
-                                TextColor="{AppThemeBinding Light=#666666, Dark=#8B9AAB}" />
-                    </Grid>
-                </VerticalStackLayout>
-            </Border>
+                           FontSize="11" />
+                </Border>
+            </VerticalStackLayout>
+        </Border>
 
-        </VerticalStackLayout>
-    </ScrollView>
+        <Border Padding="10">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="10" />
+            </Border.StrokeShape>
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Quantity" Style="{StaticResource SectionTitle}" />
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="12">
+                    <Button Clicked="OnQtyMinusClicked"
+                            FontSize="18"
+                            HeightRequest="40"
+                            Text="−"
+                            WidthRequest="40"
+                            BackgroundColor="{AppThemeBinding Light=#E8E8E8, Dark=#243044}"
+                            TextColor="{AppThemeBinding Light=#222222, Dark=#E8EEF5}" />
+                    <Label x:Name="QtyLabel"
+                           FontAttributes="Bold"
+                           FontSize="22"
+                           HorizontalTextAlignment="Center"
+                           MinimumWidthRequest="40"
+                           Text="1"
+                           VerticalOptions="Center" />
+                    <Button Clicked="OnQtyPlusClicked"
+                            FontSize="18"
+                            HeightRequest="40"
+                            Text="+"
+                            WidthRequest="40"
+                            BackgroundColor="{AppThemeBinding Light=#E8E8E8, Dark=#243044}"
+                            TextColor="{AppThemeBinding Light=#222222, Dark=#E8EEF5}" />
+                </HorizontalStackLayout>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0"
+                            Style="{StaticResource ActionButton}"
+                            BackgroundColor="#8B1A1A"
+                            Clicked="OnOutboundClicked"
+                            Text="Outbound (−)"
+                            TextColor="White" />
+                    <Button Grid.Column="1"
+                            Style="{StaticResource ActionButton}"
+                            BackgroundColor="#1B6B3A"
+                            Clicked="OnInboundClicked"
+                            Text="Inbound (+)"
+                            TextColor="White" />
+                </Grid>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0"
+                            Style="{StaticResource ActionButton}"
+                            BackgroundColor="{AppThemeBinding Light=#D9E8FF, Dark=#1E3A5F}"
+                            BorderColor="{AppThemeBinding Light=#3B82F6, Dark=#3B82F6}"
+                            BorderWidth="1"
+                            Clicked="OnSyncClicked"
+                            Text="Sync"
+                            TextColor="{AppThemeBinding Light=#1E3A5F, Dark=White}" />
+                    <Button Grid.Column="1"
+                            Style="{StaticResource ActionButton}"
+                            BackgroundColor="Transparent"
+                            BorderColor="{AppThemeBinding Light=#CCCCCC, Dark=#2D3A4A}"
+                            BorderWidth="1"
+                            Clicked="OnResetClicked"
+                            Text="Reset flow"
+                            TextColor="{AppThemeBinding Light=#666666, Dark=#8B9AAB}" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+    </VerticalStackLayout>
 </ContentPage>

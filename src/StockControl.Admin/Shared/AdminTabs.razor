@@ -1,30 +1,20 @@
 @using StockControl.Admin.Auth
 
 <div class="tabs-admin-shell">
-    <div class="tabs-admin-hero">
-        <NavLink href="/stock"
-                 class="tabs-admin-hero-link"
-                 role="tab"
-                 aria-selected="@IsStockActive()"
-                 Match="NavLinkMatch.All">
-            Stock Control
-        </NavLink>
-    </div>
-
     <nav class="tabs tabs-admin-grid" role="tablist" aria-label="Admin sections">
-        <NavLink href="/users" role="tab" aria-selected="@IsActive("/users")" Match="NavLinkMatch.All">Users</NavLink>
-        <NavLink href="/warehouses" role="tab" aria-selected="@IsActive("/warehouses")">Warehouses</NavLink>
-        <NavLink href="/locations" role="tab" aria-selected="@IsActive("/locations")">Locations</NavLink>
-        <NavLink href="/suppliers" role="tab" aria-selected="@IsActive("/suppliers")">Suppliers</NavLink>
-        <NavLink href="/products" role="tab" aria-selected="@IsActive("/products")">Products</NavLink>
-        <NavLink href="/items" role="tab" aria-selected="@IsActive("/items")">Items (SKU)</NavLink>
-        <NavLink href="/minmax" role="tab" aria-selected="@IsActive("/minmax")">Min / Max</NavLink>
+        <NavLink href="/users" class="tabs-admin-tab-link admin-nav-r2-c1" role="tab" aria-selected="@IsActive("/users")" Match="NavLinkMatch.All">Users</NavLink>
+        <NavLink href="/warehouses" class="tabs-admin-tab-link admin-nav-r2-c2" role="tab" aria-selected="@IsActive("/warehouses")">Warehouses</NavLink>
+        <NavLink href="/locations" class="tabs-admin-tab-link admin-nav-r2-c3" role="tab" aria-selected="@IsActive("/locations")">Locations</NavLink>
+        <NavLink href="/suppliers" class="tabs-admin-tab-link admin-nav-r2-c4" role="tab" aria-selected="@IsActive("/suppliers")">Suppliers</NavLink>
+        <NavLink href="/products" class="tabs-admin-tab-link admin-nav-r3-c1" role="tab" aria-selected="@IsActive("/products")">Products</NavLink>
+        <NavLink href="/items" class="tabs-admin-tab-link admin-nav-r3-c2" role="tab" aria-selected="@IsActive("/items")">Items (SKU)</NavLink>
+        <NavLink href="/minmax" class="tabs-admin-tab-link admin-nav-r3-c3" role="tab" aria-selected="@IsActive("/minmax")">Min / Max</NavLink>
         <AuthorizeView Roles="@AuthConstants.AdminRole">
             <Authorized>
-                <NavLink href="/audit" role="tab" aria-selected="@IsActive("/audit")">Audit Logs</NavLink>
+                <NavLink href="/audit" class="tabs-admin-tab-link admin-nav-r3-c4" role="tab" aria-selected="@IsActive("/audit")">Audit Logs</NavLink>
             </Authorized>
             <NotAuthorized>
-                <span class="tabs-admin-placeholder" aria-hidden="true"></span>
+                <span class="tabs-admin-placeholder admin-nav-r3-c4" aria-hidden="true"></span>
             </NotAuthorized>
         </AuthorizeView>
     </nav>
@@ -50,11 +40,5 @@
     {
         var rel = NormalizePath(Nav.ToBaseRelativePath(Nav.Uri));
         return string.Equals(rel, href.TrimEnd('/'), StringComparison.OrdinalIgnoreCase);
-    }
-
-    private bool IsStockActive()
-    {
-        var rel = NormalizePath(Nav.ToBaseRelativePath(Nav.Uri));
-        return rel is "/" or "/stock";
     }
 }

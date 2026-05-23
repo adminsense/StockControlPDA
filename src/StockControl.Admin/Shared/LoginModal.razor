@@ -1,43 +1,37 @@
 @using StockControl.Admin.Auth
 @inject IJSRuntime Js
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
 
-<div class="sc-modal-backdrop login-backdrop" role="presentation">
-    <div class="sc-modal login-modal" role="dialog" aria-modal="true" aria-label="Sign in" @onclick:stopPropagation="true">
-        <div class="sc-modal-header">
-            <div class="sc-modal-title">Sign in</div>
-        </div>
+<div class="login-page" role="presentation">
+    <div class="login-card" role="dialog" aria-modal="true" aria-label="Sign in">
+        <h1 class="login-heading">Stock Control — Admin</h1>
+
         <form class="login-form" @onsubmit="SubmitAsync" @onsubmit:preventDefault="true">
-            <div class="sc-modal-body">
-                <label for="login-user">Username</label>
-                <input id="login-user" type="text" autocomplete="username" @bind="_username" disabled="@_busy" />
+            <label class="login-label" for="login-user">Username</label>
+            <input id="login-user"
+                   class="login-field"
+                   type="text"
+                   autocomplete="username"
+                   placeholder="Username"
+                   @bind="_username"
+                   disabled="@_busy" />
 
-                <label for="login-pass">Password</label>
-                <div class="login-password-wrap">
-                    <input id="login-pass"
-                           type="@(_showPassword ? "text" : "password")"
-                           autocomplete="current-password"
-                           @bind="_password"
-                           disabled="@_busy" />
-                    <button type="button"
-                            class="login-password-toggle"
-                            tabindex="-1"
-                            aria-label="@(_showPassword ? "Hide password" : "Show password")"
-                            title="@(_showPassword ? "Hide password" : "Show password")"
-                            disabled="@_busy"
-                            @onclick="TogglePassword">
-                        <i class="bi @(_showPassword ? "bi-eye-slash" : "bi-eye")" aria-hidden="true"></i>
-                    </button>
-                </div>
+            <label class="login-label" for="login-pass">Password</label>
+            <input id="login-pass"
+                   class="login-field"
+                   type="password"
+                   autocomplete="current-password"
+                   placeholder="Password"
+                   @bind="_password"
+                   disabled="@_busy" />
 
-                @if (!string.IsNullOrWhiteSpace(_error))
-                {
-                    <p class="login-error">@_error</p>
-                }
-            </div>
-            <div class="sc-modal-actions">
-                <button class="btn success" type="submit" disabled="@_busy">Sign in</button>
-            </div>
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <p class="login-error">@_error</p>
+            }
+
+            <button class="login-submit" type="submit" disabled="@_busy">Sign in</button>
         </form>
     </div>
 </div>
@@ -47,9 +41,6 @@
     private string _password = "";
     private string? _error;
     private bool _busy;
-    private bool _showPassword;
-
-    private void TogglePassword() => _showPassword = !_showPassword;
 
     private async Task SubmitAsync()
     {
@@ -58,9 +49,11 @@
         try
         {
             var result = await Js.InvokeAsync<LoginJsResult>("loginAdmin", _username.Trim(), _password);
-            if (result is { Ok: true })
+            if (result is { Ok: true, Token: not null and not "" })
             {
-                Nav.NavigateTo(Nav.Uri, forceLoad: true);
+                if (AuthState is ServerAuthenticationStateProvider serverAuth)
+                    serverAuth.SetAuthenticatedFromToken(result.Token);
+                Nav.NavigateTo("/stock");
                 return;
             }
 

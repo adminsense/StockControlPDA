@@ -1,12 +1,14 @@
 @inherits LayoutComponentBase
+@using StockControl.Admin.Auth
 @inject IJSRuntime Js
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
 
 <PageTitle>Stock Control — Admin</PageTitle>
 
 <div class="shell">
-    <header>
-        <div>
+    <div class="admin-nav-layout">
+        <div class="header-brand admin-nav-r1-c1">
             <h1>Stock Control — Admin</h1>
             <p class="sub">
                 Compact master-data registration. On PDAs, the scanner types into the focused field and may send <span class="mono">Enter</span>.
@@ -14,23 +16,50 @@
         </div>
         <AuthorizeView>
             <Authorized>
-                <div class="header-user">
-                    <span class="hint">@context.User.Identity?.Name</span>
-                    <button class="btn ghost" type="button" @onclick="SignOutAsync">Sign out</button>
+                <NavLink href="/stock"
+                         class="tabs-admin-tab-link admin-nav-r1-c3"
+                         role="tab"
+                         aria-selected="@IsStockActive()"
+                         Match="NavLinkMatch.All">
+                    Stock Control
+                </NavLink>
+                <div class="header-actions admin-nav-r1-c4">
+                    <span class="header-hint">@context.User.Identity?.Name</span>
+                    <button class="btn ghost header-signout" type="button" @onclick="SignOutAsync">Sign out</button>
                 </div>
             </Authorized>
         </AuthorizeView>
-    </header>
-
-    <AdminTabs />
+        <AdminTabs />
+    </div>
 
     @Body
 </div>
 
 @code {
+    private static string NormalizePath(string rel)
+    {
+        if (string.IsNullOrWhiteSpace(rel))
+            return "/";
+        rel = rel.Trim();
+        if (!rel.StartsWith('/'))
+            rel = "/" + rel;
+        var i = rel.IndexOf('?', StringComparison.Ordinal);
+        if (i >= 0)
+            rel = rel[..i];
+        return rel.TrimEnd('/') is "" ? "/" : rel.TrimEnd('/');
+    }
+
+    private bool IsStockActive()
+    {
+        var rel = NormalizePath(Nav.ToBaseRelativePath(Nav.Uri));
+        return rel is "/" or "/stock";
+    }
+
     private async Task SignOutAsync()
     {
         await Js.InvokeVoidAsync("logoutAdmin");
+        if (AuthState is ServerAuthenticationStateProvider serverAuth)
+            serverAuth.SignOut();
         Nav.NavigateTo("/", forceLoad: true);
     }
 }

@@ -1,15 +1,23 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using StockControl.Admin.Api;
+using StockControl.Admin.Auth;
 using StockControl.Admin.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddStockControlAuth(builder.Configuration);
+builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("connStockControlPDA"));
@@ -17,13 +25,7 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
 
 var app = builder.Build();
 
-// Keep SQL schema in sync with EF migrations (avoids "invalid column" after pulling new code).
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
-    await using var db = await factory.CreateDbContextAsync();
-    await db.Database.MigrateAsync();
-}
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -39,9 +41,13 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapAuthApi();
 app.MapStockMovementApi();
 app.MapPdaCatalogApi();
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+app.MapBlazorHub().AllowAnonymous();
+app.MapFallbackToPage("/_Host").AllowAnonymous();
 
 app.Run();
